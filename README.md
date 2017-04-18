@@ -51,6 +51,7 @@ Pass some parameters from .travis.yml to the script. `build_sketch` will echo th
 ##### `display_report`
 Echo a tab separated report of all verification results to the log. The report consists of:
 - Build timestamp
+- Travis build number
 - Branch
 - Commit hash of the build
 - Commit subject

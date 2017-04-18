@@ -23,7 +23,7 @@ REPORT_FILENAME="$HOME/report.txt"
 
 
 # Add column names to report
-echo "Build Timestamp (UTC)"$'\t'"Branch"$'\t'"Commit"$'\t'"Commit Message"$'\t'"Sketch Filename"$'\t'"Board ID"$'\t'"IDE Version"$'\t'"Program Storage (bytes)"$'\t'"Dynamic Memory (bytes)"$'\t'"# Warnings"$'\t'"Allow Failure" > "$REPORT_FILENAME"
+echo "Build Timestamp (UTC)"$'\t'"Build #"$'\t'"Branch"$'\t'"Commit"$'\t'"Commit Message"$'\t'"Sketch Filename"$'\t'"Board ID"$'\t'"IDE Version"$'\t'"Program Storage (bytes)"$'\t'"Dynamic Memory (bytes)"$'\t'"# Warnings"$'\t'"Allow Failure" > "$REPORT_FILENAME"
 
 # Create the temporary folder
 mkdir "$TEMPORARY_FOLDER"
@@ -257,7 +257,7 @@ function build_this_sketch()
   local dynamicMemory=${dynamicMemory//,}
 
   # Add the build data to the report file
-  echo `date -u "+%Y-%m-%d %H:%M:%S"`$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail" >> "$REPORT_FILENAME"
+  echo `date -u "+%Y-%m-%d %H:%M:%S"`$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail" >> "$REPORT_FILENAME"
 
   # If the sketch build failed and failure is not allowed for this test then fail the Travis build after completing all sketch builds
   if [[ "$sketchBuildExitCode" != 0 ]]; then
