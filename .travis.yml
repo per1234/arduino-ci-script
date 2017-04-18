@@ -1,0 +1,92 @@
+# This file is used to test the script with Travis CI
+
+language: bash
+sudo: required
+
+
+env:
+  global:
+    # The Arduino IDE will be installed at APPLICATION_FOLDER/arduino
+    - APPLICATION_FOLDER="/usr/local/share"
+    - SKETCHBOOK_FOLDER="${HOME}/Arduino"
+
+
+before_install:
+  # https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
+  # Uncomment the following lines to get verbose script output for debugging
+  # Print shell input lines as they are read.
+  #- set -v
+  # Print a trace of simple commands.
+  #- set -x
+
+  - source "${TRAVIS_BUILD_DIR}/arduino-ci-script.sh"
+
+  # set_parameters arguments: folder to install the Arduino IDE to, Sketchbook folder, Enable verbose output during compilation
+  - set_parameters "$APPLICATION_FOLDER" "$SKETCHBOOK_FOLDER" "false"
+
+
+install:
+  - install_ide
+
+  # Install hardware packages
+  # Test package install without URL
+  - install_package "arduino:sam"
+  # Test package install with URL
+  - install_package "MiniCore:avr" "https://mcudude.github.io/MiniCore/package_MCUdude_MiniCore_index.json"
+
+  # Test library installation from repository (can't do this because there is no library in this repository)
+  #- install_library_from_repo
+
+  # Test library install from .zip file
+  - install_library_dependency "https://github.com/per1234/WatchdogLog/archive/master.zip"
+  # Test library install from git repo
+  - install_library_dependency "https://github.com/per1234/EEPROMallocation.git"
+
+
+script:
+  # Verify sketches:
+  # build_sketch arguments: sketch name, fqbn, IDE version, allow failure
+  # IDE version: Use "all" for IDE version argument to verify sketch with all versions of the Arduino IDE, use "newest" for IDE version argument to verify sketch with the newest version of the Arduino IDE
+
+  # Installed package tests:
+  # Test sketch verification using board from hardware package installed without URL
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:sam:arduino_due_x_dbg" "newest" "false"
+  # Test sketch verification using board from hardware package installed with URL
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "MiniCore:avr:328:variant=modelP,BOD=2v7,LTO=Os,clock=16MHz_external" "newest" "false"
+
+  # Installed library tests:
+  # Test sketch verification using library installed from .zip
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WatchdogLog-master/examples/WatchdogLogExample/WatchdogLogExample.ino" "arduino:avr:mega:cpu=atmega2560" "newest" "false"
+  # Test sketch verification using library installed from .git
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/EEPROMallocation/examples/EEPROMallocationExample/EEPROMallocationExample.ino" "arduino:avr:mega:cpu=atmega2560" "newest" "false"
+
+  # build_sketch with sketch argument tests:
+  # Test sketch verification with specific IDE version
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:mega:cpu=atmega2560" "1.8.1" "false"
+  # Test sketch verification with newest IDE versions
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:mega:cpu=atmega2560" "newest" "false"
+  # Test sketch verification with all IDE versions
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:mega:cpu=atmega2560" "all" "false"
+
+  # Test sketch verification allowed to fail (this will fail because WatchdogLog is AVR specific)
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WatchdogLog-master/examples/WatchdogLogExample/WatchdogLogExample.ino" "arduino:sam:arduino_due_x_dbg" "newest" "true"
+
+  # build_sketch with folder argument tests:
+  # Test build_sketch with specific IDE version
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:mega:cpu=atmega2560" "1.8.1" "false"
+  # Test build_sketch with newest IDE versions
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:mega:cpu=atmega2560" "newest" "false"
+  # Test build_sketch with all IDE versions
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:mega:cpu=atmega2560" "all" "false"
+
+  # Test build_sketch allowed to fail (this will fail because WatchdogLog is AVR specific)
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WatchdogLog-master/examples" "arduino:sam:arduino_due_x_dbg" "newest" "true"
+
+  - display_report
+  - check_success
+
+
+notifications:
+  email:
+    on_success: always
+    on_failure: always
