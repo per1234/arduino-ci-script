@@ -9,6 +9,9 @@ env:
     # The Arduino IDE will be installed at APPLICATION_FOLDER/arduino
     - APPLICATION_FOLDER="/usr/local/share"
     - SKETCHBOOK_FOLDER="${HOME}/Arduino"
+  matrix:
+    - INSTALL_IDE_VERSIONS=''
+    - INSTALL_IDE_VERSIONS='("1.6.5-r5" "1.8.1")'
 
 
 before_install:
@@ -26,7 +29,7 @@ before_install:
 
 
 install:
-  - install_ide
+  - install_ide "$INSTALL_IDE_VERSIONS"
 
   # Install hardware packages
   # Test package install without URL
