@@ -21,6 +21,7 @@ source <(curl -SLs https://raw.githubusercontent.com/per1234/arduino-ci-script/m
 See https://github.com/per1234/arduino-ci-script/blob/master/.travis.yml for an example of the script in use.
 ##### Special version names:
   - `all`: Refers to all versions of the Arduino IDE (including the hourly build). In the context of `install_ide` this means all IDE versions listed in the script (those that support the command line interface, 1.5.2 and newer). In the context of all other functions this means all IDE versions that were installed via `install_ide`.
+  - `oldest`: The oldest release version of the Arduino IDE. In the context of `install_ide` this is the oldest of the IDE versions listed in the script (1.5.2, the first version to have a command line interface). In the context of build_sketch this means the oldest IDE version that was installed via `install_ide`.
   - `newest`: Refers to the newest release version of the Arduino IDE (not including the hourly build). In the context of `install_ide` this means the newest IDE version listed in the script. In the context of all other functions this means the newest IDE version that was installed via `install_ide`.
   - `hourly`: The hourly build of the Arduino IDE. Note that this is intended for beta testing only.
 

@@ -65,19 +65,26 @@ function install_ide()
       # get the array of all IDE versions
       eval "$IDE_VERSIONS"
       for IDEversion in "${ide_versions[@]}"; do
+        if [[ "$oldestVersion" == "" ]]; then
+          local oldestVersion="$IDEversion"
+        fi
         if [[ "$IDEversion" != "hourly" ]]; then
           local newestVersion="$IDEversion"
         fi
       done
 
-      if [[ "$startVersion" == "newest" ]]; then
+      if [[ "$startVersion" == "oldest" ]]; then
+        local startVersion="$oldestVersion"
+      elif [[ "$startVersion" == "newest" ]]; then
         local startVersion="$newestVersion"
       fi
 
       if [[ "$2" != "" ]]; then
         local endVersion="$2"
 
-        if [[ "$endVersion" == "newest" ]]; then
+        if [[ "$endVersion" == "oldest" ]]; then
+          local endVersion="$oldestVersion"
+        elif [[ "$endVersion" == "newest" ]]; then
           local endVersion="$newestVersion"
         fi
 
@@ -258,7 +265,9 @@ function build_sketch()
       find_sketches "$sketchPath" "$boardID" "$IDEversion" "$allowFail"
     done
   else
-    if [[ "$IDEversion" == "newest" ]]; then
+    if [[ "$IDEversion" == "oldest" ]]; then
+      local IDEversion="$OLDEST_IDE_VERSION"
+    elif [[ "$IDEversion" == "newest" ]]; then
       local IDEversion="$NEWEST_IDE_VERSION"
     fi
     find_sketches "$sketchPath" "$boardID" "$IDEversion" "$allowFail"
