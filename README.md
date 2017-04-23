@@ -19,6 +19,10 @@ source <(curl -SLs https://raw.githubusercontent.com/per1234/arduino-ci-script/m
 
 #### Usage
 See https://github.com/per1234/arduino-ci-script/blob/master/.travis.yml for an example of the script in use.
+##### Special version names:
+  - `all`: Refers to all versions of the Arduino IDE. In the context of `install_ide` this means all IDE versions listed in the script (those that support the command line interface, 1.6.0 and newer). In the context of all other functions this means all IDE versions that were installed via `install_ide`.
+  - `newest`: Refers to the newest version of the Arduino IDE. In the context of `install_ide` this means the newest IDE version listed in the script. In the context of all other functions this means the newest IDE version that was installed via `install_ide`.
+
 ##### `set_parameters APPLICATION_FOLDER SKETCHBOOK_FOLDER verboseArduinoOutput`
 Used to pass some parameters from .travis.yml to the script.
 - Parameter: **APPLICATION_FOLDER** - This should be set to `/usr/local/share`. The Arduino IDE will be installed in the `arduino` subfolder.
@@ -26,8 +30,11 @@ Used to pass some parameters from .travis.yml to the script.
 - Parameter: **verboseArduinoOutput** - Set to `true` to turn on verbose output during compilation.
 
 ##### `install_ide [IDE_VERSIONS]`
+##### `install_ide [startVersion [endVersion]]`
 Install all versions of the Arduino IDE specified in the script file.
 - Parameter(optional): **IDE_VERSIONS** - A list of the versions of the Arduino IDE you want installed. e.g. `'("1.6.5-r5" "1.6.9" "1.8.2")'`
+- Parameter(optional): **startVersion** - The oldest version of the Arduino IDE to install.
+- Parameter(optional): **endVersion** - The newest version of the Arduino IDE to install. If this argument is omitted then ONLY startVersion will be installed.
 
 ##### `install_package packageID [packageURL]`
 Install a hardware package. Only the **Arduino AVR Boards** package is included with the Arduino IDE installation. Packages are installed to `$HOME/.arduino15/packages.
@@ -45,7 +52,7 @@ Install a library to the `libraries` subfolder of the sketchbook folder.
 Pass some parameters from .travis.yml to the script. `build_sketch` will echo the arduino exit code to the log, which is documented at https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#exit-status.
 - Parameter: **sketchPath** - Path to a sketch or folder containing sketches. If a folder is specified it will be recursively searched and all sketches will be verified.
 - Parameter: **boardID** - `package:arch:board[:parameters]` ID of the board to be compiled for. e.g. `arduino:avr:uno`.
-- Parameter: **IDEversion** - The version of the Arduino IDE to use to verify the sketch. Use `"all"` to verify with all installed versions of the Arduino IDE. Use `"newest"` to verify with the newest installed version of the Arduino IDE.
+- Parameter: **IDEversion** - The version of the Arduino IDE to use to verify the sketch.
 - Parameter: **allowFail** - `true` or `false`. Allow the verification to fail without causing the CI build to fail.
 
 ##### `display_report`

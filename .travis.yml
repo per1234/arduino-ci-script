@@ -10,8 +10,12 @@ env:
     - APPLICATION_FOLDER="/usr/local/share"
     - SKETCHBOOK_FOLDER="${HOME}/Arduino"
   matrix:
-    - INSTALL_IDE_VERSIONS=''
-    - INSTALL_IDE_VERSIONS='("1.6.5-r5" "1.8.1")'
+    - INSTALL_IDE_START_VERSION=""
+    - INSTALL_IDE_START_VERSION='("1.6.5-r5" "1.8.1")'
+    - INSTALL_IDE_START_VERSION="1.8.1"
+    - INSTALL_IDE_START_VERSION="1.8.0" INSTALL_IDE_END_VERSION="1.8.1"
+    - INSTALL_IDE_START_VERSION="1.8.1" INSTALL_IDE_END_VERSION="newest"
+    - INSTALL_IDE_START_VERSION="all"
 
 
 before_install:
@@ -29,7 +33,7 @@ before_install:
 
 
 install:
-  - install_ide "$INSTALL_IDE_VERSIONS"
+  - install_ide "$INSTALL_IDE_START_VERSION" "$INSTALL_IDE_END_VERSION"
 
   # Install hardware packages
   # Test package install without URL

@@ -14,7 +14,8 @@ set -e
 # This is a list of every version of the Arduino IDE that supports CLI. As new versions are released they will be added to the list.
 # The newest IDE version must always be placed at the end of the array because the code for setting $NEWEST_IDE_VERSION assumes that
 # Arduino IDE 1.6.2 has the nasty behavior of copying the included hardware cores to the .arduino15 folder, causing those versions to be used for all builds after Arduino IDE 1.6.2 is used. For this reason 1.6.2 has been left off the list.
-IDE_VERSIONS='declare -a ide_versions=("1.6.0" "1.6.1" "1.6.3" "1.6.4" "1.6.5-r5" "1.6.6" "1.6.7" "1.6.8" "1.6.9" "1.6.10" "1.6.11" "1.6.12" "1.6.13" "1.8.0" "1.8.1" "1.8.2")'
+IDE_VERSIONS_DECLARATION="declare -a ide_versions="
+IDE_VERSIONS="$IDE_VERSIONS_DECLARATION"'("1.6.0" "1.6.1" "1.6.3" "1.6.4" "1.6.5-r5" "1.6.6" "1.6.7" "1.6.8" "1.6.9" "1.6.10" "1.6.11" "1.6.12" "1.6.13" "1.8.0" "1.8.1" "1.8.2")'
 
 TEMPORARY_FOLDER="$HOME/temporary"
 VERIFICATION_OUTPUT_FILENAME="$TEMPORARY_FOLDER/verification_output.txt"
@@ -53,8 +54,54 @@ function set_parameters()
 function install_ide()
 {
   if [[ "$1" != "" ]]; then
-    # IDE versions argument was supplied
-    IDE_VERSIONS="declare -a ide_versions=${1}"
+    local re="\("
+    if [[ "$1" =~ $re ]]; then
+      # IDE versions list was supplied
+      IDE_VERSIONS="${IDE_VERSIONS_DECLARATION}${1}"
+    elif [[ "$1" != "all" ]]; then
+      local startVersion="$1"
+
+      # get the array of all IDE versions
+      eval "$IDE_VERSIONS"
+      for IDEversion in "${ide_versions[@]}"; do
+        if [[ "$IDEversion" != "hourly" ]]; then
+          local newestVersion="$IDEversion"
+        fi
+      done
+
+      if [[ "$startVersion" == "newest" ]]; then
+        local startVersion="$newestVersion"
+      fi
+
+      if [[ "$2" != "" ]]; then
+        local endVersion="$2"
+
+        if [[ "$endVersion" == "newest" ]]; then
+          local endVersion="$newestVersion"
+        fi
+
+        # Assemble list of IDE versions in the specified range
+        # Begin the list
+        IDE_VERSIONS="$IDE_VERSIONS_DECLARATION"'('
+        for IDEversion in "${ide_versions[@]}"; do
+          if [[ "$IDEversion" == "$startVersion" ]]; then
+            # Set a flag
+            local listIsStarted="true"
+          fi
+          if [[ "$listIsStarted" == "true" ]]; then
+            IDE_VERSIONS="${IDE_VERSIONS} "'"'"$IDEversion"'"'
+          fi
+          if [[ "$IDEversion" == "$endVersion" ]]; then
+            break
+          fi
+        done
+        # Finish the list
+        IDE_VERSIONS="$IDE_VERSIONS"')'
+      else
+        # Only a single version argument was specified
+        IDE_VERSIONS="$IDE_VERSIONS_DECLARATION"'("'"${startVersion}"'")'
+      fi
+    fi
   fi
 
   # This runs the command contained in the $IDE_VERSIONS string, thus declaring the array locally as $ide_versions. This must be done in any function that uses the array
