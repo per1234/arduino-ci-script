@@ -229,7 +229,7 @@ function build_this_sketch()
 
   local sketchBuildExitCode=255
   # Retry the verification if it returns exit code 255
-  while [[ "$sketchBuildExitCode" == "255" && $verifyCount < $SKETCH_VERIFY_RETRIES ]]; do
+  while [[ "$sketchBuildExitCode" == "255" && $verifyCount -le $SKETCH_VERIFY_RETRIES ]]; do
     # Verify the sketch
     arduino $VERBOSE_BUILD --verify "$sketchName" --board "$boardID" 2>&1 | tee "$VERIFICATION_OUTPUT_FILENAME"; local sketchBuildExitCode="${PIPESTATUS[0]}"
     local verifyCount=$((verifyCount + 1))
