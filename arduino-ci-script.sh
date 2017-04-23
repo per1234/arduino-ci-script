@@ -15,7 +15,8 @@ set -e
 # The newest IDE version must always be placed at the end of the array because the code for setting $NEWEST_IDE_VERSION assumes that
 # Arduino IDE 1.6.2 has the nasty behavior of copying the included hardware cores to the .arduino15 folder, causing those versions to be used for all builds after Arduino IDE 1.6.2 is used. For this reason 1.6.2 has been left off the list.
 IDE_VERSIONS_DECLARATION="declare -a ide_versions="
-IDE_VERSIONS="$IDE_VERSIONS_DECLARATION"'("1.6.0" "1.6.1" "1.6.3" "1.6.4" "1.6.5-r5" "1.6.6" "1.6.7" "1.6.8" "1.6.9" "1.6.10" "1.6.11" "1.6.12" "1.6.13" "1.8.0" "1.8.1" "1.8.2" "hourly")'
+IDE_VERSIONS="$IDE_VERSIONS_DECLARATION"'("1.5.2" "1.5.3" "1.5.4" "1.5.5" "1.5.6-r2" "1.5.7" "1.5.8" "1.6.0" "1.6.1" "1.6.3" "1.6.4" "1.6.5-r5" "1.6.6" "1.6.7" "1.6.8" "1.6.9" "1.6.10" "1.6.11" "1.6.12" "1.6.13" "1.8.0" "1.8.1" "1.8.2" "hourly")'
+
 
 TEMPORARY_FOLDER="$HOME/temporary"
 VERIFICATION_OUTPUT_FILENAME="$TEMPORARY_FOLDER/verification_output.txt"
@@ -45,7 +46,7 @@ function set_parameters()
   local verboseArduinoOutput="$3"
 
   if [[ "$verboseArduinoOutput" == "true" ]]; then
-    VERBOSE_BUILD="--verbose-build"
+    VERBOSE_BUILD="--verbose"
   fi
 }
 
@@ -112,19 +113,32 @@ function install_ide()
   eval "$IDE_VERSIONS"
 
   for IDEversion in "${ide_versions[@]}"; do
+    # Determine download file extension
+    local re="1.5.[0-9]"
+    if [[ "$IDEversion" =~ $re ]]; then
+      # The download file extension prior to 1.6.0 is .tgz
+      local downloadFileExtension="tgz"
+    else
+      local downloadFileExtension="tar.xz"
+    fi
+
+    if [[ "$OLDEST_IDE_VERSION" == "" ]]; then
+      OLDEST_IDE_VERSION="$IDEversion"
+    fi
+
     if [[ "$IDEversion" == "hourly" ]]; then
       # Deal with the inaccurate name given to the hourly build download
-      wget "http://downloads.arduino.cc/arduino-nightly-linux64.tar.xz"
-      tar xf "arduino-nightly-linux64.tar.xz"
-      rm "arduino-nightly-linux64.tar.xz"
+      wget "http://downloads.arduino.cc/arduino-nightly-linux64.${downloadFileExtension}"
+      tar xf "arduino-nightly-linux64.${downloadFileExtension}"
+      rm "arduino-nightly-linux64.${downloadFileExtension}"
       sudo mv "arduino-nightly" "$APPLICATION_FOLDER/arduino-${IDEversion}"
     else
       # "newest" does not include the hourly build
       NEWEST_IDE_VERSION="$IDEversion"
 
-      wget "http://downloads.arduino.cc/arduino-${IDEversion}-linux64.tar.xz"
-      tar xf "arduino-${IDEversion}-linux64.tar.xz"
-      rm "arduino-${IDEversion}-linux64.tar.xz"
+      wget "http://downloads.arduino.cc/arduino-${IDEversion}-linux64.${downloadFileExtension}"
+      tar xf "arduino-${IDEversion}-linux64.${downloadFileExtension}"
+      rm "arduino-${IDEversion}-linux64.${downloadFileExtension}"
       sudo mv "arduino-${IDEversion}" "$APPLICATION_FOLDER/arduino-${IDEversion}"
     fi
   done
@@ -133,10 +147,21 @@ function install_ide()
   install_ide_version "$NEWEST_IDE_VERSION"
   # Create the link that will be used for all IDE installations
   sudo ln -s "$APPLICATION_FOLDER/arduino/arduino" /usr/local/bin/arduino
+
+  # Set the preferences
   # Create the sketchbook folder. The location can't be set in preferences if the folder doesn't exist.
   mkdir "$SKETCHBOOK_FOLDER"
-  # Set the preferences
-  arduino --pref compiler.warning_level=all --pref sketchbook.path="$SKETCHBOOK_FOLDER" --save-prefs
+  # --pref option is only supported by Arduino IDE 1.5.6 and newer
+  local re="1.5.[0-5]"
+  if ! [[ "$NEWEST_IDE_VERSION" =~ $re ]]; then
+    # --save-prefs was added in Arduino IDE 1.5.8
+    local re="1.5.[6-7]"
+    if ! [[ "$NEWEST_IDE_VERSION" =~ $re ]]; then
+      local savePrefs="--save-prefs"
+    fi
+    arduino --pref compiler.warning_level=all --pref sketchbook.path="$SKETCHBOOK_FOLDER" "$savePrefs"
+  fi
+
   # Uninstall the IDE
   uninstall_ide_version "$NEWEST_IDE_VERSION"
 }
