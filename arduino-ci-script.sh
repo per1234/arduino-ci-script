@@ -14,7 +14,6 @@ set -e
 # This is a list of every version of the Arduino IDE that supports CLI. As new versions are released they will be added to the list.
 # The newest IDE version must always be placed at the end of the array because the code for setting $NEWEST_IDE_VERSION assumes that
 # Arduino IDE 1.6.2 has the nasty behavior of copying the included hardware cores to the .arduino15 folder, causing those versions to be used for all builds after Arduino IDE 1.6.2 is used. For this reason 1.6.2 has been left off the list.
-# Arduino IDE 1.6.4 is causing errors due to "cc.arduino.contributions.SignatureVerificationFailedException: package_index.json file signature verification failed" so I'm removing it from the list.
 IDE_VERSIONS='declare -a ide_versions=("1.6.0" "1.6.1" "1.6.3" "1.6.4" "1.6.5-r5" "1.6.6" "1.6.7" "1.6.8" "1.6.9" "1.6.10" "1.6.11" "1.6.12" "1.6.13" "1.8.0" "1.8.1" "1.8.2")'
 
 TEMPORARY_FOLDER="$HOME/temporary"
