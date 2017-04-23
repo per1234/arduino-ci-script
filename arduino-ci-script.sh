@@ -15,7 +15,7 @@ set -e
 # The newest IDE version must always be placed at the end of the array because the code for setting $NEWEST_IDE_VERSION assumes that
 # Arduino IDE 1.6.2 has the nasty behavior of copying the included hardware cores to the .arduino15 folder, causing those versions to be used for all builds after Arduino IDE 1.6.2 is used. For this reason 1.6.2 has been left off the list.
 IDE_VERSIONS_DECLARATION="declare -a ide_versions="
-IDE_VERSIONS="$IDE_VERSIONS_DECLARATION"'("1.6.0" "1.6.1" "1.6.3" "1.6.4" "1.6.5-r5" "1.6.6" "1.6.7" "1.6.8" "1.6.9" "1.6.10" "1.6.11" "1.6.12" "1.6.13" "1.8.0" "1.8.1" "1.8.2")'
+IDE_VERSIONS="$IDE_VERSIONS_DECLARATION"'("1.6.0" "1.6.1" "1.6.3" "1.6.4" "1.6.5-r5" "1.6.6" "1.6.7" "1.6.8" "1.6.9" "1.6.10" "1.6.11" "1.6.12" "1.6.13" "1.8.0" "1.8.1" "1.8.2" "hourly")'
 
 TEMPORARY_FOLDER="$HOME/temporary"
 VERIFICATION_OUTPUT_FILENAME="$TEMPORARY_FOLDER/verification_output.txt"
@@ -88,6 +88,10 @@ function install_ide()
             # Set a flag
             local listIsStarted="true"
           fi
+          if [[ "$endVersion" == "newest" && "$IDEversion" == "hourly" ]]; then
+            # "newest" indicates the newest release, not the hourly build so the list is complete
+            break
+          fi
           if [[ "$listIsStarted" == "true" ]]; then
             IDE_VERSIONS="${IDE_VERSIONS} "'"'"$IDEversion"'"'
           fi
@@ -108,11 +112,21 @@ function install_ide()
   eval "$IDE_VERSIONS"
 
   for IDEversion in "${ide_versions[@]}"; do
-    wget "http://downloads.arduino.cc/arduino-${IDEversion}-linux64.tar.xz"
-    tar xf "arduino-${IDEversion}-linux64.tar.xz"
-    rm "arduino-${IDEversion}-linux64.tar.xz"
-    sudo mv "arduino-${IDEversion}" "$APPLICATION_FOLDER/arduino-${IDEversion}"
-    NEWEST_IDE_VERSION="$IDEversion"
+    if [[ "$IDEversion" == "hourly" ]]; then
+      # Deal with the inaccurate name given to the hourly build download
+      wget "http://downloads.arduino.cc/arduino-nightly-linux64.tar.xz"
+      tar xf "arduino-nightly-linux64.tar.xz"
+      rm "arduino-nightly-linux64.tar.xz"
+      sudo mv "arduino-nightly" "$APPLICATION_FOLDER/arduino-${IDEversion}"
+    else
+      # "newest" does not include the hourly build
+      NEWEST_IDE_VERSION="$IDEversion"
+
+      wget "http://downloads.arduino.cc/arduino-${IDEversion}-linux64.tar.xz"
+      tar xf "arduino-${IDEversion}-linux64.tar.xz"
+      rm "arduino-${IDEversion}-linux64.tar.xz"
+      sudo mv "arduino-${IDEversion}" "$APPLICATION_FOLDER/arduino-${IDEversion}"
+    fi
   done
 
   # Temporarily install the latest IDE version

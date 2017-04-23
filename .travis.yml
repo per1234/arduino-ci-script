@@ -11,10 +11,11 @@ env:
     - SKETCHBOOK_FOLDER="${HOME}/Arduino"
   matrix:
     - INSTALL_IDE_START_VERSION=""
-    - INSTALL_IDE_START_VERSION='("1.6.5-r5" "1.8.1")'
+    - INSTALL_IDE_START_VERSION='("1.6.5-r5" "1.8.1" "hourly")'
     - INSTALL_IDE_START_VERSION="1.8.1"
     - INSTALL_IDE_START_VERSION="1.8.0" INSTALL_IDE_END_VERSION="1.8.1"
     - INSTALL_IDE_START_VERSION="1.8.1" INSTALL_IDE_END_VERSION="newest"
+    - INSTALL_IDE_START_VERSION="1.8.1" INSTALL_IDE_END_VERSION="hourly"
     - INSTALL_IDE_START_VERSION="all"
 
 
@@ -72,6 +73,8 @@ script:
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:mega:cpu=atmega2560" "1.8.1" "false"
   # Test sketch verification with newest IDE versions
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:mega:cpu=atmega2560" "newest" "false"
+  # Test sketch verification with hourly IDE version
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:mega:cpu=atmega2560" "hourly" "false"
   # Test sketch verification with all IDE versions
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:mega:cpu=atmega2560" "all" "false"
 

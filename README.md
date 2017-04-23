@@ -20,8 +20,9 @@ source <(curl -SLs https://raw.githubusercontent.com/per1234/arduino-ci-script/m
 #### Usage
 See https://github.com/per1234/arduino-ci-script/blob/master/.travis.yml for an example of the script in use.
 ##### Special version names:
-  - `all`: Refers to all versions of the Arduino IDE. In the context of `install_ide` this means all IDE versions listed in the script (those that support the command line interface, 1.6.0 and newer). In the context of all other functions this means all IDE versions that were installed via `install_ide`.
-  - `newest`: Refers to the newest version of the Arduino IDE. In the context of `install_ide` this means the newest IDE version listed in the script. In the context of all other functions this means the newest IDE version that was installed via `install_ide`.
+  - `all`: Refers to all versions of the Arduino IDE (including the hourly build). In the context of `install_ide` this means all IDE versions listed in the script (those that support the command line interface, 1.6.0 and newer). In the context of all other functions this means all IDE versions that were installed via `install_ide`.
+  - `newest`: Refers to the newest release version of the Arduino IDE (not including the hourly build). In the context of `install_ide` this means the newest IDE version listed in the script. In the context of all other functions this means the newest IDE version that was installed via `install_ide`.
+  - `hourly`: The hourly build of the Arduino IDE. Note that this is intended for beta testing only.
 
 ##### `set_parameters APPLICATION_FOLDER SKETCHBOOK_FOLDER verboseArduinoOutput`
 Used to pass some parameters from .travis.yml to the script.
