@@ -27,7 +27,7 @@ Used to pass some parameters from .travis.yml to the script.
 
 ##### `install_ide [IDE_VERSIONS]`
 Install all versions of the Arduino IDE specified in the script file.
-- Parameter(optional): **IDE_VERSIONS** - An array containing the versions of the Arduino IDE you want installed. e.g. `'declare -a ide_versions=("1.6.5-r5" "1.6.9" "1.8.2")'`
+- Parameter(optional): **IDE_VERSIONS** - A list of the versions of the Arduino IDE you want installed. e.g. `'("1.6.5-r5" "1.6.9" "1.8.2")'`
 
 ##### `install_package packageID [packageURL]`
 Install a hardware package. Only the **Arduino AVR Boards** package is included with the Arduino IDE installation. Packages are installed to `$HOME/.arduino15/packages.

@@ -54,7 +54,7 @@ function install_ide()
 {
   if [[ "$1" != "" ]]; then
     # IDE versions argument was supplied
-    IDE_VERSIONS="$1"
+    IDE_VERSIONS="declare -a ide_versions=${1}"
   fi
 
   # This runs the command contained in the $IDE_VERSIONS string, thus declaring the array locally as $ide_versions. This must be done in any function that uses the array
