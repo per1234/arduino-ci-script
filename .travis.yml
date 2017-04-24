@@ -10,14 +10,18 @@ env:
     - APPLICATION_FOLDER="/usr/local/share"
     - SKETCHBOOK_FOLDER="${HOME}/Arduino"
   matrix:
-    - INSTALL_IDE_START_VERSION=""
-    - INSTALL_IDE_START_VERSION='("1.6.5-r5" "1.8.1" "hourly")'
-    - INSTALL_IDE_START_VERSION="1.8.1"
-    - INSTALL_IDE_START_VERSION="oldest" INSTALL_IDE_END_VERSION="1.8.1"
-    - INSTALL_IDE_START_VERSION="1.8.0" INSTALL_IDE_END_VERSION="1.8.1"
-    - INSTALL_IDE_START_VERSION="1.8.1" INSTALL_IDE_END_VERSION="newest"
-    - INSTALL_IDE_START_VERSION="1.8.1" INSTALL_IDE_END_VERSION="hourly"
+    # Test install_ide using full version list
     - INSTALL_IDE_START_VERSION="all"
+    # Test install_ide using custom version list
+    - INSTALL_IDE_START_VERSION='("1.6.9" "1.8.1" "hourly")'
+    # Test install_ide using single version
+    - INSTALL_IDE_START_VERSION="1.8.1"
+    # Test install_ide using custom version range
+    - INSTALL_IDE_START_VERSION="1.8.0" INSTALL_IDE_END_VERSION="1.8.2"
+    # Test install_ide using "oldest" special version name (must install up to 1.6.4 for the installation of Arduino SAM Boards to work)
+    - INSTALL_IDE_START_VERSION="oldest" INSTALL_IDE_END_VERSION="1.8.1"
+    # Test install_ide using "newest" special version name
+    - INSTALL_IDE_START_VERSION="1.8.0" INSTALL_IDE_END_VERSION="newest"
 
 
 before_install:
@@ -44,7 +48,7 @@ install:
   - install_package "MiniCore:avr" "https://mcudude.github.io/MiniCore/package_MCUdude_MiniCore_index.json"
 
   # Test library installation from repository (can't do this because there is no library in this repository)
-  #- install_library_from_repo
+  - install_library_from_repo
 
   # Test library install from .zip file
   - install_library_dependency "https://github.com/per1234/WatchdogLog/archive/master.zip"
@@ -72,12 +76,12 @@ script:
   # build_sketch with sketch argument tests:
   # Test sketch verification with specific IDE version
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:mega:cpu=atmega2560" "1.8.1" "false"
-  # Test sketch verification with newest IDE versions
+  # Test sketch verification with "oldest" IDE versions (must use Uno because fqbn for Mega 2560 is different with old IDE versions)
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:uno" "oldest" "false"
+  # Test sketch verification with "newest" IDE versions
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:mega:cpu=atmega2560" "newest" "false"
-  # Test sketch verification with hourly IDE version
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:mega:cpu=atmega2560" "hourly" "false"
-  # Test sketch verification with all IDE versions
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:mega:cpu=atmega2560" "all" "false"
+  # Test sketch verification with all IDE versions (must use Uno because fqbn for Mega 2560 is different with old IDE versions)
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:uno" "all" "false"
 
   # Test sketch verification allowed to fail (this will fail because WatchdogLog is AVR specific)
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WatchdogLog-master/examples/WatchdogLogExample/WatchdogLogExample.ino" "arduino:sam:arduino_due_x_dbg" "newest" "true"
@@ -85,10 +89,12 @@ script:
   # build_sketch with folder argument tests:
   # Test build_sketch with specific IDE version
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:mega:cpu=atmega2560" "1.8.1" "false"
-  # Test build_sketch with newest IDE versions
+  # Test build_sketch with "oldest" IDE version (must use Uno because fqbn for Mega 2560 is different with old IDE versions)
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "oldest" "false"
+  # Test build_sketch with "newest" IDE version
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:mega:cpu=atmega2560" "newest" "false"
-  # Test build_sketch with all IDE versions
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:mega:cpu=atmega2560" "all" "false"
+  # Test build_sketch with all IDE versions (must use Uno because fqbn for Mega 2560 is different with old IDE versions)
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "all" "false"
 
   # Test build_sketch allowed to fail (this will fail because WatchdogLog is AVR specific)
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WatchdogLog-master/examples" "arduino:sam:arduino_due_x_dbg" "newest" "true"
