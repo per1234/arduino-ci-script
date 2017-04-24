@@ -33,7 +33,7 @@ Used to pass some parameters from .travis.yml to the script.
 
 ##### `install_ide [IDE_VERSIONS]`
 ##### `install_ide [startVersion [endVersion]]`
-Install all versions of the Arduino IDE specified in the script file.
+Install all versions of the Arduino IDE specified in the script file. If no arguments are supplied all IDE versions will be installed.
 - Parameter(optional): **IDE_VERSIONS** - A list of the versions of the Arduino IDE you want installed. e.g. `'("1.6.5-r5" "1.6.9" "1.8.2")'`
 - Parameter(optional): **startVersion** - The oldest version of the Arduino IDE to install.
 - Parameter(optional): **endVersion** - The newest version of the Arduino IDE to install. If this argument is omitted then ONLY startVersion will be installed.
