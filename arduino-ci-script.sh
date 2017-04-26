@@ -18,9 +18,9 @@ IDE_VERSIONS_DECLARATION="declare -a ide_versions="
 IDE_VERSIONS="$IDE_VERSIONS_DECLARATION"'("1.5.2" "1.5.3" "1.5.4" "1.5.5" "1.5.6-r2" "1.5.7" "1.5.8" "1.6.0" "1.6.1" "1.6.3" "1.6.4" "1.6.5" "1.6.5-r4" "1.6.5-r5" "1.6.6" "1.6.7" "1.6.8" "1.6.9" "1.6.10" "1.6.11" "1.6.12" "1.6.13" "1.8.0" "1.8.1" "1.8.2" "hourly")'
 
 
-TEMPORARY_FOLDER="$HOME/temporary"
-VERIFICATION_OUTPUT_FILENAME="$TEMPORARY_FOLDER/verification_output.txt"
-REPORT_FILENAME="$HOME/report.txt"
+TEMPORARY_FOLDER="${HOME}/temporary"
+VERIFICATION_OUTPUT_FILENAME="${TEMPORARY_FOLDER}/verification_output.txt"
+REPORT_FILENAME="${HOME}/report.txt"
 # The Arduino IDE returns exit code 255 after a failed file signature verification of the boards manager JSON file. This does not indicate an issue with the sketch and the problem may go away after a retry.
 SKETCH_VERIFY_RETRIES=3
 
