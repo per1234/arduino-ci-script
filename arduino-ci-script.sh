@@ -45,6 +45,11 @@ function set_parameters()
   SKETCHBOOK_FOLDER="$2"
   local verboseArduinoOutput="$3"
 
+  # Create the sketchbook folder if it doesn't already exist
+  if ! [[ -d "$SKETCHBOOK_FOLDER" ]]; then
+    mkdir --parents "$SKETCHBOOK_FOLDER"
+  fi
+
   if [[ "$verboseArduinoOutput" == "true" ]]; then
     VERBOSE_BUILD="--verbose"
   fi
@@ -156,11 +161,14 @@ function install_ide()
   sudo ln -s "$APPLICATION_FOLDER/arduino/arduino" /usr/local/bin/arduino
 
   # Set the preferences
-  # Create the sketchbook folder. The location can't be set in preferences if the folder doesn't exist.
-  mkdir "$SKETCHBOOK_FOLDER"
   # --pref option is only supported by Arduino IDE 1.5.6 and newer
   local re="1.5.[0-5]"
   if ! [[ "$NEWEST_IDE_VERSION" =~ $re ]]; then
+    # Create the sketchbook folder if it doesn't already exist. The location can't be set in preferences if the folder doesn't exist.
+    if ! [[ -d "$SKETCHBOOK_FOLDER" ]]; then
+      mkdir --parents "$SKETCHBOOK_FOLDER"
+    fi
+
     # --save-prefs was added in Arduino IDE 1.5.8
     local re="1.5.[6-7]"
     if ! [[ "$NEWEST_IDE_VERSION" =~ $re ]]; then
@@ -215,7 +223,7 @@ function install_library_from_repo()
 {
   # https://docs.travis-ci.com/user/environment-variables#Global-Variables
   local library_name="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
-  mkdir "${SKETCHBOOK_FOLDER}/libraries/$library_name"
+  mkdir --parents "${SKETCHBOOK_FOLDER}/libraries/$library_name"
   cd "$TRAVIS_BUILD_DIR"
   cp -r -v * "${SKETCHBOOK_FOLDER}/libraries/${library_name}"
   # * doesn't copy .travis.yml but that file will be present in the user's installation so it should be there for the tests too
@@ -228,6 +236,11 @@ function install_library_from_repo()
 function install_library_dependency()
 {
   local libraryDependencyURL="$1"
+
+  # Create the libraries folder if it doesn't already exist
+  if ! [[ -d "${SKETCHBOOK_FOLDER}/libraries" ]]; then
+    mkdir --parents "${SKETCHBOOK_FOLDER}/libraries"
+  fi
 
   if [[ "$libraryDependencyURL" =~ \.git$ ]]; then
     # Clone the repository
