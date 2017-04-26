@@ -200,22 +200,30 @@ function uninstall_ide_version()
 # Install hardware packages
 function install_package()
 {
-  local packageID="$1"
-  local packageURL="$2"
+  # Check if the newest installed IDE version supports --install-boards
+  local regex1="1.5.[0-9]"
+  local regex2="1.6.[0-3]"
+  if [[ "$NEWEST_IDE_VERSION" =~ $regex1 || "$NEWEST_IDE_VERSION" =~ $regex2 ]]; then
+    echo "ERROR: --install-boards option is not supported by the newest version of the Arduino IDE you have installed. You must have Arduino IDE 1.6.4 or newer installed to use this function."
+    return 1
+  else
+    local packageID="$1"
+    local packageURL="$2"
 
-  # Temporarily install the latest IDE version to use for the package installation
-  install_ide_version "$NEWEST_IDE_VERSION"
+    # Temporarily install the latest IDE version to use for the package installation
+    install_ide_version "$NEWEST_IDE_VERSION"
 
-  # If defined add the boards manager URL to preferences
-  if [[ "$packageURL" != "" ]]; then
-    arduino --pref boardsmanager.additional.urls="$packageURL" --save-prefs
+    # If defined add the boards manager URL to preferences
+    if [[ "$packageURL" != "" ]]; then
+      arduino --pref boardsmanager.additional.urls="$packageURL" --save-prefs
+    fi
+
+    # Install the package
+    arduino --install-boards "$packageID"
+
+    # Uninstall the IDE
+    uninstall_ide_version "$NEWEST_IDE_VERSION"
   fi
-
-  # Install the package
-  arduino --install-boards "$packageID"
-
-  # Uninstall the IDE
-  uninstall_ide_version "$NEWEST_IDE_VERSION"
 }
 
 
