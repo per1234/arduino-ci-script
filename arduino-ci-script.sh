@@ -29,8 +29,9 @@ SKETCH_VERIFY_RETRIES=3
 echo "Build Timestamp (UTC)"$'\t'"Build #"$'\t'"Branch"$'\t'"Commit"$'\t'"Commit Message"$'\t'"Sketch Filename"$'\t'"Board ID"$'\t'"IDE Version"$'\t'"Program Storage (bytes)"$'\t'"Dynamic Memory (bytes)"$'\t'"# Warnings"$'\t'"Allow Failure"$'\t'"Exit Code" > "$REPORT_FILENAME"
 
 # Create the temporary folder
-mkdir "$TEMPORARY_FOLDER"
-
+if ! [[ -d "$TEMPORARY_FOLDER" ]]; then
+  mkdir --parents "$TEMPORARY_FOLDER"
+fi
 
 # Start the virtual display required by the Arduino IDE CLI: https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#bugs
 # based on https://learn.adafruit.com/continuous-integration-arduino-and-you/testing-your-project
