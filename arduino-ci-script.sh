@@ -60,8 +60,8 @@ function set_parameters()
 function install_ide()
 {
   if [[ "$1" != "" ]]; then
-    local re="\("
-    if [[ "$1" =~ $re ]]; then
+    local regex="\("
+    if [[ "$1" =~ $regex ]]; then
       # IDE versions list was supplied
       IDE_VERSIONS="${IDE_VERSIONS_DECLARATION}${1}"
     elif [[ "$1" != "all" ]]; then
@@ -126,8 +126,8 @@ function install_ide()
 
   for IDEversion in "${ide_versions[@]}"; do
     # Determine download file extension
-    local re="1.5.[0-9]"
-    if [[ "$IDEversion" =~ $re ]]; then
+    local regex="1.5.[0-9]"
+    if [[ "$IDEversion" =~ $regex ]]; then
       # The download file extension prior to 1.6.0 is .tgz
       local downloadFileExtension="tgz"
     else
@@ -162,16 +162,16 @@ function install_ide()
 
   # Set the preferences
   # --pref option is only supported by Arduino IDE 1.5.6 and newer
-  local re="1.5.[0-5]"
-  if ! [[ "$NEWEST_IDE_VERSION" =~ $re ]]; then
+  local regex="1.5.[0-5]"
+  if ! [[ "$NEWEST_IDE_VERSION" =~ $regex ]]; then
     # Create the sketchbook folder if it doesn't already exist. The location can't be set in preferences if the folder doesn't exist.
     if ! [[ -d "$SKETCHBOOK_FOLDER" ]]; then
       mkdir --parents "$SKETCHBOOK_FOLDER"
     fi
 
     # --save-prefs was added in Arduino IDE 1.5.8
-    local re="1.5.[6-7]"
-    if ! [[ "$NEWEST_IDE_VERSION" =~ $re ]]; then
+    local regex="1.5.[6-7]"
+    if ! [[ "$NEWEST_IDE_VERSION" =~ $regex ]]; then
       local savePrefs="--save-prefs"
     fi
     arduino --pref compiler.warning_level=all --pref sketchbook.path="$SKETCHBOOK_FOLDER" "$savePrefs"
@@ -344,22 +344,22 @@ function build_this_sketch()
 
   # Parse through the output from the sketch verification to count warnings and determine the compile size
   local warningCount=0
-  while read line; do
+  while read outputFileLine; do
     # Determine program storage memory usage
-    local re="Sketch uses ([0-9,]+) *"
-    if [[ "$line" =~ $re ]] > /dev/null; then
+    local regex="Sketch uses ([0-9,]+) *"
+    if [[ "$outputFileLine" =~ $regex ]] > /dev/null; then
       local programStorage=${BASH_REMATCH[1]}
     fi
 
     # Determine dynamic memory usage
-    local re="Global variables use ([0-9,]+) *"
-    if [[ "$line" =~ $re ]] > /dev/null; then
+    local regex="Global variables use ([0-9,]+) *"
+    if [[ "$outputFileLine" =~ $regex ]] > /dev/null; then
       local dynamicMemory=${BASH_REMATCH[1]}
     fi
 
     # Increment warning count
-    local re="warning: "
-    if [[ "$line" =~ $re ]] > /dev/null; then
+    local regex="warning: "
+    if [[ "$outputFileLine" =~ $regex ]] > /dev/null; then
       local warningCount=$((warningCount + 1))
     fi
   done < "$VERIFICATION_OUTPUT_FILENAME"
