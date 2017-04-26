@@ -159,7 +159,7 @@ function install_ide()
   # Temporarily install the latest IDE version
   install_ide_version "$NEWEST_IDE_VERSION"
   # Create the link that will be used for all IDE installations
-  sudo ln -s "$APPLICATION_FOLDER/arduino/arduino" /usr/local/bin/arduino
+  sudo ln --symbolic "$APPLICATION_FOLDER/arduino/arduino" /usr/local/bin/arduino
 
   # Set the preferences
   # --pref option is only supported by Arduino IDE 1.5.6 and newer
@@ -226,9 +226,9 @@ function install_library_from_repo()
   local library_name="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
   mkdir --parents "${SKETCHBOOK_FOLDER}/libraries/$library_name"
   cd "$TRAVIS_BUILD_DIR"
-  cp -r -v * "${SKETCHBOOK_FOLDER}/libraries/${library_name}"
+  cp --recursive --verbose * "${SKETCHBOOK_FOLDER}/libraries/${library_name}"
   # * doesn't copy .travis.yml but that file will be present in the user's installation so it should be there for the tests too
-  cp -v "${TRAVIS_BUILD_DIR}/.travis.yml" "${SKETCHBOOK_FOLDER}/libraries/${library_name}"
+  cp --verbose "${TRAVIS_BUILD_DIR}/.travis.yml" "${SKETCHBOOK_FOLDER}/libraries/${library_name}"
 }
 
 
