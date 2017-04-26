@@ -51,7 +51,7 @@ Install a hardware package. Only the **Arduino AVR Boards** package is included 
 - Parameter(optional): **packageURL** - The URL of the Boards Manager JSON file for 3rd party hardware packages. This can be omitted for hardware packages that are included in the official Arduino JSON file (e.g. Arduino SAM Boards, Arduino SAMD Boards, Intel Curie Boards).
 
 ##### `install_library_from_repo`
-Install the library from the current repository. Assumes the library is in the root of the repository.
+Install the library from the current repository. Assumes the library is in the root of the repository. The library is installed to the `libraries` subfolder of the sketchbook folder.
 
 ##### `install_library_dependency libraryDependencyURL`
 Install a library to the `libraries` subfolder of the sketchbook folder.
