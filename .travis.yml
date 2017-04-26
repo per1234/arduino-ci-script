@@ -54,6 +54,8 @@ install:
   - install_library_dependency "https://github.com/per1234/WatchdogLog/archive/master.zip"
   # Test library install from git repo
   - install_library_dependency "https://github.com/per1234/EEPROMallocation.git"
+  # Test library install from Library Manager
+  - install_library_dependency_via_library_manager "Adafruit NeoPixel"
 
 
 script:
@@ -72,6 +74,8 @@ script:
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WatchdogLog-master/examples/WatchdogLogExample/WatchdogLogExample.ino" "arduino:avr:mega:cpu=atmega2560" "newest" "false"
   # Test sketch verification using library installed from .git
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/EEPROMallocation/examples/EEPROMallocationExample/EEPROMallocationExample.ino" "arduino:avr:mega:cpu=atmega2560" "newest" "false"
+  # Test sketch verification using library installed from Library Manager
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/Adafruit_NeoPixel/examples/simple/simple.ino" "arduino:avr:mega:cpu=atmega2560" "newest" "false"
 
   # build_sketch with sketch argument tests:
   # Test sketch verification with specific IDE version

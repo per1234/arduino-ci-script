@@ -273,6 +273,30 @@ function install_library_dependency()
 }
 
 
+# Install a library that is part of the Library Manager index
+function install_library_dependency_via_library_manager()
+{
+  # Check if the newest installed IDE version supports --install-library
+  local regex1="1.5.[0-9]"
+  local regex2="1.6.[0-3]"
+  if [[ "$NEWEST_IDE_VERSION" =~ $regex1 || "$NEWEST_IDE_VERSION" =~ $regex2 ]]; then
+    echo "ERROR: --install-library option is not supported by the newest version of the Arduino IDE you have installed. You must have Arduino IDE 1.6.4 or newer installed to use this function."
+    return 1
+  else
+    local libraryDependencyName="$1"
+
+    # Temporarily install the latest IDE version to use for the package installation
+    install_ide_version "$NEWEST_IDE_VERSION"
+
+     # Install the package
+    arduino --install-library "$libraryDependencyName"
+
+    # Uninstall the IDE
+    uninstall_ide_version "$NEWEST_IDE_VERSION"
+  fi
+}
+
+
 # Verify the sketch
 function build_sketch()
 {
