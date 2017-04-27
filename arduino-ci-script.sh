@@ -227,24 +227,9 @@ function install_package()
 }
 
 
-# Install the library from the current repository
-function install_library_from_repo()
+function install_library()
 {
-  # https://docs.travis-ci.com/user/environment-variables#Global-Variables
-  local library_name="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
-  mkdir --parents "${SKETCHBOOK_FOLDER}/libraries/$library_name"
-  cd "$TRAVIS_BUILD_DIR"
-  cp --recursive --verbose * "${SKETCHBOOK_FOLDER}/libraries/${library_name}"
-  # * doesn't copy .travis.yml but that file will be present in the user's installation so it should be there for the tests too
-  cp --verbose "${TRAVIS_BUILD_DIR}/.travis.yml" "${SKETCHBOOK_FOLDER}/libraries/${library_name}"
-}
-
-
-# Install external libraries
-# Note: this assumes the library is in the root of the file
-function install_library_dependency()
-{
-  local libraryDependencyURL="$1"
+  local libraryIdentifier="$1"
   local newFolderName="$2"
 
   # Create the libraries folder if it doesn't already exist
@@ -252,53 +237,67 @@ function install_library_dependency()
     mkdir --parents "${SKETCHBOOK_FOLDER}/libraries"
   fi
 
-  if [[ "$libraryDependencyURL" =~ \.git$ ]]; then
-    # Clone the repository
-    cd "${SKETCHBOOK_FOLDER}/libraries"
-    if [[ "$newFolderName" == "" ]]; then
-      git clone "$libraryDependencyURL"
+  local regex="://"
+  if [[ "$libraryIdentifier" =~ $regex ]]; then
+    # The argument is a URL
+    # Note: this assumes the library is in the root of the file
+    if [[ "$libraryIdentifier" =~ \.git$ ]]; then
+      # Clone the repository
+      cd "${SKETCHBOOK_FOLDER}/libraries"
+      if [[ "$newFolderName" == "" ]]; then
+        git clone "$libraryIdentifier"
+      else
+        git clone "$libraryIdentifier" "$newFolderName"
+      fi
+
     else
-      git clone "$libraryDependencyURL" "$newFolderName"
+      # Assume it's a compressed file
+
+      # Download the file to the temporary folder
+      cd "$TEMPORARY_FOLDER"
+      # Clean up the temporary folder
+      rm -f *.*
+      wget "$libraryIdentifier"
+
+      # This script handles any compressed file type
+      source "${TRAVIS_BUILD_DIR}/extract.sh"
+      extract *.*
+      # Clean up the temporary folder
+      rm -f *.*
+      # Install the library
+      mv * "${SKETCHBOOK_FOLDER}/libraries/${newFolderName}"
     fi
 
+  elif [[ "$libraryIdentifier" == "" ]]; then
+    # Install library from the repository
+    # https://docs.travis-ci.com/user/environment-variables#Global-Variables
+    local library_name="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
+    mkdir --parents "${SKETCHBOOK_FOLDER}/libraries/$library_name"
+    cd "$TRAVIS_BUILD_DIR"
+    cp --recursive --verbose * "${SKETCHBOOK_FOLDER}/libraries/${library_name}"
+    # * doesn't copy .travis.yml but that file will be present in the user's installation so it should be there for the tests too
+    cp --verbose "${TRAVIS_BUILD_DIR}/.travis.yml" "${SKETCHBOOK_FOLDER}/libraries/${library_name}"
+
   else
-    # Assume it's a compressed file
+    # Install a library that is part of the Library Manager index
+    # Check if the newest installed IDE version supports --install-library
+    local regex1="1.5.[0-9]"
+    local regex2="1.6.[0-3]"
+    if [[ "$NEWEST_IDE_VERSION" =~ $regex1 || "$NEWEST_IDE_VERSION" =~ $regex2 ]]; then
+      echo "ERROR: --install-library option is not supported by the newest version of the Arduino IDE you have installed. You must have Arduino IDE 1.6.4 or newer installed to use this function."
+      return 1
+    else
+      local libraryName="$1"
 
-    # Download the file to the temporary folder
-    cd "$TEMPORARY_FOLDER"
-    wget "$libraryDependencyURL"
+      # Temporarily install the latest IDE version to use for the library installation
+      install_ide_version "$NEWEST_IDE_VERSION"
 
-    # This script handles any compressed file type
-    source "${TRAVIS_BUILD_DIR}/extract.sh"
-    extract *.*
-    # Clean up the temporary folder
-    rm *.*
-    # Install the library
-    mv * "${SKETCHBOOK_FOLDER}/libraries/${newFolderName}"
-  fi
-}
+       # Install the library
+      arduino --install-library "$libraryName"
 
-
-# Install a library that is part of the Library Manager index
-function install_library_dependency_via_library_manager()
-{
-  # Check if the newest installed IDE version supports --install-library
-  local regex1="1.5.[0-9]"
-  local regex2="1.6.[0-3]"
-  if [[ "$NEWEST_IDE_VERSION" =~ $regex1 || "$NEWEST_IDE_VERSION" =~ $regex2 ]]; then
-    echo "ERROR: --install-library option is not supported by the newest version of the Arduino IDE you have installed. You must have Arduino IDE 1.6.4 or newer installed to use this function."
-    return 1
-  else
-    local libraryDependencyName="$1"
-
-    # Temporarily install the latest IDE version to use for the package installation
-    install_ide_version "$NEWEST_IDE_VERSION"
-
-     # Install the package
-    arduino --install-library "$libraryDependencyName"
-
-    # Uninstall the IDE
-    uninstall_ide_version "$NEWEST_IDE_VERSION"
+      # Uninstall the IDE
+      uninstall_ide_version "$NEWEST_IDE_VERSION"
+    fi
   fi
 }
 

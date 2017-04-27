@@ -50,17 +50,17 @@ Install a hardware package. Only the **Arduino AVR Boards** package is included 
 - Parameter: **packageID** - `package name:platform architecture[:version]`. If `version` is omitted the most recent version will be installed. e.g. `arduino:samd` will install the most recent version of **Arduino SAM Boards**.
 - Parameter(optional): **packageURL** - The URL of the Boards Manager JSON file for 3rd party hardware packages. This can be omitted for hardware packages that are included in the official Arduino JSON file (e.g. Arduino SAM Boards, Arduino SAMD Boards, Intel Curie Boards).
 
-##### `install_library_from_repo`
+##### `install_library`
 Install the library from the current repository. Assumes the library is in the root of the repository. The library is installed to the `libraries` subfolder of the sketchbook folder.
 
-##### `install_library_dependency libraryDependencyURL [newFolderName]`
-Install a library to the `libraries` subfolder of the sketchbook folder.
-- Parameter: **libraryDependencyURL** - The URL of the library download. This can be any compressed file format or a .git file will cause that repository to be cloned. Assumes the library is located in the root of the file.
-- Parameter(optional): **newFolderName** - Folder name to rename the installed library folder to. This can be useful if the default folder name of the downloaded file is problematic. The Arduino IDE gives include file preference when the filename matches the library folder name. GitHub's "Download ZIP" file is given the folder name {repository name}-{branch name}. Library folder names that contain `-` or `.` are not compatible with Arduino IDE 1.5.6 and older, arduino will hang if it's started with a library using an invalid folder name installed.
-
-##### `install_library_dependency_via_library_manager libraryName`
+##### `install_library libraryName`
 Install a library that is listed in the Arduino Library Manager index. The library is installed to the `libraries` subfolder of the sketchbook folder. You must call `install_ide` before this function. This feature is only available with Arduino IDE 1.6.4 and newer installed.
 - Parameter: **libraryName** - The name of the library to install. You can specify a version separated from the name by a colon, e.g. "LiquidCrystal I2C:1.1.2". If no version is specified the most recent version will be installed. You can also specify comma-separated lists of library names.
+
+##### `install_library [[libraryURL] newFolderName]`
+Install a library from a URL (either compressed file download or clone Git repository). The library is installed to the `libraries` subfolder of the sketchbook folder.
+- Parameter(optional): **libraryURL** - The URL of the library download or library name in the Arduino Library Manager. The protocol component of the URL (e.g. `http://`, `https://`) is required. This can be any compressed file format or a .git file will cause that repository to be cloned. Assumes the library is located in the root of the file.
+- Parameter(optional): **newFolderName** - Folder name to rename the installed library folder to. This parameter is only used if the library identifier is a URL (installation from a compressed file or Git repository) This can be useful if the default folder name of the downloaded file is problematic. The Arduino IDE gives include file preference when the filename matches the library folder name. GitHub's "Download ZIP" file is given the folder name {repository name}-{branch name}. Library folder names that contain `-` or `.` are not compatible with Arduino IDE 1.5.6 and older, arduino will hang if it's started with a library using an invalid folder name installed.
 
 ##### `build_sketch sketchPath boardID IDEversion allowFail`
 Pass some parameters from .travis.yml to the script. `build_sketch` will echo the arduino exit code to the log, which is documented at https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#exit-status.

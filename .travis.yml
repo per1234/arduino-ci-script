@@ -48,14 +48,17 @@ install:
   - install_package "MiniCore:avr" "https://mcudude.github.io/MiniCore/package_MCUdude_MiniCore_index.json"
 
   # Test library installation from repository (can't do this because there is no library in this repository)
-  - install_library_from_repo
-
-  # Test library install from .zip file. If the rename doesn't work then any job verifying with Arduino IDE 1.5.6 or older will hang because GitHub changes the folder name to WatchdogLog-master, which is not a valid folder name on those IDE versions.
-  - install_library_dependency "https://github.com/per1234/WatchdogLog/archive/master.zip" "WatchdogLog"
+  # - install_library
+  # Test library install from .zip file. A non-GitHub library download must be used because GitHub appends -{branch name} or -{release version} to the .zip downloads and having a library folder installed whos name contains "-" causes arduino 1.5.6 or older to hang.
+  - install_library "https://bitbucket.org/teckel12/arduino-new-ping/downloads/NewPing_v1.8.zip"
+  # Test library install from .zip file with rename. If the rename doesn't work then any job verifying with Arduino IDE 1.5.6 or older will hang because GitHub changes the folder name to WatchdogLog-master, which is not a valid folder name on those IDE versions.
+  - install_library "https://github.com/per1234/WatchdogLog/archive/master.zip" "WatchdogLog"
   # Test library install from git repo
-  - install_library_dependency "https://github.com/per1234/EEPROMallocation.git"
+  - install_library "https://github.com/per1234/EEPROMallocation.git"
+  # Test library install from git repo with rename
+  - install_library "https://github.com/per1234/MouseTo.git" "MouseToRename"
   # Test library install from Library Manager
-  - install_library_dependency_via_library_manager "Adafruit NeoPixel"
+  - install_library "Adafruit NeoPixel"
 
 
 script:
@@ -71,9 +74,13 @@ script:
 
   # Installed library tests:
   # Test sketch verification using library installed from .zip
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/NewPing/examples/NewPingExample/NewPingExample.pde" "arduino:avr:mega:cpu=atmega2560" "newest" "false"
+  # Test sketch verification using library installed from .zip with rename
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WatchdogLog/examples/WatchdogLogExample/WatchdogLogExample.ino" "arduino:avr:mega:cpu=atmega2560" "newest" "false"
   # Test sketch verification using library installed from .git
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/EEPROMallocation/examples/EEPROMallocationExample/EEPROMallocationExample.ino" "arduino:avr:mega:cpu=atmega2560" "newest" "false"
+  # Test sketch verification using library installed from .git with rename
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/MouseToRename/examples/BasicUsage/BasicUsage.ino" "arduino:avr:leonardo" "newest" "false"
   # Test sketch verification using library installed from Library Manager
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/Adafruit_NeoPixel/examples/simple/simple.ino" "arduino:avr:mega:cpu=atmega2560" "newest" "false"
 
