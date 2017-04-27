@@ -74,7 +74,7 @@ Pass some parameters from .travis.yml to the script. `build_sketch` will echo th
 - Parameter: **allowFail** - `true` or `false`. Allow the verification to fail without causing the CI build to fail.
 
 ##### `display_report`
-Echo a tab separated report of all verification results to the log. The report consists of:
+Echo a tab separated report of all verification results to the log. The report is located at `$HOME/report.txt`. The report consists of:
 - Build timestamp
 - Travis build number
 - Branch
