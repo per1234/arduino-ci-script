@@ -324,12 +324,12 @@ function install_library()
   elif [[ "$libraryIdentifier" == "" ]]; then
     # Install library from the repository
     # https://docs.travis-ci.com/user/environment-variables#Global-Variables
-    local library_name="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
-    mkdir --parents "${SKETCHBOOK_FOLDER}/libraries/$library_name"
+    local libraryName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
+    mkdir --parents "${SKETCHBOOK_FOLDER}/libraries/$libraryName"
     cd "$TRAVIS_BUILD_DIR"
-    cp --recursive --verbose * "${SKETCHBOOK_FOLDER}/libraries/${library_name}"
+    cp --recursive --verbose * "${SKETCHBOOK_FOLDER}/libraries/${libraryName}"
     # * doesn't copy .travis.yml but that file will be present in the user's installation so it should be there for the tests too
-    cp --verbose "${TRAVIS_BUILD_DIR}/.travis.yml" "${SKETCHBOOK_FOLDER}/libraries/${library_name}"
+    cp --verbose "${TRAVIS_BUILD_DIR}/.travis.yml" "${SKETCHBOOK_FOLDER}/libraries/${libraryName}"
 
   else
     # Install a library that is part of the Library Manager index
