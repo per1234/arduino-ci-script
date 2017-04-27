@@ -245,6 +245,7 @@ function install_library_from_repo()
 function install_library_dependency()
 {
   local libraryDependencyURL="$1"
+  local newFolderName="$2"
 
   # Create the libraries folder if it doesn't already exist
   if ! [[ -d "${SKETCHBOOK_FOLDER}/libraries" ]]; then
@@ -254,7 +255,12 @@ function install_library_dependency()
   if [[ "$libraryDependencyURL" =~ \.git$ ]]; then
     # Clone the repository
     cd "${SKETCHBOOK_FOLDER}/libraries"
-    git clone "$libraryDependencyURL"
+    if [[ "$newFolderName" == "" ]]; then
+      git clone "$libraryDependencyURL"
+    else
+      git clone "$libraryDependencyURL" "$newFolderName"
+    fi
+
   else
     # Assume it's a compressed file
 
@@ -268,7 +274,7 @@ function install_library_dependency()
     # Clean up the temporary folder
     rm *.*
     # Install the library
-    mv * "${SKETCHBOOK_FOLDER}/libraries"
+    mv * "${SKETCHBOOK_FOLDER}/libraries/${newFolderName}"
   fi
 }
 

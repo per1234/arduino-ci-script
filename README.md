@@ -53,9 +53,10 @@ Install a hardware package. Only the **Arduino AVR Boards** package is included 
 ##### `install_library_from_repo`
 Install the library from the current repository. Assumes the library is in the root of the repository. The library is installed to the `libraries` subfolder of the sketchbook folder.
 
-##### `install_library_dependency libraryDependencyURL`
+##### `install_library_dependency libraryDependencyURL [newFolderName]`
 Install a library to the `libraries` subfolder of the sketchbook folder.
 - Parameter: **libraryDependencyURL** - The URL of the library download. This can be any compressed file format or a .git file will cause that repository to be cloned. Assumes the library is located in the root of the file.
+- Parameter(optional): **newFolderName** - Folder name to rename the installed library folder to. This can be useful if the default folder name of the downloaded file is problematic. The Arduino IDE gives include file preference when the filename matches the library folder name. GitHub's "Download ZIP" file is given the folder name {repository name}-{branch name}. Library folder names that contain `-` or `.` are not compatible with Arduino IDE 1.5.6 and older, arduino will hang if it's started with a library using an invalid folder name installed.
 
 ##### `install_library_dependency_via_library_manager libraryName`
 Install a library that is listed in the Arduino Library Manager index. The library is installed to the `libraries` subfolder of the sketchbook folder. You must call `install_ide` before this function. This feature is only available with Arduino IDE 1.6.4 and newer installed.

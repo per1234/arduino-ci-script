@@ -50,8 +50,8 @@ install:
   # Test library installation from repository (can't do this because there is no library in this repository)
   - install_library_from_repo
 
-  # Test library install from .zip file
-  - install_library_dependency "https://github.com/per1234/WatchdogLog/archive/master.zip"
+  # Test library install from .zip file. If the rename doesn't work then any job verifying with Arduino IDE 1.5.6 or older will hang because GitHub changes the folder name to WatchdogLog-master, which is not a valid folder name on those IDE versions.
+  - install_library_dependency "https://github.com/per1234/WatchdogLog/archive/master.zip" "WatchdogLog"
   # Test library install from git repo
   - install_library_dependency "https://github.com/per1234/EEPROMallocation.git"
   # Test library install from Library Manager
@@ -71,7 +71,7 @@ script:
 
   # Installed library tests:
   # Test sketch verification using library installed from .zip
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WatchdogLog-master/examples/WatchdogLogExample/WatchdogLogExample.ino" "arduino:avr:mega:cpu=atmega2560" "newest" "false"
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WatchdogLog/examples/WatchdogLogExample/WatchdogLogExample.ino" "arduino:avr:mega:cpu=atmega2560" "newest" "false"
   # Test sketch verification using library installed from .git
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/EEPROMallocation/examples/EEPROMallocationExample/EEPROMallocationExample.ino" "arduino:avr:mega:cpu=atmega2560" "newest" "false"
   # Test sketch verification using library installed from Library Manager
@@ -88,7 +88,7 @@ script:
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:uno" "all" "false"
 
   # Test sketch verification allowed to fail (this will fail because WatchdogLog is AVR specific)
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WatchdogLog-master/examples/WatchdogLogExample/WatchdogLogExample.ino" "arduino:sam:arduino_due_x_dbg" "newest" "true"
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WatchdogLog/examples/WatchdogLogExample/WatchdogLogExample.ino" "arduino:sam:arduino_due_x_dbg" "newest" "true"
 
   # build_sketch with folder argument tests:
   # Test build_sketch with specific IDE version
@@ -101,7 +101,7 @@ script:
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "all" "false"
 
   # Test build_sketch allowed to fail (this will fail because WatchdogLog is AVR specific)
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WatchdogLog-master/examples" "arduino:sam:arduino_due_x_dbg" "newest" "true"
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WatchdogLog/examples" "arduino:sam:arduino_due_x_dbg" "newest" "true"
 
   - display_report
   - check_success
