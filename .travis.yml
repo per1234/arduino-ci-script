@@ -42,6 +42,8 @@ install:
   - install_ide "$INSTALL_IDE_START_VERSION" "$INSTALL_IDE_END_VERSION"
 
   # Install hardware packages
+  # Test package install from this repository (can't do this because the repository isn't a hardware package)
+  # - install_package
   # Test Boards Manager package install without URL
   - install_package "arduino:sam"
   # Test Boards Manager package install with URL

@@ -239,6 +239,16 @@ function install_package()
       mv * "${SKETCHBOOK_FOLDER}/hardware/"
     fi
 
+  elif [[ "$1" == "" ]]; then
+    # Install hardware package from this repository
+    # https://docs.travis-ci.com/user/environment-variables#Global-Variables
+    local packageName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
+    mkdir --parents "${SKETCHBOOK_FOLDER}/hardware/$packageName"
+    cd "$TRAVIS_BUILD_DIR"
+    cp --recursive --verbose * "${SKETCHBOOK_FOLDER}/hardware/${packageName}"
+    # * doesn't copy .travis.yml but that file will be present in the user's installation so it should be there for the tests too
+    cp --verbose "${TRAVIS_BUILD_DIR}/.travis.yml" "${SKETCHBOOK_FOLDER}/hardware/${packageName}"
+
   else
     # Install package via Boards Manager
 
