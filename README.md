@@ -18,11 +18,11 @@ source <(curl -SLs https://raw.githubusercontent.com/per1234/arduino-ci-script/m
 
 
 #### Usage
-See https://github.com/per1234/arduino-ci-script/blob/master/.travis.yml for an example of the script in use.
+See https://github.com/per1234/arduino-ci-script/blob/master/.travis.yml for an example of the script in use. Please configure your continuous integration system to make the minimum number of downloads and sketch verifications necessary to effectively test your code. This will prevent wasting Arduino and Travis CI's bandwidth while making the builds run fast.
 ##### Special version names:
   - `all`: Refers to all versions of the Arduino IDE (including the hourly build). In the context of `install_ide` this means all IDE versions listed in the script (those that support the command line interface, 1.5.2 and newer). In the context of all other functions this means all IDE versions that were installed via `install_ide`.
   - `oldest`: The oldest release version of the Arduino IDE. In the context of `install_ide` this is the oldest of the IDE versions listed in the script (1.5.2, the first version to have a command line interface). In the context of build_sketch this means the oldest IDE version that was installed via `install_ide`.
-  - `newest`: Refers to the newest release version of the Arduino IDE (not including the hourly build). In the context of `install_ide` this means the newest IDE version listed in the script. In the context of all other functions this means the newest IDE version that was installed via `install_ide`.
+  - `newest`: Refers to the newest release version of the Arduino IDE (not including the hourly build unless hourly is the only version on the list). In the context of `install_ide` this means the newest IDE version listed in the script. In the context of all other functions this means the newest IDE version that was installed via `install_ide`.
   - `hourly`: The hourly build of the Arduino IDE. Note that this is intended for beta testing only.
 
 ##### `set_parameters APPLICATION_FOLDER SKETCHBOOK_FOLDER verboseArduinoOutput`
@@ -33,7 +33,7 @@ Used to pass some parameters from .travis.yml to the script.
 
 ##### `install_ide [IDE_VERSIONS]`
 ##### `install_ide [startVersion [endVersion]]`
-Install all versions of the Arduino IDE specified in the script file. If no arguments are supplied all IDE versions will be installed.
+Install version(s) of the Arduino IDE. If no arguments are supplied all IDE versions will be installed. I have defined all versions of the Arduino IDE that have a command line interface in the script for the sake of being complete but I really don't see much reason for testing with the 1.5.x versions of the Arduino IDE. Please only install the IDE versions you actually need for your test to avoid wasting Arduino's bandwidth. This will also result in the builds running faster.
 - Parameter(optional): **IDE_VERSIONS** - A list of the versions of the Arduino IDE you want installed, in order from oldest to newest. e.g. `'("1.6.5-r5" "1.6.9" "1.8.2")'`
   - Problematic IDE versions - Some older versions of the Arduino IDE have bugs or limitations that may cause problems if used with this script:
     - 1.5.1 and older - The command line interface was added in 1.5.2, thus no version older than that can be used.
@@ -69,12 +69,17 @@ Install a library from a URL (either compressed file download or clone Git repos
 - Parameter(optional): **libraryURL** - The URL of the library download or library name in the Arduino Library Manager. The protocol component of the URL (e.g. `http://`, `https://`) is required. This can be any compressed file format or a .git file will cause that repository to be cloned. Assumes the library is located in the root of the file.
 - Parameter(optional): **newFolderName** - Folder name to rename the installed library folder to. This parameter is only used if the library identifier is a URL (installation from a compressed file or Git repository) This can be useful if the default folder name of the downloaded file is problematic. The Arduino IDE gives include file preference when the filename matches the library folder name. GitHub's "Download ZIP" file is given the folder name {repository name}-{branch name}. Library folder names that contain `-` or `.` are not compatible with Arduino IDE 1.5.6 and older, arduino will hang if it's started with a library using an invalid folder name installed.
 
-##### `build_sketch sketchPath boardID IDEversion allowFail`
+##### `build_sketch sketchPath boardID allowFail IDEversion`
+##### `build_sketch sketchPath boardID allowFail [IDEversionList]`
+##### `build_sketch sketchPath boardID allowFail startIDEversion endIDEversion`
 Pass some parameters from .travis.yml to the script. `build_sketch` will echo the arduino exit code to the log, which is documented at https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#exit-status.
 - Parameter: **sketchPath** - Path to a sketch or folder containing sketches. If a folder is specified it will be recursively searched and all sketches will be verified.
 - Parameter: **boardID** - `package:arch:board[:parameters]` ID of the board to be compiled for. e.g. `arduino:avr:uno`. Board-specific parameters are only supported by Arduino IDE 1.5.5 and newer.
-- Parameter: **IDEversion** - The version of the Arduino IDE to use to verify the sketch.
 - Parameter: **allowFail** - `true` or `false`. Allow the verification to fail without causing the CI build to fail.
+- Parameter: **IDEversion** - The version of the Arduino IDE to use to verify the sketch.
+- Parameter(optional): **IDEversionList** - A list of versions of the Arduino IDE to use to verify the sketch. e.g. `'("1.6.5-r5" "1.6.9" "1.8.2")'`. If no version list is provided all installed IDE versions will be used.
+- Parameter: **startIDEversion** - The start (inclusive) of a range of versions of the Arduino IDE to use to verify the sketch.
+- Parameter: **endIDEversion** - The end (inclusive) of a range of versions of the Arduino IDE to use to verify the sketch.
 
 ##### `display_report`
 Echo a tab separated report of all verification results to the log. The report is located at `$HOME/report.txt`. The report consists of:

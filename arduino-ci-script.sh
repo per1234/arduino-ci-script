@@ -10,12 +10,13 @@ set -e
 
 # Based on https://github.com/adafruit/travis-ci-arduino/blob/eeaeaf8fa253465d18785c2bb589e14ea9893f9f/install.sh#L11
 # It seems that arrays can't been seen in other functions. So instead I'm setting $IDE_VERSIONS to a string that is the command to create the array
+IDE_VERSION_LIST_ARRAY_DECLARATION="declare -a IDEversionListArray="
+
 # https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#history shows CLI was added in IDE 1.5.2, Boards and Library Manager support added in 1.6.4
 # This is a list of every version of the Arduino IDE that supports CLI. As new versions are released they will be added to the list.
-# The newest IDE version must always be placed at the end of the array because the code for setting $NEWEST_IDE_VERSION assumes that
+# The newest IDE version must always be placed at the end of the array because the code for setting $NEWEST_INSTALLED_IDE_VERSION assumes that
 # Arduino IDE 1.6.2 has the nasty behavior of copying the included hardware cores to the .arduino15 folder, causing those versions to be used for all builds after Arduino IDE 1.6.2 is used. For this reason 1.6.2 has been left off the list.
-IDE_VERSIONS_DECLARATION="declare -a ide_versions="
-IDE_VERSIONS="$IDE_VERSIONS_DECLARATION"'("1.5.2" "1.5.3" "1.5.4" "1.5.5" "1.5.6-r2" "1.5.7" "1.5.8" "1.6.0" "1.6.1" "1.6.3" "1.6.4" "1.6.5" "1.6.5-r4" "1.6.5-r5" "1.6.6" "1.6.7" "1.6.8" "1.6.9" "1.6.10" "1.6.11" "1.6.12" "1.6.13" "1.8.0" "1.8.1" "1.8.2" "hourly")'
+FULL_IDE_VERSION_LIST_ARRAY="${IDE_VERSION_LIST_ARRAY_DECLARATION}"'("1.5.2" "1.5.3" "1.5.4" "1.5.5" "1.5.6-r2" "1.5.7" "1.5.8" "1.6.0" "1.6.1" "1.6.3" "1.6.4" "1.6.5" "1.6.5-r4" "1.6.5-r5" "1.6.6" "1.6.7" "1.6.8" "1.6.9" "1.6.10" "1.6.11" "1.6.12" "1.6.13" "1.8.0" "1.8.1" "1.8.2" "hourly")'
 
 
 TEMPORARY_FOLDER="${HOME}/temporary/arduino-ci-script"
@@ -57,75 +58,25 @@ function set_parameters()
 }
 
 
-# Install all versions of the Arduino IDE defined in the ide_versions array in set_parameters()
+# Install all specified versions of the Arduino IDE
 function install_ide()
 {
-  if [[ "$1" != "" ]]; then
-    local regex="\("
-    if [[ "$1" =~ $regex ]]; then
-      # IDE versions list was supplied
-      IDE_VERSIONS="${IDE_VERSIONS_DECLARATION}${1}"
-    elif [[ "$1" != "all" ]]; then
-      local startVersion="$1"
+  local startIDEversion="$1"
+  local endIDEversion="$2"
 
-      # get the array of all IDE versions
-      eval "$IDE_VERSIONS"
-      for IDEversion in "${ide_versions[@]}"; do
-        if [[ "$oldestVersion" == "" ]]; then
-          local oldestVersion="$IDEversion"
-        fi
-        if [[ "$IDEversion" != "hourly" ]]; then
-          local newestVersion="$IDEversion"
-        fi
-      done
+  generate_ide_version_list_array "$FULL_IDE_VERSION_LIST_ARRAY" "$startIDEversion" "$endIDEversion"
+  INSTALLED_IDE_VERSION_LIST_ARRAY="$GENERATED_IDE_VERSION_LIST_ARRAY"
 
-      if [[ "$startVersion" == "oldest" ]]; then
-        local startVersion="$oldestVersion"
-      elif [[ "$startVersion" == "newest" ]]; then
-        local startVersion="$newestVersion"
-      fi
+  # Set "$NEWEST_INSTALLED_IDE_VERSION" and "$OLDEST_INSTALLED_IDE_VERSION"
+  determine_ide_version_extremes "$INSTALLED_IDE_VERSION_LIST_ARRAY"
+  OLDEST_INSTALLED_IDE_VERSION="$DETERMINED_OLDEST_IDE_VERSION"
+  NEWEST_INSTALLED_IDE_VERSION="$DETERMINED_NEWEST_IDE_VERSION"
 
-      if [[ "$2" != "" ]]; then
-        local endVersion="$2"
 
-        if [[ "$endVersion" == "oldest" ]]; then
-          local endVersion="$oldestVersion"
-        elif [[ "$endVersion" == "newest" ]]; then
-          local endVersion="$newestVersion"
-        fi
+  # This runs the command contained in the $INSTALLED_IDE_VERSION_LIST_ARRAY string, thus declaring the array locally as $IDEversionListArray. This must be done in any function that uses the array
+  eval "$INSTALLED_IDE_VERSION_LIST_ARRAY"
 
-        # Assemble list of IDE versions in the specified range
-        # Begin the list
-        IDE_VERSIONS="$IDE_VERSIONS_DECLARATION"'('
-        for IDEversion in "${ide_versions[@]}"; do
-          if [[ "$IDEversion" == "$startVersion" ]]; then
-            # Set a flag
-            local listIsStarted="true"
-          fi
-          if [[ "$endVersion" == "newest" && "$IDEversion" == "hourly" ]]; then
-            # "newest" indicates the newest release, not the hourly build so the list is complete
-            break
-          fi
-          if [[ "$listIsStarted" == "true" ]]; then
-            IDE_VERSIONS="${IDE_VERSIONS} "'"'"$IDEversion"'"'
-          fi
-          if [[ "$IDEversion" == "$endVersion" ]]; then
-            break
-          fi
-        done
-        # Finish the list
-        IDE_VERSIONS="$IDE_VERSIONS"')'
-      else
-        # Only a single version argument was specified
-        IDE_VERSIONS="$IDE_VERSIONS_DECLARATION"'("'"${startVersion}"'")'
-      fi
-    fi
-  fi
-
-  # This runs the command contained in the $IDE_VERSIONS string, thus declaring the array locally as $ide_versions. This must be done in any function that uses the array
-  eval "$IDE_VERSIONS"
-
-  for IDEversion in "${ide_versions[@]}"; do
+  for IDEversion in "${IDEversionListArray[@]}"; do
     # Determine download file extension
     local regex="1.5.[0-9]"
     if [[ "$IDEversion" =~ $regex ]]; then
@@ -135,20 +86,14 @@ function install_ide()
       local downloadFileExtension="tar.xz"
     fi
 
-    if [[ "$OLDEST_IDE_VERSION" == "" ]]; then
-      OLDEST_IDE_VERSION="$IDEversion"
-    fi
-
     if [[ "$IDEversion" == "hourly" ]]; then
       # Deal with the inaccurate name given to the hourly build download
       wget "http://downloads.arduino.cc/arduino-nightly-linux64.${downloadFileExtension}"
       tar xf "arduino-nightly-linux64.${downloadFileExtension}"
       rm "arduino-nightly-linux64.${downloadFileExtension}"
       sudo mv "arduino-nightly" "$APPLICATION_FOLDER/arduino-${IDEversion}"
-    else
-      # "newest" does not include the hourly build
-      NEWEST_IDE_VERSION="$IDEversion"
 
+    else
       wget "http://downloads.arduino.cc/arduino-${IDEversion}-linux64.${downloadFileExtension}"
       tar xf "arduino-${IDEversion}-linux64.${downloadFileExtension}"
       rm "arduino-${IDEversion}-linux64.${downloadFileExtension}"
@@ -157,14 +102,14 @@ function install_ide()
   done
 
   # Temporarily install the latest IDE version
-  install_ide_version "$NEWEST_IDE_VERSION"
+  install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
   # Create the link that will be used for all IDE installations
   sudo ln --symbolic "$APPLICATION_FOLDER/arduino/arduino" /usr/local/bin/arduino
 
   # Set the preferences
   # --pref option is only supported by Arduino IDE 1.5.6 and newer
   local regex="1.5.[0-5]"
-  if ! [[ "$NEWEST_IDE_VERSION" =~ $regex ]]; then
+  if ! [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $regex ]]; then
     # Create the sketchbook folder if it doesn't already exist. The location can't be set in preferences if the folder doesn't exist.
     if ! [[ -d "$SKETCHBOOK_FOLDER" ]]; then
       mkdir --parents "$SKETCHBOOK_FOLDER"
@@ -172,14 +117,104 @@ function install_ide()
 
     # --save-prefs was added in Arduino IDE 1.5.8
     local regex="1.5.[6-7]"
-    if ! [[ "$NEWEST_IDE_VERSION" =~ $regex ]]; then
+    if ! [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $regex ]]; then
       local savePrefs="--save-prefs"
     fi
     arduino --pref compiler.warning_level=all --pref sketchbook.path="$SKETCHBOOK_FOLDER" "$savePrefs"
   fi
 
   # Uninstall the IDE
-  uninstall_ide_version "$NEWEST_IDE_VERSION"
+  uninstall_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
+}
+
+
+# Generate an array of Arduino IDE versions as a subset of the list provided in the base array defined by the start and end versions
+# This function allows the same code to be shared by install_ide and build_sketch. The generated array is "returned" as a global named "$GENERATED_IDE_VERSION_LIST_ARRAY"
+function generate_ide_version_list_array()
+{
+  local baseIDEversionArray="$1"
+  local startIDEversion="$2"
+  local endIDEversion="$3"
+
+  # Convert "oldest" or "newest" to actual version numbers
+  determine_ide_version_extremes "$baseIDEversionArray"
+  if [[ "$startIDEversion" == "oldest" ]]; then
+    local startIDEversion="$DETERMINED_OLDEST_IDE_VERSION"
+  elif [[ "$startIDEversion" == "newest" ]]; then
+    local startIDEversion="$DETERMINED_NEWEST_IDE_VERSION"
+  fi
+
+  if [[ "$endIDEversion" == "oldest" ]]; then
+    local endIDEversion="$DETERMINED_OLDEST_IDE_VERSION"
+  elif [[ "$endIDEversion" == "newest" ]]; then
+    local endIDEversion="$DETERMINED_NEWEST_IDE_VERSION"
+  fi
+
+
+  local regex="\("
+  if [[ "$startIDEversion" =~ $regex ]]; then
+    # IDE versions list was supplied
+    GENERATED_IDE_VERSION_LIST_ARRAY="${IDE_VERSION_LIST_ARRAY_DECLARATION}${startIDEversion}"
+
+  elif [[ "$startIDEversion" == "" || "$startIDEversion" == "all" ]]; then
+    # Use the full base array
+    GENERATED_IDE_VERSION_LIST_ARRAY="$baseIDEversionArray"
+
+  else
+    # Start the array
+    GENERATED_IDE_VERSION_LIST_ARRAY="$IDE_VERSION_LIST_ARRAY_DECLARATION"'('
+
+    if [[ "$endIDEversion" == "" ]]; then
+      # Only a single version was specified
+      GENERATED_IDE_VERSION_LIST_ARRAY="$GENERATED_IDE_VERSION_LIST_ARRAY"'"'"$startIDEversion"'"'
+
+    else
+      # A version range was specified
+      eval "$baseIDEversionArray"
+      for IDEversion in "${IDEversionListArray[@]}"; do
+        if [[ "$IDEversion" == "$startIDEversion" ]]; then
+          # Start of the list reached, set a flag
+          local listIsStarted="true"
+        fi
+
+        if [[ "$listIsStarted" == "true" ]]; then
+          # Add the version to the list
+          GENERATED_IDE_VERSION_LIST_ARRAY="${GENERATED_IDE_VERSION_LIST_ARRAY} "'"'"$IDEversion"'"'
+        fi
+
+        if [[ "$IDEversion" == "$endIDEversion" ]]; then
+          # End of the list was reached, exit the loop
+          break
+        fi
+      done
+    fi
+
+    # Finish the list
+    GENERATED_IDE_VERSION_LIST_ARRAY="$GENERATED_IDE_VERSION_LIST_ARRAY"')'
+  fi
+}
+
+
+# Determine the oldest and newest (non-hourly unless hourly is the only version on the list) IDE version in the provided array
+# The determined versions are "returned" by setting the global variables "$DETERMINED_OLDEST_IDE_VERSION" and "$DETERMINED_NEWEST_IDE_VERSION"
+function determine_ide_version_extremes()
+{
+  local baseIDEversionArray="$1"
+
+  # Reset the variables from any value they were assigned the last time the function was ran
+  DETERMINED_OLDEST_IDE_VERSION=""
+  DETERMINED_NEWEST_IDE_VERSION=""
+
+  # Determine the oldest and newest (non-hourly) IDE version in the base array
+  eval "$baseIDEversionArray"
+  for IDEversion in "${IDEversionListArray[@]}"; do
+    if [[ "$DETERMINED_OLDEST_IDE_VERSION" == "" ]]; then
+      DETERMINED_OLDEST_IDE_VERSION="$IDEversion"
+    fi
+    if [[ "$DETERMINED_NEWEST_IDE_VERSION" == "" || "$IDEversion" != "hourly" ]]; then
+      DETERMINED_NEWEST_IDE_VERSION="$IDEversion"
+    fi
+  done
 }
 
 
@@ -258,12 +293,12 @@ function install_package()
     # Check if the newest installed IDE version supports --install-boards
     local regex1="1.5.[0-9]"
     local regex2="1.6.[0-3]"
-    if [[ "$NEWEST_IDE_VERSION" =~ $regex1 || "$NEWEST_IDE_VERSION" =~ $regex2 ]]; then
+    if [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $regex1 || "$NEWEST_INSTALLED_IDE_VERSION" =~ $regex2 ]]; then
       echo "ERROR: --install-boards option is not supported by the newest version of the Arduino IDE you have installed. You must have Arduino IDE 1.6.4 or newer installed to use this function."
       return 1
     else
       # Temporarily install the latest IDE version to use for the package installation
-      install_ide_version "$NEWEST_IDE_VERSION"
+      install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
 
       # If defined add the boards manager URL to preferences
       if [[ "$packageURL" != "" ]]; then
@@ -274,7 +309,7 @@ function install_package()
       arduino --install-boards "$packageID"
 
       # Uninstall the IDE
-      uninstall_ide_version "$NEWEST_IDE_VERSION"
+      uninstall_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
     fi
   fi
 }
@@ -336,20 +371,20 @@ function install_library()
     # Check if the newest installed IDE version supports --install-library
     local regex1="1.5.[0-9]"
     local regex2="1.6.[0-3]"
-    if [[ "$NEWEST_IDE_VERSION" =~ $regex1 || "$NEWEST_IDE_VERSION" =~ $regex2 ]]; then
+    if [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $regex1 || "$NEWEST_INSTALLED_IDE_VERSION" =~ $regex2 ]]; then
       echo "ERROR: --install-library option is not supported by the newest version of the Arduino IDE you have installed. You must have Arduino IDE 1.6.4 or newer installed to use this function."
       return 1
     else
       local libraryName="$1"
 
       # Temporarily install the latest IDE version to use for the library installation
-      install_ide_version "$NEWEST_IDE_VERSION"
+      install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
 
        # Install the library
       arduino --install-library "$libraryName"
 
       # Uninstall the IDE
-      uninstall_ide_version "$NEWEST_IDE_VERSION"
+      uninstall_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
     fi
   fi
 }
@@ -360,56 +395,39 @@ function build_sketch()
 {
   local sketchPath="$1"
   local boardID="$2"
-  local IDEversion="$3"
-  local allowFail="$4"
+  local allowFail="$3"
+  local startIDEversion="$4"
+  local endIDEversion="$5"
 
-  if [[ "$IDEversion" == "all" ]]; then
-    eval "$IDE_VERSIONS"
-    for IDEversion in "${ide_versions[@]}"; do
-      find_sketches "$sketchPath" "$boardID" "$IDEversion" "$allowFail"
-    done
-  else
-    if [[ "$IDEversion" == "oldest" ]]; then
-      local IDEversion="$OLDEST_IDE_VERSION"
-    elif [[ "$IDEversion" == "newest" ]]; then
-      local IDEversion="$NEWEST_IDE_VERSION"
+  generate_ide_version_list_array "$INSTALLED_IDE_VERSION_LIST_ARRAY" "$startIDEversion" "$endIDEversion"
+
+  eval "$GENERATED_IDE_VERSION_LIST_ARRAY"
+  for IDEversion in "${IDEversionListArray[@]}"; do
+    # Install the IDE
+    # This must be done before searching for sketches in case the path specified is in the Arduino IDE installation folder
+    install_ide_version "$IDEversion"
+
+    if [[ "$sketchPath" =~ \.ino$ || "$sketchPath" =~ \.pde$ ]]; then
+      # A sketch was specified
+      build_this_sketch "$sketchPath" "$boardID" "$IDEversion" "$allowFail"
+    else
+      # Search for all sketches in the path and put them in an array
+      # https://github.com/adafruit/travis-ci-arduino/blob/eeaeaf8fa253465d18785c2bb589e14ea9893f9f/install.sh#L100
+      declare -a sketches
+      sketches=($(find "$sketchPath" -name "*.pde" -o -name "*.ino"))
+      for sketchName in "${sketches[@]}"; do
+        # Only verify the sketch that matches the name of the sketch folder, otherwise it will cause redundant verifications for sketches that have multiple .ino files
+        local sketchFolder="$(echo $sketchName | rev | cut -d'/' -f 2 | rev)"
+        local sketchNameWithoutPathWithExtension="$(echo $sketchName | rev | cut -d'/' -f 1 | rev)"
+        local sketchNameWithoutPathWithoutExtension="$(echo $sketchNameWithoutPathWithExtension | cut -d'.' -f1)"
+        if [[ "$sketchFolder" == "$sketchNameWithoutPathWithoutExtension" ]]; then
+          build_this_sketch "$sketchName" "$boardID" "$IDEversion" "$allowFail"
+        fi
+      done
     fi
-    find_sketches "$sketchPath" "$boardID" "$IDEversion" "$allowFail"
-  fi
-}
-
-
-function find_sketches()
-{
-  local sketchPath="$1"
-  local boardID="$2"
-  local IDEversion="$3"
-  local allowFail="$4"
-
-  # Install the IDE
-  # This must be done before searching for sketches in case the path specified is in the Arduino IDE installation folder
-  install_ide_version "$IDEversion"
-
-  if [[ "$sketchPath" =~ \.ino$ || "$sketchPath" =~ \.pde$ ]]; then
-    # A sketch was specified
-    build_this_sketch "$sketchPath" "$boardID" "$IDEversion" "$allowFail"
-  else
-    # Search for all sketches in the path and put them in an array
-    # https://github.com/adafruit/travis-ci-arduino/blob/eeaeaf8fa253465d18785c2bb589e14ea9893f9f/install.sh#L100
-    declare -a sketches
-    sketches=($(find "$sketchPath" -name "*.pde" -o -name "*.ino"))
-    for sketchName in "${sketches[@]}"; do
-      # Only verify the sketch that matches the name of the sketch folder, otherwise it will cause redundant verifications for sketches that have multiple .ino files
-      local sketchFolder="$(echo $sketchName | rev | cut -d'/' -f 2 | rev)"
-      local sketchNameWithoutPathWithExtension="$(echo $sketchName | rev | cut -d'/' -f 1 | rev)"
-      local sketchNameWithoutPathWithoutExtension="$(echo $sketchNameWithoutPathWithExtension | cut -d'.' -f1)"
-      if [[ "$sketchFolder" == "$sketchNameWithoutPathWithoutExtension" ]]; then
-        build_this_sketch "$sketchName" "$boardID" "$IDEversion" "$allowFail"
-      fi
-    done
-  fi
-  # Uninstall the IDE
-  uninstall_ide_version "$IDEversion"
+    # Uninstall the IDE
+    uninstall_ide_version "$IDEversion"
+  done
 }
 
 
