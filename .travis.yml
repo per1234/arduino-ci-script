@@ -42,10 +42,14 @@ install:
   - install_ide "$INSTALL_IDE_START_VERSION" "$INSTALL_IDE_END_VERSION"
 
   # Install hardware packages
-  # Test package install without URL
+  # Test Boards Manager package install without URL
   - install_package "arduino:sam"
-  # Test package install with URL
+  # Test Boards Manager package install with URL
   - install_package "MiniCore:avr" "https://mcudude.github.io/MiniCore/package_MCUdude_MiniCore_index.json"
+  # Test manual package install from compressed file download
+  - install_package "https://github.com/SpenceKonde/ATTinyCore/archive/master.zip"
+  # Test manual package install from Git repository clone
+  - install_package "https://github.com/MCUdude/MightyCore.git"
 
   # Test library installation from repository (can't do this because there is no library in this repository)
   # - install_library
@@ -67,10 +71,14 @@ script:
   # IDE version: Use "all" for IDE version argument to verify sketch with all versions of the Arduino IDE, use "newest" for IDE version argument to verify sketch with the newest version of the Arduino IDE
 
   # Installed package tests:
-  # Test sketch verification using board from hardware package installed without URL
+  # Test sketch verification using board from hardware package installed via Boards Manager without URL
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:sam:arduino_due_x_dbg" "newest" "false"
-  # Test sketch verification using board from hardware package installed with URL
+  # Test sketch verification using board from hardware package installed with Boards Manager URL
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "MiniCore:avr:328:variant=modelP,BOD=2v7,LTO=Os,clock=16MHz_external" "newest" "false"
+  # Test sketch verification using board from hardware package manually installed from compressed file download
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "ATTinyCore-master:avr:attinyx5:LTO=disable,TimerClockSource=default,chip=85,clock=8internal,bod=disable" "newest" "false"
+  # Test sketch verification using board from hardware package manually installed by cloning Git repository
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "MightyCore:avr:1284:pinout=standard,variant=modelP,BOD=2v7,LTO=Os,clock=16MHz_external" "newest" "false"
 
   # Installed library tests:
   # Test sketch verification using library installed from .zip
