@@ -34,7 +34,7 @@ Used to pass some parameters from .travis.yml to the script.
 ##### `install_ide [IDE_VERSIONS]`
 ##### `install_ide [startVersion [endVersion]]`
 Install all versions of the Arduino IDE specified in the script file. If no arguments are supplied all IDE versions will be installed.
-- Parameter(optional): **IDE_VERSIONS** - A list of the versions of the Arduino IDE you want installed. e.g. `'("1.6.5-r5" "1.6.9" "1.8.2")'`
+- Parameter(optional): **IDE_VERSIONS** - A list of the versions of the Arduino IDE you want installed, in order from oldest to newest. e.g. `'("1.6.5-r5" "1.6.9" "1.8.2")'`
   - Problematic IDE versions - Some older versions of the Arduino IDE have bugs or limitations that may cause problems if used with this script:
     - 1.5.1 and older - The command line interface was added in 1.5.2, thus no version older than that can be used.
     - 1.5.4 and older - Do not support board-specific parameters, set by custom **Tools** menu items.
