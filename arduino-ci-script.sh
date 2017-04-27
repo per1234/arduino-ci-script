@@ -391,8 +391,8 @@ function find_sketches()
     for sketchName in "${sketches[@]}"; do
       # Only verify the sketch that matches the name of the sketch folder, otherwise it will cause redundant verifications for sketches that have multiple .ino files
       local sketchFolder="$(echo $sketchName | rev | cut -d'/' -f 2 | rev)"
-      local sketchNameWithoutPathWithExtension=$(echo $sketchName | rev | cut -d'/' -f 1 | rev)
-      local sketchNameWithoutPathWithoutExtension=$(echo $sketchNameWithoutPathWithExtension | cut -d'.' -f1)
+      local sketchNameWithoutPathWithExtension="$(echo $sketchName | rev | cut -d'/' -f 1 | rev)"
+      local sketchNameWithoutPathWithoutExtension="$(echo $sketchNameWithoutPathWithExtension | cut -d'.' -f1)"
       if [[ "$sketchFolder" == "$sketchNameWithoutPathWithoutExtension" ]]; then
         build_this_sketch "$sketchName" "$boardID" "$IDEversion" "$allowFail"
       fi
