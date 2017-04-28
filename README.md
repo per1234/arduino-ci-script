@@ -39,6 +39,7 @@ Install version(s) of the Arduino IDE. If no arguments are supplied all IDE vers
     - 1.5.1 and older - The command line interface was added in 1.5.2, thus no version older than that can be used.
     - 1.5.4 and older - Do not support board-specific parameters, set by custom **Tools** menu items.
     - 1.5.5 and older - Do not support setting preferences (`--pref`), thus the sketchbook folder argument of `set_parameters` will not be used.
+    - 1.5.5-r2 and older - Don't recognize libraries that have a library.properties` file that doesn't define a `core-dependencies` property. The file include is successful but compilation of sketches that use the library functions will fail.
     - 1.5.6 and older - `-` or `.` are not allowed in sketch or library folder names. If any are present the Arduino IDE will hang indefinitely when it's executed.
     - 1.6.2 - Moves its hardware packages to the .arduino15 folder, causing all other IDE versions to use those cores, some of which are not compatible. For this reason 1.6.2 has been removed from the default list of versions but may still be specified via the `IDE_VERSIONS` argument.
     - 1.6.3 and older - Do not support installing boards (`--install-boards`), thus `install_package` can't be used.
