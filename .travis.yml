@@ -16,14 +16,20 @@ env:
     - INSTALL_IDE_START_VERSION="all"
     # Test install_ide using custom version list
     - INSTALL_IDE_START_VERSION='("1.8.0" "1.8.1" "1.8.2")'
-    # Test install_ide using single version (disabled because having only one IDE version installed will prevent testing of build_sketch with a version range or list)
-    # - INSTALL_IDE_START_VERSION="1.8.1"
+    # Test install_ide using single version (allowed to fail)
+    - INSTALL_IDE_START_VERSION="1.6.3"
     # Test install_ide using custom version range
     - INSTALL_IDE_START_VERSION="1.8.0" INSTALL_IDE_END_VERSION="hourly"
     # Test install_ide using "oldest" special version name (must install up to 1.6.4 for the installation of Arduino SAM Boards to work)
     - INSTALL_IDE_START_VERSION="oldest" INSTALL_IDE_END_VERSION="1.8.2"
     # Test install_ide using "newest" special version name
     - INSTALL_IDE_START_VERSION="1.8.0" INSTALL_IDE_END_VERSION="newest"
+
+
+matrix:
+  allow_failures:
+    # Allowed to fail to test the failure behavior of install_package when a Boards Manager installation is attempted using an IDE version that doesn't support it. This would also cause the build_sketch calls that have a version list argument to fail because the required IDE versions would not be installed.
+    - env: INSTALL_IDE_START_VERSION="1.6.3"
 
 
 before_install:
@@ -46,7 +52,7 @@ install:
   # Install hardware packages
   # Test package install from this repository (can't do this because the repository isn't a hardware package)
   # - install_package
-  # Test Boards Manager package install without URL
+  # Test Boards Manager package install without URL. Test error handling of attempting to do a Boards Manager installation when the newest installed IDE version doesn't support it (should print a helpful error message and fail instead of hanging).
   - install_package "arduino:sam"
   # Test Boards Manager package install with URL
   - install_package "MiniCore:avr" "https://mcudude.github.io/MiniCore/package_MCUdude_MiniCore_index.json"
