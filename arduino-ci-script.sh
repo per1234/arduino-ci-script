@@ -151,12 +151,7 @@ function generate_ide_version_list_array()
   fi
 
 
-  local regex="\("
-  if [[ "$startIDEversion" =~ $regex ]]; then
-    # IDE versions list was supplied
-    GENERATED_IDE_VERSION_LIST_ARRAY="${IDE_VERSION_LIST_ARRAY_DECLARATION}${startIDEversion}"
-
-  elif [[ "$startIDEversion" == "" || "$startIDEversion" == "all" ]]; then
+  if [[ "$startIDEversion" == "" || "$startIDEversion" == "all" ]]; then
     # Use the full base array
     GENERATED_IDE_VERSION_LIST_ARRAY="$baseIDEversionArray"
 
@@ -164,7 +159,25 @@ function generate_ide_version_list_array()
     # Start the array
     GENERATED_IDE_VERSION_LIST_ARRAY="$IDE_VERSION_LIST_ARRAY_DECLARATION"'('
 
-    if [[ "$endIDEversion" == "" ]]; then
+    local regex="\("
+    if [[ "$startIDEversion" =~ $regex ]]; then
+      # IDE versions list was supplied
+      # Convert it to a temporary array
+      local suppliedIDEversionListArray="${IDE_VERSION_LIST_ARRAY_DECLARATION}${startIDEversion}"
+      eval "$suppliedIDEversionListArray"
+      local IDEversion
+      for IDEversion in "${IDEversionListArray[@]}"; do
+        # Convert any use of "oldest" or "newest" special version names to the actual version number
+        if [[ "$IDEversion" == "oldest" ]]; then
+          local IDEversion="$DETERMINED_OLDEST_IDE_VERSION"
+        elif [[ "$IDEversion" == "newest" ]]; then
+          local IDEversion="$DETERMINED_NEWEST_IDE_VERSION"
+        fi
+        # Add the version to the array
+        GENERATED_IDE_VERSION_LIST_ARRAY="${GENERATED_IDE_VERSION_LIST_ARRAY} "'"'"$IDEversion"'"'
+      done
+
+    elif [[ "$endIDEversion" == "" ]]; then
       # Only a single version was specified
       GENERATED_IDE_VERSION_LIST_ARRAY="$GENERATED_IDE_VERSION_LIST_ARRAY"'"'"$startIDEversion"'"'
 
