@@ -15,7 +15,7 @@ IDE_VERSION_LIST_ARRAY_DECLARATION="declare -a IDEversionListArray="
 # https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#history shows CLI was added in IDE 1.5.2, Boards and Library Manager support added in 1.6.4
 # This is a list of every version of the Arduino IDE that supports CLI. As new versions are released they will be added to the list.
 # The newest IDE version must always be placed at the end of the array because the code for setting $NEWEST_INSTALLED_IDE_VERSION assumes that
-# Arduino IDE 1.6.2 has the nasty behavior of copying the included hardware cores to the .arduino15 folder, causing those versions to be used for all builds after Arduino IDE 1.6.2 is used. For this reason 1.6.2 has been left off the list.
+# Arduino IDE 1.6.2 has the nasty behavior of moving the included hardware cores to the .arduino15 folder, causing those versions to be used for all builds after Arduino IDE 1.6.2 is used. For this reason 1.6.2 has been left off the list.
 FULL_IDE_VERSION_LIST_ARRAY="${IDE_VERSION_LIST_ARRAY_DECLARATION}"'("1.5.2" "1.5.3" "1.5.4" "1.5.5" "1.5.6" "1.5.6-r2" "1.5.7" "1.5.8" "1.6.0" "1.6.1" "1.6.3" "1.6.4" "1.6.5" "1.6.5-r4" "1.6.5-r5" "1.6.6" "1.6.7" "1.6.8" "1.6.9" "1.6.10" "1.6.11" "1.6.12" "1.6.13" "1.8.0" "1.8.1" "1.8.2" "hourly")'
 
 
@@ -433,6 +433,7 @@ function build_sketch()
 
 function build_this_sketch()
 {
+  # Fold this section of output in the Travis CI build log to make it easier to read
   echo -e "travis_fold:start:build_sketch"
 
   local sketchName="$1"
@@ -489,7 +490,9 @@ function build_this_sketch()
     fi
   fi
 
+  # End the folded section of the Travis CI build log
   echo -e "travis_fold:end:build_sketch"
+  # Add a useful message to the Travis CI build log
   echo "arduino exit code: $sketchBuildExitCode"
 }
 
