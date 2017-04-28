@@ -85,9 +85,14 @@ Pass some parameters from .travis.yml to the script. `build_sketch` will echo th
 ##### `display_report`
 Echo a tab separated report of all verification results to the log. The report is located at `$HOME/report.txt`. The report consists of:
 - Build timestamp
-- Travis build number
+- Travis CI build number
+- Travis CI job number
+- Travis CI build trigger
+- Allow Travis CI job failure
+- Pull request number
 - Branch
 - Commit hash of the build
+- Commit range
 - Commit subject
 - Sketch filename
 - Board ID
@@ -95,7 +100,7 @@ Echo a tab separated report of all verification results to the log. The report i
 - Program storage usage
 - Dynamic memory usage by global variables (not available for some boards)
 - Number of warnings
-- Allowed to fail
+- Sketch verification allowed to fail
 - Sketch verification exit code
 
 Note that Travis CI runs each build of the job in a separate virtual machine so if you have multiple jobs you will have multiple reports. The only way I have found to generate a single report for all tests is to run them as a single job. This means not setting multiple matrix environment variables in the `env` array. See https://docs.travis-ci.com/user/environment-variables.
