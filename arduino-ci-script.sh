@@ -75,7 +75,7 @@ function install_ide()
 
   # This runs the command contained in the $INSTALLED_IDE_VERSION_LIST_ARRAY string, thus declaring the array locally as $IDEversionListArray. This must be done in any function that uses the array
   eval "$INSTALLED_IDE_VERSION_LIST_ARRAY"
-
+  local IDEversion
   for IDEversion in "${IDEversionListArray[@]}"; do
     # Determine download file extension
     local regex="1.5.[0-9]"
@@ -171,6 +171,7 @@ function generate_ide_version_list_array()
     else
       # A version range was specified
       eval "$baseIDEversionArray"
+      local IDEversion
       for IDEversion in "${IDEversionListArray[@]}"; do
         if [[ "$IDEversion" == "$startIDEversion" ]]; then
           # Start of the list reached, set a flag
@@ -207,6 +208,7 @@ function determine_ide_version_extremes()
 
   # Determine the oldest and newest (non-hourly) IDE version in the base array
   eval "$baseIDEversionArray"
+  local IDEversion
   for IDEversion in "${IDEversionListArray[@]}"; do
     if [[ "$DETERMINED_OLDEST_IDE_VERSION" == "" ]]; then
       DETERMINED_OLDEST_IDE_VERSION="$IDEversion"
@@ -402,6 +404,7 @@ function build_sketch()
   generate_ide_version_list_array "$INSTALLED_IDE_VERSION_LIST_ARRAY" "$startIDEversion" "$endIDEversion"
 
   eval "$GENERATED_IDE_VERSION_LIST_ARRAY"
+  local IDEversion
   for IDEversion in "${IDEversionListArray[@]}"; do
     # Install the IDE
     # This must be done before searching for sketches in case the path specified is in the Arduino IDE installation folder
@@ -415,6 +418,7 @@ function build_sketch()
       # https://github.com/adafruit/travis-ci-arduino/blob/eeaeaf8fa253465d18785c2bb589e14ea9893f9f/install.sh#L100
       declare -a sketches
       sketches=($(find "$sketchPath" -name "*.pde" -o -name "*.ino"))
+      local sketchName
       for sketchName in "${sketches[@]}"; do
         # Only verify the sketch that matches the name of the sketch folder, otherwise it will cause redundant verifications for sketches that have multiple .ino files
         local sketchFolder="$(echo $sketchName | rev | cut -d'/' -f 2 | rev)"
