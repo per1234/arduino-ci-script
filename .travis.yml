@@ -81,59 +81,59 @@ script:
 
   # Installed package tests:
   # Test sketch verification using board from hardware package installed via Boards Manager without URL
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:sam:arduino_due_x_dbg" "false" "newest"
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "arduino:sam:arduino_due_x_dbg" "false" "newest"
   # Test sketch verification using board from hardware package installed with Boards Manager URL
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "MiniCore:avr:328:variant=modelP,BOD=2v7,LTO=Os,clock=16MHz_external" "false" "newest"
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "MiniCore:avr:328:variant=modelP,BOD=2v7,LTO=Os,clock=16MHz_external" "false" "newest"
   # Test sketch verification using board from hardware package manually installed from compressed file download
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "ATTinyCore-master:avr:attinyx5:LTO=disable,TimerClockSource=default,chip=85,clock=8internal,bod=disable" "false" "newest"
   # Test sketch verification using board from hardware package manually installed by cloning Git repository
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "MightyCore:avr:1284:pinout=standard,variant=modelP,BOD=2v7,LTO=Os,clock=16MHz_external" "false" "newest"
 
   # Installed library tests:
+  # (All of the below) Test sketch verification with "newest" special version name
   # Test sketch verification using library installed from .zip
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/NewPing/examples/NewPingExample/NewPingExample.pde" "arduino:avr:mega:cpu=atmega2560" "false" "newest"
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/NewPing/examples/NewPingExample/NewPingExample.pde" "arduino:avr:uno" "false" "newest"
   # Test sketch verification using library installed from .zip with rename
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/MPU9250/examples/MPU9250/MPU9250.ino" "arduino:avr:mega:cpu=atmega2560" "false" "newest"
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/MPU9250/examples/MPU9250/MPU9250.ino" "arduino:avr:uno" "false" "newest"
   # Test sketch verification using library installed from .git
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WirelessOregonV2/examples/OregonReceiver/OregonReceiver.ino" "arduino:avr:mega:cpu=atmega2560" "false" "newest"
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WirelessOregonV2/examples/OregonReceiver/OregonReceiver.ino" "arduino:avr:uno" "false" "newest"
   # Test sketch verification using library installed from .git with rename
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/ArduinoShell/examples/ShellBlink/ShellBlink.ino" "arduino:avr:mega:cpu=atmega2560" "false" "newest"
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/ArduinoShell/examples/ShellBlink/ShellBlink.ino" "arduino:avr:uno" "false" "newest"
   # Test sketch verification using library installed from Library Manager
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/Pushetta/examples/simple_notification/simple_notification.ino" "arduino:avr:mega:cpu=atmega2560" "false" "newest"
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/Pushetta/examples/simple_notification/simple_notification.ino" "arduino:avr:uno" "false" "newest"
 
   # build_sketch with sketch argument tests:
   # Test sketch verification with specific IDE version
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:mega:cpu=atmega2560" "false" "1.8.1"
-  # Test sketch verification with "oldest" IDE versions (must use Uno because fqbn for Mega 2560 is different with old IDE versions)
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:uno" "false" "oldest"
-  # Test sketch verification with "newest" IDE versions
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:mega:cpu=atmega2560" "false" "newest"
-  # Test sketch verification with all IDE versions (must use Uno because fqbn for Mega 2560 is different with old IDE versions)
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:uno" "false" "all"
-  # Test sketch verification with no IDE versions specified (should use all installed IDE versions) (must use Uno because fqbn for Mega 2560 is different with old IDE versions)
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:uno" "false"
-  # Test sketch verification with an IDE version list (must use Uno because fqbn for Mega 2560 is different with old IDE versions)
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:uno" "false" '("1.8.0" "1.8.1" "1.8.2")'
-  # Test sketch verification with an IDE version range (must use Uno because fqbn for Mega 2560 is different with old IDE versions)
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/Blink/Blink.ino" "arduino:avr:uno" "false" "1.8.0" "1.8.2"
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "arduino:avr:uno" "false" "1.8.1"
+  # Test sketch verification with "newest" special version name is already done in the library tests
+  # Test sketch verification with "oldest" IDE versions
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "arduino:avr:uno" "false" "oldest"
+  # Test sketch verification with all IDE versions
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "arduino:avr:uno" "false" "all"
+  # Test sketch verification with no IDE versions specified (should use all installed IDE versions)
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "arduino:avr:uno" "false"
+  # Test sketch verification with an IDE version list
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "arduino:avr:uno" "false" '("1.8.0" "1.8.1" "1.8.2")'
+  # Test sketch verification with an IDE version range
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "arduino:avr:uno" "false" "1.8.0" "1.8.2"
 
   # Test sketch verification allowed to fail (this will fail because WirelessOregonV2 is AVR specific)
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WirelessOregonV2/examples/OregonReceiver/OregonReceiver.ino" "arduino:sam:arduino_due_x_dbg" "true" "newest"
 
   # build_sketch with folder argument tests:
   # Test build_sketch with specific IDE version
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:mega:cpu=atmega2560" "false" "1.8.1"
-  # Test build_sketch with "oldest" IDE version (must use Uno because fqbn for Mega 2560 is different with old IDE versions)
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "false" "1.8.1"
+  # Test build_sketch with "oldest" IDE version
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "false" "oldest"
   # Test build_sketch with "newest" IDE version
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:mega:cpu=atmega2560" "false" "newest"
-  # Test build_sketch with all IDE versions (must use Uno because fqbn for Mega 2560 is different with old IDE versions)
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "false" "newest"
+  # Test build_sketch with all IDE versions
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "false" "all"
-  # Test build_sketch with no IDE versions specified (should use all installed IDE versions) (must use Uno because fqbn for Mega 2560 is different with old IDE versions)
+  # Test build_sketch with no IDE versions specified (should use all installed IDE versions)
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "false"
-  # Test build_sketch with an IDE version list (must use Uno because fqbn for Mega 2560 is different with old IDE versions)
+  # Test build_sketch with an IDE version list
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "false" '("1.8.0" "1.8.1" "1.8.2")'
-  # Test build_sketch with an IDE version range (must use Uno because fqbn for Mega 2560 is different with old IDE versions)
+  # Test build_sketch with an IDE version range
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "false" "oldest" "newest"
 
   # Test build_sketch allowed to fail (this will fail because WirelessOregonV2 is AVR specific)
