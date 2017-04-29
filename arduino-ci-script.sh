@@ -118,9 +118,11 @@ function install_ide()
     # --save-prefs was added in Arduino IDE 1.5.8
     local regex="1.5.[6-7]"
     if ! [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $regex ]]; then
-      local savePrefs="--save-prefs"
+      arduino --pref compiler.warning_level=all --pref sketchbook.path="$SKETCHBOOK_FOLDER" --save-prefs
+    else
+      # Arduino IDE 1.5.6 - 1.5.7 load the GUI if you only set preferences without doing a verify. So I am doing an unnecessary verification just to set the preferences in those versions. Definitely a hack but I prefer to keep the preferences setting code all here instead of cluttering build_sketch and this will pretty much never be used.
+      arduino --pref compiler.warning_level=all --pref sketchbook.path="$SKETCHBOOK_FOLDER" --verify "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino"
     fi
-    arduino --pref compiler.warning_level=all --pref sketchbook.path="$SKETCHBOOK_FOLDER" "$savePrefs"
   fi
 
   # Uninstall the IDE
