@@ -41,8 +41,60 @@ sleep 3
 export DISPLAY=:1.0
 
 
+# "Print shell input lines as they are read."
+# https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
+function set_verbose_script_output()
+{
+  set_script_verbosity
+
+  VERBOSE_SCRIPT_OUTPUT="$1"
+
+  unset_script_verbosity
+}
+
+
+# "Print a trace of simple commands, for commands, case commands, select commands, and arithmetic for commands and their arguments or associated word lists after they are expanded and before they are executed. The value of the PS4 variable is expanded and the resultant value is printed before the command and its expanded arguments."
+# https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
+function set_more_verbose_script_output()
+{
+  set_script_verbosity
+
+  MORE_VERBOSE_SCRIPT_OUTPUT="$1"
+
+  unset_script_verbosity
+}
+
+
+# Turn on verbosity based on the preferences set by set_verbose_script_output and set_more_verbose_script_output
+function set_script_verbosity()
+{
+  # https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
+  if [[ "$VERBOSE_SCRIPT_OUTPUT" == "true" ]]; then
+    set -o verbose
+  fi
+  if [[ "$MORE_VERBOSE_SCRIPT_OUTPUT" == "true" ]]; then
+    set -o xtrace
+  fi
+}
+
+
+# Turn off verbosity based on the preferences set by set_verbose_script_output and set_more_verbose_script_output
+function unset_script_verbosity()
+{
+  # https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
+  if [[ "$VERBOSE_SCRIPT_OUTPUT" == "true" ]]; then
+    set +o verbose
+  fi
+  if [[ "$MORE_VERBOSE_SCRIPT_OUTPUT" == "true" ]]; then
+    set +o xtrace
+  fi
+}
+
+
 function set_parameters()
 {
+  set_script_verbosity
+
   APPLICATION_FOLDER="$1"
   SKETCHBOOK_FOLDER="$2"
 
@@ -50,12 +102,16 @@ function set_parameters()
   if ! [[ -d "$SKETCHBOOK_FOLDER" ]]; then
     mkdir --parents "$SKETCHBOOK_FOLDER"
   fi
+
+  unset_script_verbosity
 }
 
 
 # Install all specified versions of the Arduino IDE
 function install_ide()
 {
+  set_script_verbosity
+
   local startIDEversion="$1"
   local endIDEversion="$2"
 
@@ -122,6 +178,8 @@ function install_ide()
 
   # Uninstall the IDE
   uninstall_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
+
+  unset_script_verbosity
 }
 
 
@@ -129,6 +187,8 @@ function install_ide()
 # This function allows the same code to be shared by install_ide and build_sketch. The generated array is "returned" as a global named "$GENERATED_IDE_VERSION_LIST_ARRAY"
 function generate_ide_version_list_array()
 {
+  set_script_verbosity
+
   local baseIDEversionArray="$1"
   local startIDEversion="$2"
   local endIDEversion="$3"
@@ -203,6 +263,8 @@ function generate_ide_version_list_array()
     # Finish the list
     GENERATED_IDE_VERSION_LIST_ARRAY="$GENERATED_IDE_VERSION_LIST_ARRAY"')'
   fi
+
+  unset_script_verbosity
 }
 
 
@@ -210,6 +272,8 @@ function generate_ide_version_list_array()
 # The determined versions are "returned" by setting the global variables "$DETERMINED_OLDEST_IDE_VERSION" and "$DETERMINED_NEWEST_IDE_VERSION"
 function determine_ide_version_extremes()
 {
+  set_script_verbosity
+
   local baseIDEversionArray="$1"
 
   # Reset the variables from any value they were assigned the last time the function was ran
@@ -227,26 +291,37 @@ function determine_ide_version_extremes()
       DETERMINED_NEWEST_IDE_VERSION="$IDEversion"
     fi
   done
+
+  unset_script_verbosity
 }
 
 
 function install_ide_version()
 {
+  set_script_verbosity
+
   local IDEversion="$1"
   sudo mv "${APPLICATION_FOLDER}/arduino-${IDEversion}" "${APPLICATION_FOLDER}/arduino"
+
+  unset_script_verbosity
 }
 
 
 function uninstall_ide_version()
 {
+  set_script_verbosity
+
   local IDEversion="$1"
   sudo mv "${APPLICATION_FOLDER}/arduino" "${APPLICATION_FOLDER}/arduino-${IDEversion}"
+
+  unset_script_verbosity
 }
 
 
 # Install hardware packages
 function install_package()
 {
+  set_script_verbosity
 
   local regex="://"
   if [[ "$1" =~ $regex ]]; then
@@ -324,11 +399,15 @@ function install_package()
       uninstall_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
     fi
   fi
+
+  unset_script_verbosity
 }
 
 
 function install_library()
 {
+  set_script_verbosity
+
   local libraryIdentifier="$1"
   local newFolderName="$2"
 
@@ -399,23 +478,31 @@ function install_library()
       uninstall_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
     fi
   fi
+
+  unset_script_verbosity
 }
 
 
 function set_verbose_output_during_compilation()
 {
+  set_script_verbosity
+
   local verboseOutputDuringCompilation="$1"
   if [[ "$verboseOutputDuringCompilation" == "true" ]]; then
     VERBOSE_BUILD="--verbose"
   else
     VERBOSE_BUILD=""
   fi
+
+  unset_script_verbosity
 }
 
 
 # Verify the sketch
 function build_sketch()
 {
+  set_script_verbosity
+
   local sketchPath="$1"
   local boardID="$2"
   local allowFail="$3"
@@ -453,6 +540,8 @@ function build_sketch()
     # Uninstall the IDE
     uninstall_ide_version "$IDEversion"
   done
+
+  unset_script_verbosity
 }
 
 
@@ -460,6 +549,8 @@ function build_this_sketch()
 {
   # Fold this section of output in the Travis CI build log to make it easier to read
   echo -e "travis_fold:start:build_sketch"
+
+  set_script_verbosity
 
   local sketchName="$1"
   local boardID="$2"
@@ -518,6 +609,9 @@ function build_this_sketch()
   # End the folded section of the Travis CI build log
   echo -e "travis_fold:end:build_sketch"
   # Add a useful message to the Travis CI build log
+
+  unset_script_verbosity
+
   echo "arduino exit code: $sketchBuildExitCode"
 }
 
@@ -525,6 +619,8 @@ function build_this_sketch()
 # Print the contents of the report file
 function display_report()
 {
+  set_script_verbosity
+
   if [ -e "$REPORT_FILENAME" ]; then
     echo -e "\n\n\n**************Begin Report**************\n\n\n"
     cat "$REPORT_FILENAME"
@@ -532,13 +628,19 @@ function display_report()
   else
     echo "No report file available for this job"
   fi
+
+  unset_script_verbosity
 }
 
 
 # Return 1 if any of the sketch builds failed
 function check_success()
 {
+  set_script_verbosity
+
   if [[ "$TRAVIS_BUILD_EXIT_CODE" != "" ]]; then
     return 1
   fi
+
+  unset_script_verbosity
 }

@@ -19,6 +19,14 @@ source <(curl -SLs https://raw.githubusercontent.com/per1234/arduino-ci-script/m
 
 #### Usage
 See https://github.com/per1234/arduino-ci-script/blob/master/.travis.yml for an example of the script in use. Please configure your continuous integration system to make the minimum number of downloads and sketch verifications necessary to effectively test your code. This will prevent wasting Arduino and Travis CI's bandwidth while making the builds run fast.
+##### `set_verbose_script_output VERBOSE_SCRIPT_OUTPUT`
+Print shell input lines as they are read.
+- Parameter: **VERBOSE_SCRIPT_OUTPUT** - `true`/`false`
+
+##### `set_more_verbose_script_output MORE_VERBOSE_SCRIPT_OUTPUT`
+Print a trace of simple commands, for commands, case commands, select commands, and arithmetic for commands and their arguments or associated word lists after they are expanded and before they are executed. The value of the PS4 variable is expanded and the resultant value is printed before the command and its expanded arguments.
+- Parameter: **MORE_VERBOSE_SCRIPT_OUTPUT** - `true`/`false`
+
 ##### `set_parameters APPLICATION_FOLDER SKETCHBOOK_FOLDER`
 Used to pass some parameters from .travis.yml to the script.
 - Parameter: **APPLICATION_FOLDER** - This should be set to `/usr/local/share`. The Arduino IDE will be installed in the `arduino` subfolder.
@@ -108,11 +116,17 @@ This function returns an exit code of 1 if any sketch verification failed except
 ##### Script hangs after an arduino command
 The Arduino IDE will usually try to start the GUI whenever there is an error in the command. Since the Travis CI build environment does not support this it will just hang for ten minutes until Travis CI automatically cancels the job. This means you get no useful information on the cause of the problem.
 ##### Verbose output
-- Verbose script output - Add or uncomment the following lines in your `.travis.yml` file to get more information for troubleshooting. Unfortunately this results in a lot of useless content in the log from all the commands Travis CI is running so you should leave verbose output off when possible. More information on these commands at https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html.
-  - To print shell input lines as they are read:
-    - `- set -v`
-  - To print a trace of simple commands.
-    - `- set -x`
+Verbose output results in a harder to read log so you should leave it off or minimized when possible. Note that turning on verbose output for a large build may cause the log to exceed 4 MB, which causes Travis CI to terminate the job.
+- Verbose script output - Add or uncomment the following lines in your `.travis.yml` file to get more information for troubleshooting.
+  - Print shell input lines as they are read:
+    - `- set_verbose_script_output "true"`
+  - Print a trace of simple commands, for commands, case commands, select commands, and arithmetic for commands and their arguments or associated word lists after they are expanded and before they are executed. The value of the PS4 variable is expanded and the resultant value is printed before the command and its expanded arguments. 
+    - `- set_more_verbose_script_output "true"`
+- Verbose output for Travis CI and script - Add one or both of the following lines to your `.travis.yml` file to get more information for troubleshooting of both the Travis CI build process and the script. Do not turn on verbosity by passing `true` to `set_verbose_script_output` or `set_more_verbose_script_output` when you have these lines in your `.travis.yml` file.
+  - Print shell input lines as they are read:
+    - `- set -o verbose`
+  - Print a trace of simple commands, for commands, case commands, select commands, and arithmetic for commands and their arguments or associated word lists after they are expanded and before they are executed. The value of the PS4 variable is expanded and the resultant value is printed before the command and its expanded arguments. 
+    - `- set -o xtrace`
 - Verbose output during compilation - Add the following line to your `.travis.yml` file to get verbose output from arduino of the commands used in the sketch building process:
   - `set_verbose_output_during_compilation true`
 ##### Problematic IDE versions
