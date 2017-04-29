@@ -18,7 +18,7 @@ source <(curl -SLs https://raw.githubusercontent.com/per1234/arduino-ci-script/m
 
 
 #### Usage
-See https://github.com/per1234/arduino-ci-script/blob/master/.travis.yml for an example of the script in use. Please configure your continuous integration system to make the minimum number of downloads and sketch verifications necessary to effectively test your code. This will prevent wasting Arduino and Travis CI's bandwidth while making the builds run fast.
+See https://github.com/per1234/WatchdogLog/blob/master/.travis.yml for an example of the script in use. Please configure your continuous integration system to make the minimum number of downloads and sketch verifications necessary to effectively test your code. This will prevent wasting Arduino and Travis CI's bandwidth while making the builds run fast.
 ##### `set_verbose_script_output VERBOSE_SCRIPT_OUTPUT`
 Print shell input lines as they are read.
 - Parameter: **VERBOSE_SCRIPT_OUTPUT** - `true`/`false`
