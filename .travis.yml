@@ -14,16 +14,12 @@ env:
     # - INSTALL_IDE_START_VERSION=""
     # Test install_ide using full version list
     - INSTALL_IDE_START_VERSION="all"
-    # Test install_ide using custom version list. Test the use of the special version names "oldest" and "newest" in a version list.
-    - INSTALL_IDE_START_VERSION='("oldest" "1.8.0" "1.8.1" "newest")'
+    # Test install_ide using custom version list. Test the use of the special version names "oldest" and "newest" in a version list. Test use of "hourly" version name.
+    - INSTALL_IDE_START_VERSION='("oldest" "1.8.0" "1.8.1" "newest" "hourly")'
     # Test install_ide using single version (allowed to fail)
     - INSTALL_IDE_START_VERSION="1.6.3"
-    # Test install_ide using custom version range
-    - INSTALL_IDE_START_VERSION="1.8.0" INSTALL_IDE_END_VERSION="hourly"
-    # Test install_ide using "oldest" special version name in a range (must install up to 1.6.4 for the installation of Arduino SAM Boards to work)
-    - INSTALL_IDE_START_VERSION="oldest" INSTALL_IDE_END_VERSION="1.8.2"
-    # Test install_ide using "newest" special version name in a range
-    - INSTALL_IDE_START_VERSION="1.8.0" INSTALL_IDE_END_VERSION="newest"
+    # Test install_ide using version range. Test the use of the special version names "oldest" and "newest" in a version range.
+    - INSTALL_IDE_START_VERSION="oldest" INSTALL_IDE_END_VERSION="newest"
 
 
 matrix:
