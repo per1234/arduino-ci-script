@@ -174,6 +174,7 @@ function install_ide()
       # Arduino IDE 1.5.6 - 1.5.7 load the GUI if you only set preferences without doing a verify. So I am doing an unnecessary verification just to set the preferences in those versions. Definitely a hack but I prefer to keep the preferences setting code all here instead of cluttering build_sketch and this will pretty much never be used.
       arduino --pref compiler.warning_level=all --pref sketchbook.path="$SKETCHBOOK_FOLDER" --verify "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino"
     fi
+    delete_package_index_files
   fi
 
   # Uninstall the IDE
@@ -315,6 +316,13 @@ function uninstall_ide_version()
   sudo mv "${APPLICATION_FOLDER}/arduino" "${APPLICATION_FOLDER}/arduino-${IDEversion}"
 
   unset_script_verbosity
+}
+
+
+function delete_package_index_files()
+{
+  # The package_index files installed by some versions of the IDE (1.6.5, 1.6.5) can cause compilation to fail for other versions (1.6.5-r4, 1.6.5-r5)
+  rm -f ${HOME}/.arduino15/package_index.*
 }
 
 
@@ -565,6 +573,9 @@ function build_this_sketch()
   while [[ "$sketchBuildExitCode" == "255" && $verifyCount -le $SKETCH_VERIFY_RETRIES ]]; do
     # Verify the sketch
     arduino $VERBOSE_BUILD --verify "$sketchName" --board "$boardID" 2>&1 | tee "$VERIFICATION_OUTPUT_FILENAME"; local sketchBuildExitCode="${PIPESTATUS[0]}"
+
+    delete_package_index_files
+
     local verifyCount=$((verifyCount + 1))
   done
 
