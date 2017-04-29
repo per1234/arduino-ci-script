@@ -45,15 +45,10 @@ function set_parameters()
 {
   APPLICATION_FOLDER="$1"
   SKETCHBOOK_FOLDER="$2"
-  local verboseArduinoOutput="$3"
 
   # Create the sketchbook folder if it doesn't already exist
   if ! [[ -d "$SKETCHBOOK_FOLDER" ]]; then
     mkdir --parents "$SKETCHBOOK_FOLDER"
-  fi
-
-  if [[ "$verboseArduinoOutput" == "true" ]]; then
-    VERBOSE_BUILD="--verbose"
   fi
 }
 
@@ -403,6 +398,17 @@ function install_library()
       # Uninstall the IDE
       uninstall_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
     fi
+  fi
+}
+
+
+function set_verbose_output_during_compilation()
+{
+  local verboseOutputDuringCompilation="$1"
+  if [[ "$verboseOutputDuringCompilation" == "true" ]]; then
+    VERBOSE_BUILD="--verbose"
+  else
+    VERBOSE_BUILD=""
   fi
 }
 

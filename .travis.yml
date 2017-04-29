@@ -39,7 +39,7 @@ before_install:
   - source "${TRAVIS_BUILD_DIR}/arduino-ci-script.sh"
 
   # set_parameters arguments: folder to install the Arduino IDE to, Sketchbook folder, Enable verbose output during compilation
-  - set_parameters "$APPLICATION_FOLDER" "$SKETCHBOOK_FOLDER" "false"
+  - set_parameters "$APPLICATION_FOLDER" "$SKETCHBOOK_FOLDER"
 
 
 install:
@@ -72,6 +72,9 @@ install:
 
 
 script:
+  # Test set_verbose_output_during_compilation. Setting verbose output to false is not actually necessary but it tests the function.
+  - set_verbose_output_during_compilation "false"
+
   # Verify sketches:
   # build_sketch arguments: sketch name, fqbn, IDE version, allow failure
   # IDE version: Use "all" for IDE version argument to verify sketch with all versions of the Arduino IDE, use "newest" for IDE version argument to verify sketch with the newest version of the Arduino IDE

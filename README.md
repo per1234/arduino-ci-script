@@ -19,11 +19,10 @@ source <(curl -SLs https://raw.githubusercontent.com/per1234/arduino-ci-script/m
 
 #### Usage
 See https://github.com/per1234/arduino-ci-script/blob/master/.travis.yml for an example of the script in use. Please configure your continuous integration system to make the minimum number of downloads and sketch verifications necessary to effectively test your code. This will prevent wasting Arduino and Travis CI's bandwidth while making the builds run fast.
-##### `set_parameters APPLICATION_FOLDER SKETCHBOOK_FOLDER verboseArduinoOutput`
+##### `set_parameters APPLICATION_FOLDER SKETCHBOOK_FOLDER`
 Used to pass some parameters from .travis.yml to the script.
 - Parameter: **APPLICATION_FOLDER** - This should be set to `/usr/local/share`. The Arduino IDE will be installed in the `arduino` subfolder.
 - Parameter: **SKETCHBOOK_FOLDER** - The folder to be set as the Arduino IDE's sketchbook folder. Libraries installed via the Arduino IDE CLI's `--install-library` option will be installed to the `libraries` subfolder of this folder. You can also use the `libraries` subfolder of this folder for [manually installing libraries in the recommended manner](https://www.arduino.cc/en/Guide/Libraries#toc5). This setting is only supported by Arduino IDE 1.5.6 and newer.
-- Parameter: **verboseArduinoOutput** - Set to `true` to turn on verbose output during compilation.
 
 ##### Special version names:
   - `all`: Refers to all versions of the Arduino IDE (including the hourly build). In the context of `install_ide` this means all IDE versions listed in the script (those that support the command line interface, 1.5.2 and newer). In the context of all other functions this means all IDE versions that were installed via `install_ide`.
@@ -63,6 +62,10 @@ Install a library that is listed in the Arduino Library Manager index. The libra
 Install a library from a URL (either compressed file download or clone Git repository). The library is installed to the `libraries` subfolder of the sketchbook folder.
 - Parameter: **libraryURL** - The URL of the library download or library name in the Arduino Library Manager. The protocol component of the URL (e.g. `http://`, `https://`) is required. This can be any compressed file format or a .git file will cause that repository to be cloned. Assumes the library is located in the root of the file.
 - Parameter(optional): **newFolderName** - Folder name to rename the installed library folder to. This parameter is only used if the library identifier is a URL (installation from a compressed file or Git repository) This can be useful if the default folder name of the downloaded file is problematic. The Arduino IDE gives include file preference when the filename matches the library folder name. GitHub's "Download ZIP" file is given the folder name {repository name}-{branch name}. Library folder names that contain `-` or `.` are not compatible with Arduino IDE 1.5.6 and older, arduino will hang if it's started with a library using an invalid folder name installed.
+
+##### `set_verbose_output_during_compilation verboseOutputDuringCompilation`
+Turn on/off arduino verbose output during compilation. This will show all the commands arduino runs during the process rather than just the compiler output. This is usually not very useful output and only clutters up the log.
+- Parameter: **verboseOutputDuringCompilation** - `true`/`false`
 
 ##### `build_sketch sketchPath boardID allowFail IDEversion`
 ##### `build_sketch sketchPath boardID allowFail [IDEversionList]`
@@ -110,6 +113,8 @@ The Arduino IDE will usually try to start the GUI whenever there is an error in 
     - `- set -v`
   - To print a trace of simple commands.
     - `- set -x`
+- Verbose output during compilation - Add the following line to your `.travis.yml` file to get verbose output from arduino of the commands used in the sketch building process:
+  - `set_verbose_output_during_compilation true`
 ##### Problematic IDE versions
 Some older versions of the Arduino IDE have bugs or limitations that may cause problems if used with this script:
 - 1.5.1 and older - The command line interface was added in 1.5.2, thus no version older than that can be used.
