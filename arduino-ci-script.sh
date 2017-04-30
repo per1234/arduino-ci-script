@@ -517,6 +517,25 @@ function build_sketch()
     # Install the IDE
     # This must be done before searching for sketches in case the path specified is in the Arduino IDE installation folder
     install_ide_version "$IDEversion"
+    
+    # For some reason the failure to install the dummy package causes the build to immediately fail with some IDE versions so I need to configure it to not do that
+    set +e
+    # The package_index files installed by some versions of the IDE (1.6.5, 1.6.5) can cause compilation to fail for other versions (1.6.5-r4, 1.6.5-r5). Attempting to install a dummy package ensures that the correct version of those files will be installed before the sketch verification.
+    # Check if the newest installed IDE version supports --install-boards
+    local regex1="1.5.[0-9]"
+    local regex2="1.6.[0-3]"
+    if ! [[ "$IDEversion" =~ $regex1 || "$IDEversion" =~ $regex2 ]]; then
+      if [[ VERBOSE_SCRIPT_OUTPUT == "true" || MORE_VERBOSE_SCRIPT_OUTPUT == "true" ]]; then
+        # Show the output from the command
+        arduino --install-boards arduino:dummy
+        echo "NOTE: The warning above \"Selected board is not available\" is caused intentionally and does not indicate a problem."
+      else
+        # Run the command silently to avoid cluttering up the log
+        arduino --install-boards arduino:dummy > dev/nul 2>&1
+      fi
+    fi
+    # Apparently the default state should be set -e, this will still allow the build to complete through failed verifications before failing rather than immediately failing
+    set -e
 
     if [[ "$sketchPath" =~ \.ino$ || "$sketchPath" =~ \.pde$ ]]; then
       # A sketch was specified
