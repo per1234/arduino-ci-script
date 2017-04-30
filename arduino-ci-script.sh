@@ -7,6 +7,10 @@
 # -e will cause the script to exit as soon as one command returns a non-zero exit code
 set -e
 
+# Save the location of the script
+# http://stackoverflow.com/a/246128/7059512
+ARDUINO_CI_SCRIPT_FOLDER="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 
 # Based on https://github.com/adafruit/travis-ci-arduino/blob/eeaeaf8fa253465d18785c2bb589e14ea9893f9f/install.sh#L11
 # It seems that arrays can't been seen in other functions. So instead I'm setting $IDE_VERSIONS to a string that is the command to create the array
@@ -351,7 +355,7 @@ function install_package()
 
       # Uncompress the package
       # This script handles any compressed file type
-      source "${TRAVIS_BUILD_DIR}/extract.sh"
+      source "${ARDUINO_CI_SCRIPT_FOLDER}/extract.sh"
       extract *.*
 
       # Clean up the temporary folder
@@ -439,7 +443,7 @@ function install_library()
       wget "$libraryIdentifier"
 
       # This script handles any compressed file type
-      source "${TRAVIS_BUILD_DIR}/extract.sh"
+      source "${ARDUINO_CI_SCRIPT_FOLDER}/extract.sh"
       extract *.*
       # Clean up the temporary folder
       rm -f *.*
@@ -517,7 +521,7 @@ function build_sketch()
     # Install the IDE
     # This must be done before searching for sketches in case the path specified is in the Arduino IDE installation folder
     install_ide_version "$IDEversion"
-    
+
     # For some reason the failure to install the dummy package causes the build to immediately fail with some IDE versions so I need to configure it to not do that
     set +e
     # The package_index files installed by some versions of the IDE (1.6.5, 1.6.5) can cause compilation to fail for other versions (1.6.5-r4, 1.6.5-r5). Attempting to install a dummy package ensures that the correct version of those files will be installed before the sketch verification.
@@ -531,7 +535,7 @@ function build_sketch()
         echo "NOTE: The warning above \"Selected board is not available\" is caused intentionally and does not indicate a problem."
       else
         # Run the command silently to avoid cluttering up the log
-        arduino --install-boards arduino:dummy > dev/nul 2>&1
+        arduino --install-boards arduino:dummy > /dev/null 2>&1
       fi
     fi
     # Apparently the default state should be set -e, this will still allow the build to complete through failed verifications before failing rather than immediately failing
