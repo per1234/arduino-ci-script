@@ -583,6 +583,10 @@ function build_this_sketch()
   # Produce a useful label for the fold in the Travis log for this function call
   echo "build_sketch $sketchName $boardID $IDEversion $allowFail"
 
+  # Arduino IDE 1.8.0 and 1.8.1 fail to verify a sketch if the absolute path to it is not specified
+  # http://stackoverflow.com/a/3915420/7059512
+  local sketchName="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
+
   local sketchBuildExitCode=255
   # Retry the verification if it returns exit code 255
   while [[ "$sketchBuildExitCode" == "255" && $verifyCount -le $SKETCH_VERIFY_RETRIES ]]; do

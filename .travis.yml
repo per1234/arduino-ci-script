@@ -91,6 +91,9 @@ script:
 
   # Installed library tests:
   # (All of the below) Test sketch verification with "newest" special version name
+  # Test sketch verification without absolute path
+  - cd "${SKETCHBOOK_FOLDER}/libraries/MPU9250/examples/MPU9250/"
+  - build_sketch "MPU9250.ino" "arduino:avr:uno" "false" "newest"
   # Test sketch verification using library installed from .zip
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/NewPing/examples/NewPingExample/NewPingExample.pde" "arduino:avr:uno" "false" "newest"
   # Test sketch verification using library installed from .zip with rename
