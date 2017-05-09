@@ -27,9 +27,10 @@ Print shell input lines as they are read.
 Print a trace of simple commands, for commands, case commands, select commands, and arithmetic for commands and their arguments or associated word lists after they are expanded and before they are executed. The value of the PS4 variable is expanded and the resultant value is printed before the command and its expanded arguments.
 - Parameter: **MORE_VERBOSE_SCRIPT_OUTPUT** - `true`/`false`
 
-##### `set_parameters APPLICATION_FOLDER SKETCHBOOK_FOLDER`
-Used to pass some parameters from .travis.yml to the script.
+##### `set_application_folder APPLICATION_FOLDER`
 - Parameter: **APPLICATION_FOLDER** - This should be set to `/usr/local/share`. The Arduino IDE will be installed in the `arduino` subfolder.
+
+##### `set_sketchbook_folder SKETCHBOOK_FOLDER`
 - Parameter: **SKETCHBOOK_FOLDER** - The folder to be set as the Arduino IDE's sketchbook folder. Libraries installed via the Arduino IDE CLI's `--install-library` option will be installed to the `libraries` subfolder of this folder. You can also use the `libraries` subfolder of this folder for [manually installing libraries in the recommended manner](https://www.arduino.cc/en/Guide/Libraries#toc5). This setting is only supported by Arduino IDE 1.5.6 and newer.
 
 ##### `set_board_testing BOARD_TESTING`

@@ -40,8 +40,8 @@ before_install:
   # Print a trace of simple commands.
   #- set_more_verbose_script_output "true"
 
-  # set_parameters arguments: folder to install the Arduino IDE to, Sketchbook folder, Enable verbose output during compilation
-  - set_parameters "$APPLICATION_FOLDER" "$SKETCHBOOK_FOLDER"
+  - set_application_folder "$APPLICATION_FOLDER"
+  - set_sketchbook_folder "$SKETCHBOOK_FOLDER"
 
   # Check for board definition errors that don't affect compilation
   - set_board_testing "true"

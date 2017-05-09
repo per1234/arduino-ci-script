@@ -110,15 +110,36 @@ function unset_script_verbosity()
 }
 
 
-function set_parameters()
+function set_application_folder()
 {
   set_script_verbosity
 
   APPLICATION_FOLDER="$1"
-  SKETCHBOOK_FOLDER="$2"
+
+  unset_script_verbosity
+}
+
+
+function set_sketchbook_folder()
+{
+  set_script_verbosity
+
+  SKETCHBOOK_FOLDER="$1"
 
   # Create the sketchbook folder if it doesn't already exist
   create_folder "$SKETCHBOOK_FOLDER"
+
+  unset_script_verbosity
+}
+
+
+# Deprecated
+function set_parameters()
+{
+  set_script_verbosity
+
+  set_application_folder "$1"
+  set_sketchbook_folder "$2"
 
   unset_script_verbosity
 }
