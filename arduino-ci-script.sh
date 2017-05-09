@@ -738,6 +738,7 @@ function check_success()
   set_script_verbosity
 
   if [[ "$TRAVIS_BUILD_EXIT_CODE" != "" ]]; then
+    set +e  # without this the build is ended immediately and none of the post-script build steps are run
     return 1
   fi
 
