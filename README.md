@@ -32,6 +32,16 @@ Used to pass some parameters from .travis.yml to the script.
 - Parameter: **APPLICATION_FOLDER** - This should be set to `/usr/local/share`. The Arduino IDE will be installed in the `arduino` subfolder.
 - Parameter: **SKETCHBOOK_FOLDER** - The folder to be set as the Arduino IDE's sketchbook folder. Libraries installed via the Arduino IDE CLI's `--install-library` option will be installed to the `libraries` subfolder of this folder. You can also use the `libraries` subfolder of this folder for [manually installing libraries in the recommended manner](https://www.arduino.cc/en/Guide/Libraries#toc5). This setting is only supported by Arduino IDE 1.5.6 and newer.
 
+##### `comment_report_gist_link REPORT_GITHUB_TOKEN REPORT_GIST_ID`
+Leave a comment on the commit with a link to the report gist when the Travis CI build begins. See the [instructions for Publishing job reports](publishing-job-reports) for details.
+- Parameter: **REPORT_GITHUB_TOKEN** - The hidden or encrypted environment variable containing the GitHub personal access token.
+- Parameter: **REPORT_GIST_ID** - The ID of the report gist.
+
+##### `publish_report_to_gist REPORT_GITHUB_TOKEN REPORT_GIST_ID`
+Add the report to the report gist. See the [instructions for Publishing job reports](publishing-job-reports) for details.
+- Parameter: **REPORT_GITHUB_TOKEN** - The hidden or encrypted environment variable containing the GitHub personal access token.
+- Parameter: **REPORT_GIST_ID** - The ID of the report gist.
+
 ##### Special version names:
   - `all`: Refers to all versions of the Arduino IDE (including the hourly build). In the context of `install_ide` this means all IDE versions listed in the script (those that support the command line interface, 1.5.2 and newer). In the context of all other functions this means all IDE versions that were installed via `install_ide`.
   - `oldest`: The oldest release version of the Arduino IDE. In the context of `install_ide` this is the oldest of the IDE versions listed in the script (1.5.2, the first version to have a command line interface). In the context of build_sketch this means the oldest IDE version that was installed via `install_ide`.
@@ -110,6 +120,34 @@ Echo a tab separated report of all verification results to the log. The report i
 
 ##### `check_success`
 This function returns an exit code of 1 if any sketch verification failed except for those that were allowed failure by setting the `build_sketch` function's `allowFail` argument to `"true"`. Returns 0 otherwise.
+
+
+#### Publishing job reports
+The script offers the option of publishing the job result reports to a GitHub [gist](https://gist.github.com/) by using the `publish_report_to_gist` function. This makes it easier to view the reports or to import them into a spreadsheet program. You also have the option of having the link to the gist automatically. This requires some configuration, which is described in the instructions below.
+
+NOTE: For security reasons reports for builds of pull requests from a fork of the repository can not be published. If the owner of that fork wants to publish reports they can create a GitHub token and Gist and configure the Travis CI settings for the repository following these instructions.
+##### Creating a GitHub personal access token
+1. Sign in to your GitHub account.
+2. Click your avatar at the top right corner of GitHub > **Settings** > **Personal access tokens** > **Generate new token**.
+3. Check **gist**.
+4. If you want to use the `publish_report_to_gist` feature then also check **public_repo** (for a public repository) or **repo** (for private and public repositories).
+5. Click the **Generate token** button.
+6. When the generated token is displayed click the clipboard icon to copy the token.
+7. Open the settings page for your repository on the Travis CI website.
+8. In the **Environment Variables** section enter `REPORT_GITHUB_TOKEN` in the **Name** field and the token in the **Value** field. Make sure the **Display value in build log** switch is in the off position.
+9. Click the **Add** button.
+
+An alternative to using a Travis CI hidden environment variable as described above is to define the GitHub personal access token as an encrypted environment variable: https://docs.travis-ci.com/user/environment-variables/#Encrypting-environment-variables.
+##### Creating a gist
+1. Open https://gist.github.com/
+2. Sign in to your GitHub account.
+3. Type an appropriate name in the **Filename including extension...** field. Gists sort files alphabetically so the filename should be something that will sort before the report filenames, which start at travis_ci_job_report_1.1.tsv.
+4. Add some text to the file contents box.
+5. Click **Create secret gist** if you don't want the gist to be discoverable (it can still be read by anyone who knows the URL), or **Create public gist** to make it discoverable.
+6. Copy the gist ID from the end of the URL.
+7. Open the settings page for your repository on the Travis CI website.
+8. In the **Environment Variables** section enter `REPORT_GIST_ID` in the **Name** field and the gist ID in the **Value** field. Turn the **Display value in build log** switch to the on position. The gist ID is not secret and this will provide more information in the log.
+9. Click the **Add** button.
 
 
 #### Troubleshooting

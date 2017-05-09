@@ -25,18 +25,33 @@ FULL_IDE_VERSION_LIST_ARRAY="${IDE_VERSION_LIST_ARRAY_DECLARATION}"'("1.5.2" "1.
 
 TEMPORARY_FOLDER="${HOME}/temporary/arduino-ci-script"
 VERIFICATION_OUTPUT_FILENAME="${TEMPORARY_FOLDER}/verification_output.txt"
-REPORT_FILENAME="${HOME}/report.txt"
+REPORT_FILENAME="travis_ci_job_report_${TRAVIS_JOB_NUMBER}.tsv"
+REPORT_FOLDER="${HOME}/arduino-ci-script_report"
+REPORT_FILE_PATH="${REPORT_FOLDER}/${REPORT_FILENAME}"
 # The Arduino IDE returns exit code 255 after a failed file signature verification of the boards manager JSON file. This does not indicate an issue with the sketch and the problem may go away after a retry.
 SKETCH_VERIFY_RETRIES=3
 
 
-# Add column names to report
-echo "Build Timestamp (UTC)"$'\t'"Build"$'\t'"Job"$'\t'"Build Trigger"$'\t'"Allow Job Failure"$'\t'"PR#"$'\t'"Branch"$'\t'"Commit"$'\t'"Commit Range"$'\t'"Commit Message"$'\t'"Sketch Filename"$'\t'"Board ID"$'\t'"IDE Version"$'\t'"Program Storage (bytes)"$'\t'"Dynamic Memory (bytes)"$'\t'"# Warnings"$'\t'"Allow Failure"$'\t'"Exit Code" > "$REPORT_FILENAME"
+# Create the folder if it doesn't exist
+function create_folder()
+{
+  local folderName="$1"
+  if ! [[ -d "$folderName" ]]; then
+    mkdir --parents "$folderName"
+  fi
+}
+
 
 # Create the temporary folder
-if ! [[ -d "$TEMPORARY_FOLDER" ]]; then
-  mkdir --parents "$TEMPORARY_FOLDER"
-fi
+create_folder "$TEMPORARY_FOLDER"
+
+# Create the report folder
+create_folder "$REPORT_FOLDER"
+
+
+# Add column names to report
+echo "Build Timestamp (UTC)"$'\t'"Build"$'\t'"Job"$'\t'"Build Trigger"$'\t'"Allow Job Failure"$'\t'"PR#"$'\t'"Branch"$'\t'"Commit"$'\t'"Commit Range"$'\t'"Commit Message"$'\t'"Sketch Filename"$'\t'"Board ID"$'\t'"IDE Version"$'\t'"Program Storage (bytes)"$'\t'"Dynamic Memory (bytes)"$'\t'"# Warnings"$'\t'"Allow Failure"$'\t'"Exit Code" > "$REPORT_FILE_PATH"
+
 
 # Start the virtual display required by the Arduino IDE CLI: https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#bugs
 # based on https://learn.adafruit.com/continuous-integration-arduino-and-you/testing-your-project
@@ -103,9 +118,7 @@ function set_parameters()
   SKETCHBOOK_FOLDER="$2"
 
   # Create the sketchbook folder if it doesn't already exist
-  if ! [[ -d "$SKETCHBOOK_FOLDER" ]]; then
-    mkdir --parents "$SKETCHBOOK_FOLDER"
-  fi
+  create_folder "$SKETCHBOOK_FOLDER"
 
   unset_script_verbosity
 }
@@ -166,9 +179,7 @@ function install_ide()
   local regex="1.5.[0-5]"
   if ! [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $regex ]]; then
     # Create the sketchbook folder if it doesn't already exist. The location can't be set in preferences if the folder doesn't exist.
-    if ! [[ -d "$SKETCHBOOK_FOLDER" ]]; then
-      mkdir --parents "$SKETCHBOOK_FOLDER"
-    fi
+    create_folder "$SKETCHBOOK_FOLDER"
 
     # --save-prefs was added in Arduino IDE 1.5.8
     local regex="1.5.[6-7]"
@@ -335,9 +346,7 @@ function install_package()
     local packageURL="$1"
 
     # Create the hardware folder if it doesn't exist
-    if ! [[ -d "${SKETCHBOOK_FOLDER}/hardware" ]]; then
-      mkdir --parents "${SKETCHBOOK_FOLDER}/hardware"
-    fi
+    create_folder "${SKETCHBOOK_FOLDER}/hardware"
 
     if [[ "$packageURL" =~ \.git$ ]]; then
       # Clone the repository
@@ -416,9 +425,7 @@ function install_library()
   local newFolderName="$2"
 
   # Create the libraries folder if it doesn't already exist
-  if ! [[ -d "${SKETCHBOOK_FOLDER}/libraries" ]]; then
-    mkdir --parents "${SKETCHBOOK_FOLDER}/libraries"
-  fi
+  create_folder "${SKETCHBOOK_FOLDER}/libraries"
 
   local regex="://"
   if [[ "$libraryIdentifier" =~ $regex ]]; then
@@ -624,7 +631,7 @@ function build_this_sketch()
   local dynamicMemory=${dynamicMemory//,}
 
   # Add the build data to the report file
-  echo `date -u "+%Y-%m-%d %H:%M:%S"`$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_JOB_NUMBER"$'\t'"$TRAVIS_EVENT_TYPE"$'\t'"$TRAVIS_ALLOW_FAILURE"$'\t'"$TRAVIS_PULL_REQUEST"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"$TRAVIS_COMMIT_RANGE"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail"$'\t'"$sketchBuildExitCode" >> "$REPORT_FILENAME"
+  echo `date -u "+%Y-%m-%d %H:%M:%S"`$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_JOB_NUMBER"$'\t'"$TRAVIS_EVENT_TYPE"$'\t'"$TRAVIS_ALLOW_FAILURE"$'\t'"$TRAVIS_PULL_REQUEST"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"$TRAVIS_COMMIT_RANGE"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail"$'\t'"$sketchBuildExitCode" >> "$REPORT_FILE_PATH"
 
   # If the sketch build failed and failure is not allowed for this test then fail the Travis build after completing all sketch builds
   if [[ "$sketchBuildExitCode" != 0 ]]; then
@@ -643,17 +650,82 @@ function build_this_sketch()
 }
 
 
+# Leave a comment on the commit with a link to the report Gist
+function comment_report_gist_link()
+{
+  set_script_verbosity
+
+  local token="$1"
+  local gist_id="$2"
+
+  if [[ "$token" != "" ]] && [[ "$gist_id" != "" ]]; then
+    local commentIdentifier="(build ID: ${TRAVIS_BUILD_ID})"
+    # Check if this is job 1 so the comment will only be made once
+    local regex=".1"
+    if [[ "$TRAVIS_JOB_NUMBER" =~ $regex ]]; then
+      local userName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 1)"
+      # Make the comment
+      if [[ "$MORE_VERBOSE_SCRIPT_OUTPUT" == "true" ]] || [[ "$VERBOSE_SCRIPT_OUTPUT" == "true" ]]; then
+        curl --header "Authorization: token ${token}" --data "{\"body\":\"Travis CI [build ${TRAVIS_BUILD_NUMBER}](https://travis-ci.org/${TRAVIS_REPO_SLUG}/builds/${TRAVIS_BUILD_ID}) has started. Once completed the job reports will be found at:\nhttps://gist.github.com/${userName}/${gist_id}#file-${REPORT_FILENAME//./-}\"}" "https://api.github.com/repos/${TRAVIS_REPO_SLUG}/commits/${TRAVIS_COMMIT}/comments"
+      else
+        curl --header "Authorization: token ${token}" --data "{\"body\":\"Travis CI [build ${TRAVIS_BUILD_NUMBER}](https://travis-ci.org/${TRAVIS_REPO_SLUG}/builds/${TRAVIS_BUILD_ID}) has started. Once completed the job reports will be found at:\nhttps://gist.github.com/${userName}/${gist_id}#file-${REPORT_FILENAME//./-}\"}" "https://api.github.com/repos/${TRAVIS_REPO_SLUG}/commits/${TRAVIS_COMMIT}/comments" 2>&1 >/dev/null
+      fi
+    fi
+  else
+    echo "GitHub token and Gist ID must be defined in your Travis CI settings for this repository to use this function. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."
+  fi
+
+  unset_script_verbosity
+}
+
+
 # Print the contents of the report file
 function display_report()
 {
   set_script_verbosity
 
-  if [ -e "$REPORT_FILENAME" ]; then
+  if [ -e "$REPORT_FILE_PATH" ]; then
     echo -e "\n\n\n**************Begin Report**************\n\n\n"
-    cat "$REPORT_FILENAME"
+    cat "$REPORT_FILE_PATH"
     echo -e "\n\n"
   else
     echo "No report file available for this job"
+  fi
+
+  unset_script_verbosity
+}
+
+
+# Add the report file to a Gist
+function publish_report_to_gist()
+{
+  set_script_verbosity
+
+  local token="$1"
+  local gist_id="$2"
+
+  if [[ "$token" != "" ]] && [[ "$gist_id" != "" ]]; then
+    if [ -e "$REPORT_FILE_PATH" ]; then
+      # http://stackoverflow.com/a/33354920/7059512
+      # Sanitize the report file content so it can be sent via a POST request without breaking the JSON
+      # Remove \r (from Windows end-of-lines), replace tabs by \t, replace " by \", replace EOL by \n
+      local reportContent=$(sed -e 's/\r//' -e's/\t/\\t/g' -e 's/"/\\"/g' "$REPORT_FILE_PATH" | awk '{ printf($0 "\\n") }')
+
+      # Upload the report to the Gist. I have to use the here document to avoid the "Argument list too long" error from curl with long reports. Redirect output to dev/null because it dumps the whole gist to the log
+      if [[ "$MORE_VERBOSE_SCRIPT_OUTPUT" == "true" ]]; then
+        curl --header "Authorization: token ${token}" --data @- "https://api.github.com/gists/${gist_id}" <<curlDataHere
+{"files":{"${REPORT_FILENAME}":{"content": "${reportContent}"}}}
+curlDataHere
+      else
+        curl --header "Authorization: token ${token}" --data @- "https://api.github.com/gists/${gist_id}" <<curlDataHere 2>&1 >/dev/null
+{"files":{"${REPORT_FILENAME}":{"content": "${reportContent}"}}}
+curlDataHere
+      fi
+    else
+      echo "No report file available for this job"
+    fi
+  else
+    echo "GitHub token and Gist ID must be defined in your Travis CI settings for this repository to use this function. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."
   fi
 
   unset_script_verbosity
