@@ -43,6 +43,9 @@ before_install:
   # set_parameters arguments: folder to install the Arduino IDE to, Sketchbook folder, Enable verbose output during compilation
   - set_parameters "$APPLICATION_FOLDER" "$SKETCHBOOK_FOLDER"
 
+  # Check for board definition errors that don't affect compilation
+  - set_board_testing "true"
+
   - comment_report_gist_link "$REPORT_GITHUB_TOKEN" "$REPORT_GIST_ID"
 
 

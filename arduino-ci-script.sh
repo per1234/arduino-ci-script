@@ -50,7 +50,7 @@ create_folder "$REPORT_FOLDER"
 
 
 # Add column names to report
-echo "Build Timestamp (UTC)"$'\t'"Build"$'\t'"Job"$'\t'"Build Trigger"$'\t'"Allow Job Failure"$'\t'"PR#"$'\t'"Branch"$'\t'"Commit"$'\t'"Commit Range"$'\t'"Commit Message"$'\t'"Sketch Filename"$'\t'"Board ID"$'\t'"IDE Version"$'\t'"Program Storage (bytes)"$'\t'"Dynamic Memory (bytes)"$'\t'"# Warnings"$'\t'"Allow Failure"$'\t'"Exit Code" > "$REPORT_FILE_PATH"
+echo "Build Timestamp (UTC)"$'\t'"Build"$'\t'"Job"$'\t'"Build Trigger"$'\t'"Allow Job Failure"$'\t'"PR#"$'\t'"Branch"$'\t'"Commit"$'\t'"Commit Range"$'\t'"Commit Message"$'\t'"Sketch Filename"$'\t'"Board ID"$'\t'"IDE Version"$'\t'"Program Storage (bytes)"$'\t'"Dynamic Memory (bytes)"$'\t'"# Warnings"$'\t'"Allow Failure"$'\t'"Exit Code"$'\t'"Board Error" > "$REPORT_FILE_PATH"
 
 
 # Start the virtual display required by the Arduino IDE CLI: https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#bugs
@@ -119,6 +119,17 @@ function set_parameters()
 
   # Create the sketchbook folder if it doesn't already exist
   create_folder "$SKETCHBOOK_FOLDER"
+
+  unset_script_verbosity
+}
+
+
+# Check for errors with the board definition that don't affect sketch verification
+function set_board_testing()
+{
+  set_script_verbosity
+
+  BOARD_TESTING="$1"
 
   unset_script_verbosity
 }
@@ -628,6 +639,17 @@ function build_this_sketch()
       if [[ "$outputFileLine" =~ $regex ]] > /dev/null; then
         local warningCount=$((warningCount + 1))
       fi
+
+      # Check for missing bootloader
+      if [[ "$TEST_PACKAGE" == "true" ]]; then
+        local regex="Bootloader file specified but missing: "
+        if [[ "$outputFileLine" =~ $regex ]] > /dev/null; then
+          local boardError="missing bootloader"
+          if [[ "$allowFail" != "true" ]]; then
+            TRAVIS_BUILD_EXIT_CODE=1
+          fi
+        fi
+      fi
     done < "$VERIFICATION_OUTPUT_FILENAME"
 
     rm "$VERIFICATION_OUTPUT_FILENAME"
@@ -638,7 +660,7 @@ function build_this_sketch()
   fi
 
   # Add the build data to the report file
-  echo `date -u "+%Y-%m-%d %H:%M:%S"`$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_JOB_NUMBER"$'\t'"$TRAVIS_EVENT_TYPE"$'\t'"$TRAVIS_ALLOW_FAILURE"$'\t'"$TRAVIS_PULL_REQUEST"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"$TRAVIS_COMMIT_RANGE"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail"$'\t'"$sketchBuildExitCode" >> "$REPORT_FILE_PATH"
+  echo `date -u "+%Y-%m-%d %H:%M:%S"`$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_JOB_NUMBER"$'\t'"$TRAVIS_EVENT_TYPE"$'\t'"$TRAVIS_ALLOW_FAILURE"$'\t'"$TRAVIS_PULL_REQUEST"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"$TRAVIS_COMMIT_RANGE"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail"$'\t'"$sketchBuildExitCode"$'\t'"$boardError" >> "$REPORT_FILE_PATH"
 
   # End the folded section of the Travis CI build log
   echo -e "travis_fold:end:build_sketch"

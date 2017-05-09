@@ -32,6 +32,10 @@ Used to pass some parameters from .travis.yml to the script.
 - Parameter: **APPLICATION_FOLDER** - This should be set to `/usr/local/share`. The Arduino IDE will be installed in the `arduino` subfolder.
 - Parameter: **SKETCHBOOK_FOLDER** - The folder to be set as the Arduino IDE's sketchbook folder. Libraries installed via the Arduino IDE CLI's `--install-library` option will be installed to the `libraries` subfolder of this folder. You can also use the `libraries` subfolder of this folder for [manually installing libraries in the recommended manner](https://www.arduino.cc/en/Guide/Libraries#toc5). This setting is only supported by Arduino IDE 1.5.6 and newer.
 
+##### `set_board_testing BOARD_TESTING`
+Turn on/off checking for errors with the board definition that don't affect sketch verification such as missing bootloader file. If this is turned on and an error is detected the build will be failed. This feature is off by default.
+- Parameter: **BOARD_TESTING** - `true`/`false`
+
 ##### `comment_report_gist_link REPORT_GITHUB_TOKEN REPORT_GIST_ID`
 Leave a comment on the commit with a link to the report gist when the Travis CI build begins. See the [instructions for Publishing job reports](publishing-job-reports) for details.
 - Parameter: **REPORT_GITHUB_TOKEN** - The hidden or encrypted environment variable containing the GitHub personal access token.
@@ -117,6 +121,7 @@ Echo a tab separated report of all verification results to the log. The report i
 - Number of warnings
 - Sketch verification allowed to fail
 - Sketch verification exit code
+- Board error
 
 ##### `check_success`
 This function returns an exit code of 1 if any sketch verification failed except for those that were allowed failure by setting the `build_sketch` function's `allowFail` argument to `"true"`. Returns 0 otherwise.
