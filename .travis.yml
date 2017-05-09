@@ -138,9 +138,12 @@ script:
   # Test build_sketch with folder argument allowed to fail (this will fail because WirelessOregonV2 is AVR specific)
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WirelessOregonV2/examples" "arduino:sam:arduino_due_x_dbg" "true" "newest"
 
+  - check_success
+
+
+after_script:
   - publish_report_to_gist "$REPORT_GITHUB_TOKEN" "$REPORT_GIST_ID"
   - display_report
-  - check_success
 
 
 notifications:
