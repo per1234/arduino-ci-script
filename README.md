@@ -158,12 +158,12 @@ Verbose output results in a harder to read log so you should leave it off or min
 - Verbose script output - Add or uncomment the following lines in your `.travis.yml` file to get more information for troubleshooting.
   - Print shell input lines as they are read:
     - `- set_verbose_script_output "true"`
-  - Print a trace of simple commands, for commands, case commands, select commands, and arithmetic for commands and their arguments or associated word lists after they are expanded and before they are executed. The value of the PS4 variable is expanded and the resultant value is printed before the command and its expanded arguments. 
+  - Print a trace of simple commands, for commands, case commands, select commands, and arithmetic for commands and their arguments or associated word lists after they are expanded and before they are executed. The value of the PS4 variable is expanded and the resultant value is printed before the command and its expanded arguments.
     - `- set_more_verbose_script_output "true"`
 - Verbose output for Travis CI and script - Add one or both of the following lines to your `.travis.yml` file to get more information for troubleshooting of both the Travis CI build process and the script. Do not turn on verbosity by passing `true` to `set_verbose_script_output` or `set_more_verbose_script_output` when you have these lines in your `.travis.yml` file.
   - Print shell input lines as they are read:
     - `- set -o verbose`
-  - Print a trace of simple commands, for commands, case commands, select commands, and arithmetic for commands and their arguments or associated word lists after they are expanded and before they are executed. The value of the PS4 variable is expanded and the resultant value is printed before the command and its expanded arguments. 
+  - Print a trace of simple commands, for commands, case commands, select commands, and arithmetic for commands and their arguments or associated word lists after they are expanded and before they are executed. The value of the PS4 variable is expanded and the resultant value is printed before the command and its expanded arguments.
     - `- set -o xtrace`
 - Verbose output during compilation - Add the following line to your `.travis.yml` file to get verbose output from arduino of the commands used in the sketch building process:
   - `set_verbose_output_during_compilation true`
