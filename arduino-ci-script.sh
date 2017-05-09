@@ -602,43 +602,43 @@ function build_this_sketch()
     local verifyCount=$((verifyCount + 1))
   done
 
-  # Parse through the output from the sketch verification to count warnings and determine the compile size
-  local warningCount=0
-  while read outputFileLine; do
-    # Determine program storage memory usage
-    local regex="Sketch uses ([0-9,]+) *"
-    if [[ "$outputFileLine" =~ $regex ]] > /dev/null; then
-      local programStorage=${BASH_REMATCH[1]}
-    fi
-
-    # Determine dynamic memory usage
-    local regex="Global variables use ([0-9,]+) *"
-    if [[ "$outputFileLine" =~ $regex ]] > /dev/null; then
-      local dynamicMemory=${BASH_REMATCH[1]}
-    fi
-
-    # Increment warning count
-    local regex="warning: "
-    if [[ "$outputFileLine" =~ $regex ]] > /dev/null; then
-      local warningCount=$((warningCount + 1))
-    fi
-  done < "$VERIFICATION_OUTPUT_FILENAME"
-
-  rm "$VERIFICATION_OUTPUT_FILENAME"
-
-  # Remove the stupid comma from the memory values if present
-  local programStorage=${programStorage//,}
-  local dynamicMemory=${dynamicMemory//,}
-
-  # Add the build data to the report file
-  echo `date -u "+%Y-%m-%d %H:%M:%S"`$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_JOB_NUMBER"$'\t'"$TRAVIS_EVENT_TYPE"$'\t'"$TRAVIS_ALLOW_FAILURE"$'\t'"$TRAVIS_PULL_REQUEST"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"$TRAVIS_COMMIT_RANGE"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail"$'\t'"$sketchBuildExitCode" >> "$REPORT_FILE_PATH"
-
   # If the sketch build failed and failure is not allowed for this test then fail the Travis build after completing all sketch builds
   if [[ "$sketchBuildExitCode" != 0 ]]; then
     if [[ "$allowFail" != "true" ]]; then
       TRAVIS_BUILD_EXIT_CODE=1
     fi
+  else
+    # Parse through the output from the sketch verification to count warnings and determine the compile size
+    local warningCount=0
+    while read outputFileLine; do
+      # Determine program storage memory usage
+      local regex="Sketch uses ([0-9,]+) *"
+      if [[ "$outputFileLine" =~ $regex ]] > /dev/null; then
+        local programStorage=${BASH_REMATCH[1]}
+      fi
+
+      # Determine dynamic memory usage
+      local regex="Global variables use ([0-9,]+) *"
+      if [[ "$outputFileLine" =~ $regex ]] > /dev/null; then
+        local dynamicMemory=${BASH_REMATCH[1]}
+      fi
+
+      # Increment warning count
+      local regex="warning: "
+      if [[ "$outputFileLine" =~ $regex ]] > /dev/null; then
+        local warningCount=$((warningCount + 1))
+      fi
+    done < "$VERIFICATION_OUTPUT_FILENAME"
+
+    rm "$VERIFICATION_OUTPUT_FILENAME"
+
+    # Remove the stupid comma from the memory values if present
+    local programStorage=${programStorage//,}
+    local dynamicMemory=${dynamicMemory//,}
   fi
+
+  # Add the build data to the report file
+  echo `date -u "+%Y-%m-%d %H:%M:%S"`$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_JOB_NUMBER"$'\t'"$TRAVIS_EVENT_TYPE"$'\t'"$TRAVIS_ALLOW_FAILURE"$'\t'"$TRAVIS_PULL_REQUEST"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"$TRAVIS_COMMIT_RANGE"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail"$'\t'"$sketchBuildExitCode" >> "$REPORT_FILE_PATH"
 
   # End the folded section of the Travis CI build log
   echo -e "travis_fold:end:build_sketch"
