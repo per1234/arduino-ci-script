@@ -80,6 +80,12 @@ function set_more_verbose_script_output()
 
   MORE_VERBOSE_SCRIPT_OUTPUT="$1"
 
+  if [[ "$MORE_VERBOSE_SCRIPT_OUTPUT" == "true" ]]; then
+    VERBOSE_OPTION="--verbose"
+  else
+    VERBOSE_OPTION=""
+  fi
+
   unset_script_verbosity
 }
 
@@ -412,9 +418,9 @@ function install_package()
     local packageName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
     mkdir --parents "${SKETCHBOOK_FOLDER}/hardware/$packageName"
     cd "$TRAVIS_BUILD_DIR"
-    cp --recursive --verbose * "${SKETCHBOOK_FOLDER}/hardware/${packageName}"
+    cp --recursive $VERBOSE_OPTION * "${SKETCHBOOK_FOLDER}/hardware/${packageName}"
     # * doesn't copy .travis.yml but that file will be present in the user's installation so it should be there for the tests too
-    cp --verbose "${TRAVIS_BUILD_DIR}/.travis.yml" "${SKETCHBOOK_FOLDER}/hardware/${packageName}"
+    cp $VERBOSE_OPTION "${TRAVIS_BUILD_DIR}/.travis.yml" "${SKETCHBOOK_FOLDER}/hardware/${packageName}"
 
   else
     # Install package via Boards Manager
@@ -496,9 +502,9 @@ function install_library()
     local libraryName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
     mkdir --parents "${SKETCHBOOK_FOLDER}/libraries/$libraryName"
     cd "$TRAVIS_BUILD_DIR"
-    cp --recursive --verbose * "${SKETCHBOOK_FOLDER}/libraries/${libraryName}"
+    cp --recursive $VERBOSE_OPTION * "${SKETCHBOOK_FOLDER}/libraries/${libraryName}"
     # * doesn't copy .travis.yml but that file will be present in the user's installation so it should be there for the tests too
-    cp --verbose "${TRAVIS_BUILD_DIR}/.travis.yml" "${SKETCHBOOK_FOLDER}/libraries/${libraryName}"
+    cp $VERBOSE_OPTION "${TRAVIS_BUILD_DIR}/.travis.yml" "${SKETCHBOOK_FOLDER}/libraries/${libraryName}"
 
   else
     # Install a library that is part of the Library Manager index
