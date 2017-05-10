@@ -33,12 +33,7 @@ matrix:
 before_install:
   - source "${TRAVIS_BUILD_DIR}/arduino-ci-script.sh"
 
-  # https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
-  # Uncomment the following lines to get verbose script output for debugging
-  # Print shell input lines as they are read.
-  #- set_verbose_script_output "true"
-  # Print a trace of simple commands.
-  #- set_more_verbose_script_output "true"
+  - set_script_verbosity 0
 
   - set_application_folder "$APPLICATION_FOLDER"
   - set_sketchbook_folder "$SKETCHBOOK_FOLDER"

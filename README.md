@@ -26,13 +26,9 @@ Bash script for continuous integration of [Arduino](http://www.arduino.cc/) proj
 
 #### Usage
 See https://github.com/per1234/WatchdogLog/blob/master/.travis.yml for an example of the script in use. Please configure your continuous integration system to make the minimum number of downloads and sketch verifications necessary to effectively test your code. This will prevent wasting Arduino and Travis CI's bandwidth while making the builds run fast.
-##### `set_verbose_script_output VERBOSE_SCRIPT_OUTPUT`
-Print shell input lines as they are read.
-- Parameter: **VERBOSE_SCRIPT_OUTPUT** - `true`/`false`
-
-##### `set_more_verbose_script_output MORE_VERBOSE_SCRIPT_OUTPUT`
-Print a trace of simple commands, for commands, case commands, select commands, and arithmetic for commands and their arguments or associated word lists after they are expanded and before they are executed. The value of the PS4 variable is expanded and the resultant value is printed before the command and its expanded arguments.
-- Parameter: **MORE_VERBOSE_SCRIPT_OUTPUT** - `true`/`false`
+##### `set_script_verbosity SCRIPT_VERBOSITY_LEVEL`
+Control the level of verbosity of the script's output in the Travis CI log. Verbose output can be helpful for debugging but in normal usage it makes the log hard to read and may cause the log to exceed Travis CI's maximum log size of 4 MB, which causes the job to be terminated.
+- Parameter: **SCRIPT_VERBOSITY_LEVEL** - `0`, `1` or `2` (least to most verbosity).
 
 ##### `set_application_folder APPLICATION_FOLDER`
 - Parameter: **APPLICATION_FOLDER** - This should be set to `/usr/local/share`. The Arduino IDE will be installed in the `arduino` subfolder.

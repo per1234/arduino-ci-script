@@ -60,112 +60,146 @@ sleep 3
 export DISPLAY=:1.0
 
 
-# "Print shell input lines as they are read."
-# https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
-function set_verbose_script_output()
-{
-  set_script_verbosity
-
-  VERBOSE_SCRIPT_OUTPUT="$1"
-
-  unset_script_verbosity
-}
-
-
-# "Print a trace of simple commands, for commands, case commands, select commands, and arithmetic for commands and their arguments or associated word lists after they are expanded and before they are executed. The value of the PS4 variable is expanded and the resultant value is printed before the command and its expanded arguments."
-# https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
-function set_more_verbose_script_output()
-{
-  set_script_verbosity
-
-  MORE_VERBOSE_SCRIPT_OUTPUT="$1"
-
-  if [[ "$MORE_VERBOSE_SCRIPT_OUTPUT" == "true" ]]; then
-    VERBOSE_OPTION="--verbose"
-  else
-    VERBOSE_OPTION=""
-  fi
-
-  unset_script_verbosity
-}
-
-
-# Turn on verbosity based on the preferences set by set_verbose_script_output and set_more_verbose_script_output
 function set_script_verbosity()
 {
-  # https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
+  enable_verbosity
+
+  SCRIPT_VERBOSITY_LEVEL="$1"
+
+  if [[ "$SCRIPT_VERBOSITY_LEVEL" == "true" ]]; then
+    SCRIPT_VERBOSITY_LEVEL=1
+  fi
+
+  if [[ "$SCRIPT_VERBOSITY_LEVEL" == 1 ]]; then
+    VERBOSITY_OPTION="--verbose"
+    # Show stderr only
+    VERBOSITY_REDIRECT="1>/dev/null"
+  elif [[ "$SCRIPT_VERBOSITY_LEVEL" == 2 ]]; then
+    VERBOSE_SCRIPT_OUTPUT="true"
+    MORE_VERBOSE_SCRIPT_OUTPUT="true"
+    VERBOSITY_OPTION="--verbose"
+    # Show stdout and stderr
+    VERBOSITY_REDIRECT=""
+  else
+    SCRIPT_VERBOSITY_LEVEL=0
+    VERBOSITY_OPTION=""
+    # Don't show stderr or stdout
+    VERBOSITY_REDIRECT="&>/dev/null"
+  fi
+
+  disable_verbosity
+}
+
+
+# Deprecated, use set_script_verbosity
+function set_verbose_script_output()
+{
+  enable_verbosity
+
   if [[ "$VERBOSE_SCRIPT_OUTPUT" == "true" ]]; then
+    set_script_verbosity 1
+  else
+    set_script_verbosity 0
+  fi
+
+  disable_verbosity
+}
+
+
+# Deprecated, use set_script_verbosity
+function set_more_verbose_script_output()
+{
+  enable_verbosity
+
+  if [[ "$MORE_VERBOSE_SCRIPT_OUTPUT" == "true" ]]; then
+    set_script_verbosity 2
+  else
+    set_script_verbosity 0
+  fi
+
+  disable_verbosity
+}
+
+
+# Turn on verbosity based on the preferences set by set_script_verbosity
+function enable_verbosity()
+{
+  if [[ "$SCRIPT_VERBOSITY_LEVEL" > 0 ]]; then
+    # "Print shell input lines as they are read."
+    # https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
     set -o verbose
   fi
-  if [[ "$MORE_VERBOSE_SCRIPT_OUTPUT" == "true" ]]; then
+  if [[ "$SCRIPT_VERBOSITY_LEVEL" > 1 ]]; then
+    set -o verbose
+    # "Print a trace of simple commands, for commands, case commands, select commands, and arithmetic for commands and their arguments or associated word lists after they are expanded and before they are executed. The value of the PS4 variable is expanded and the resultant value is printed before the command and its expanded arguments."
+    # https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
     set -o xtrace
   fi
 }
 
 
 # Turn off verbosity based on the preferences set by set_verbose_script_output and set_more_verbose_script_output
-function unset_script_verbosity()
+function disable_verbosity()
 {
-  # https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
-  if [[ "$VERBOSE_SCRIPT_OUTPUT" == "true" ]]; then
-    set +o verbose
-  fi
-  if [[ "$MORE_VERBOSE_SCRIPT_OUTPUT" == "true" ]]; then
-    set +o xtrace
-  fi
+  set +o verbose
+  set +o xtrace
 }
+
+
+# Set default verbosity (must be called after the function definitions
+set_script_verbosity 0
 
 
 function set_application_folder()
 {
-  set_script_verbosity
+  enable_verbosity
 
   APPLICATION_FOLDER="$1"
 
-  unset_script_verbosity
+  disable_verbosity
 }
 
 
 function set_sketchbook_folder()
 {
-  set_script_verbosity
+  enable_verbosity
 
   SKETCHBOOK_FOLDER="$1"
 
   # Create the sketchbook folder if it doesn't already exist
   create_folder "$SKETCHBOOK_FOLDER"
 
-  unset_script_verbosity
+  disable_verbosity
 }
 
 
 # Deprecated
 function set_parameters()
 {
-  set_script_verbosity
+  enable_verbosity
 
   set_application_folder "$1"
   set_sketchbook_folder "$2"
 
-  unset_script_verbosity
+  disable_verbosity
 }
 
 
 # Check for errors with the board definition that don't affect sketch verification
 function set_board_testing()
 {
-  set_script_verbosity
+  enable_verbosity
 
   BOARD_TESTING="$1"
 
-  unset_script_verbosity
+  disable_verbosity
 }
 
 
 # Install all specified versions of the Arduino IDE
 function install_ide()
 {
-  set_script_verbosity
+  enable_verbosity
 
   local startIDEversion="$1"
   local endIDEversion="$2"
@@ -232,7 +266,7 @@ function install_ide()
   # Uninstall the IDE
   uninstall_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
 
-  unset_script_verbosity
+  disable_verbosity
 }
 
 
@@ -240,7 +274,7 @@ function install_ide()
 # This function allows the same code to be shared by install_ide and build_sketch. The generated array is "returned" as a global named "$GENERATED_IDE_VERSION_LIST_ARRAY"
 function generate_ide_version_list_array()
 {
-  set_script_verbosity
+  enable_verbosity
 
   local baseIDEversionArray="$1"
   local startIDEversion="$2"
@@ -317,7 +351,7 @@ function generate_ide_version_list_array()
     GENERATED_IDE_VERSION_LIST_ARRAY="$GENERATED_IDE_VERSION_LIST_ARRAY"')'
   fi
 
-  unset_script_verbosity
+  disable_verbosity
 }
 
 
@@ -325,7 +359,7 @@ function generate_ide_version_list_array()
 # The determined versions are "returned" by setting the global variables "$DETERMINED_OLDEST_IDE_VERSION" and "$DETERMINED_NEWEST_IDE_VERSION"
 function determine_ide_version_extremes()
 {
-  set_script_verbosity
+  enable_verbosity
 
   local baseIDEversionArray="$1"
 
@@ -345,36 +379,36 @@ function determine_ide_version_extremes()
     fi
   done
 
-  unset_script_verbosity
+  disable_verbosity
 }
 
 
 function install_ide_version()
 {
-  set_script_verbosity
+  enable_verbosity
 
   local IDEversion="$1"
   sudo mv "${APPLICATION_FOLDER}/arduino-${IDEversion}" "${APPLICATION_FOLDER}/arduino"
 
-  unset_script_verbosity
+  disable_verbosity
 }
 
 
 function uninstall_ide_version()
 {
-  set_script_verbosity
+  enable_verbosity
 
   local IDEversion="$1"
   sudo mv "${APPLICATION_FOLDER}/arduino" "${APPLICATION_FOLDER}/arduino-${IDEversion}"
 
-  unset_script_verbosity
+  disable_verbosity
 }
 
 
 # Install hardware packages
 function install_package()
 {
-  set_script_verbosity
+  enable_verbosity
 
   local regex="://"
   if [[ "$1" =~ $regex ]]; then
@@ -418,9 +452,9 @@ function install_package()
     local packageName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
     mkdir --parents "${SKETCHBOOK_FOLDER}/hardware/$packageName"
     cd "$TRAVIS_BUILD_DIR"
-    cp --recursive $VERBOSE_OPTION * "${SKETCHBOOK_FOLDER}/hardware/${packageName}"
+    cp --recursive $VERBOSITY_OPTION * "${SKETCHBOOK_FOLDER}/hardware/${packageName}"
     # * doesn't copy .travis.yml but that file will be present in the user's installation so it should be there for the tests too
-    cp $VERBOSE_OPTION "${TRAVIS_BUILD_DIR}/.travis.yml" "${SKETCHBOOK_FOLDER}/hardware/${packageName}"
+    cp $VERBOSITY_OPTION "${TRAVIS_BUILD_DIR}/.travis.yml" "${SKETCHBOOK_FOLDER}/hardware/${packageName}"
 
   else
     # Install package via Boards Manager
@@ -451,13 +485,13 @@ function install_package()
     fi
   fi
 
-  unset_script_verbosity
+  disable_verbosity
 }
 
 
 function install_library()
 {
-  set_script_verbosity
+  enable_verbosity
 
   local libraryIdentifier="$1"
   local newFolderName="$2"
@@ -502,9 +536,9 @@ function install_library()
     local libraryName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
     mkdir --parents "${SKETCHBOOK_FOLDER}/libraries/$libraryName"
     cd "$TRAVIS_BUILD_DIR"
-    cp --recursive $VERBOSE_OPTION * "${SKETCHBOOK_FOLDER}/libraries/${libraryName}"
+    cp --recursive $VERBOSITY_OPTION * "${SKETCHBOOK_FOLDER}/libraries/${libraryName}"
     # * doesn't copy .travis.yml but that file will be present in the user's installation so it should be there for the tests too
-    cp $VERBOSE_OPTION "${TRAVIS_BUILD_DIR}/.travis.yml" "${SKETCHBOOK_FOLDER}/libraries/${libraryName}"
+    cp $VERBOSITY_OPTION "${TRAVIS_BUILD_DIR}/.travis.yml" "${SKETCHBOOK_FOLDER}/libraries/${libraryName}"
 
   else
     # Install a library that is part of the Library Manager index
@@ -528,13 +562,13 @@ function install_library()
     fi
   fi
 
-  unset_script_verbosity
+  disable_verbosity
 }
 
 
 function set_verbose_output_during_compilation()
 {
-  set_script_verbosity
+  enable_verbosity
 
   local verboseOutputDuringCompilation="$1"
   if [[ "$verboseOutputDuringCompilation" == "true" ]]; then
@@ -543,14 +577,14 @@ function set_verbose_output_during_compilation()
     VERBOSE_BUILD=""
   fi
 
-  unset_script_verbosity
+  disable_verbosity
 }
 
 
 # Verify the sketch
 function build_sketch()
 {
-  set_script_verbosity
+  enable_verbosity
 
   local sketchPath="$1"
   local boardID="$2"
@@ -574,13 +608,10 @@ function build_sketch()
     local regex1="1.5.[0-9]"
     local regex2="1.6.[0-3]"
     if ! [[ "$IDEversion" =~ $regex1 || "$IDEversion" =~ $regex2 ]]; then
-      if [[ VERBOSE_SCRIPT_OUTPUT == "true" || MORE_VERBOSE_SCRIPT_OUTPUT == "true" ]]; then
-        # Show the output from the command
-        arduino --install-boards arduino:dummy
+      eval arduino --install-boards arduino:dummy "$VERBOSITY_REDIRECT"
+      if [[ "$SCRIPT_VERBOSITY_LEVEL" -gt 1 ]]; then
+        # The warning is printed to stdout
         echo "NOTE: The warning above \"Selected board is not available\" is caused intentionally and does not indicate a problem."
-      else
-        # Run the command silently to avoid cluttering up the log
-        arduino --install-boards arduino:dummy > /dev/null 2>&1
       fi
     fi
     # Apparently the default state should be set -e, this will still allow the build to complete through failed verifications before failing rather than immediately failing
@@ -609,7 +640,7 @@ function build_sketch()
     uninstall_ide_version "$IDEversion"
   done
 
-  unset_script_verbosity
+  disable_verbosity
 }
 
 
@@ -618,7 +649,7 @@ function build_this_sketch()
   # Fold this section of output in the Travis CI build log to make it easier to read
   echo -e "travis_fold:start:build_sketch"
 
-  set_script_verbosity
+  enable_verbosity
 
   local sketchName="$1"
   local boardID="$2"
@@ -693,7 +724,7 @@ function build_this_sketch()
   echo -e "travis_fold:end:build_sketch"
   # Add a useful message to the Travis CI build log
 
-  unset_script_verbosity
+  disable_verbosity
 
   echo "arduino exit code: $sketchBuildExitCode"
 }
@@ -702,7 +733,7 @@ function build_this_sketch()
 # Leave a comment on the commit with a link to the report Gist
 function comment_report_gist_link()
 {
-  set_script_verbosity
+  enable_verbosity
 
   local token="$1"
   local gist_id="$2"
@@ -714,24 +745,20 @@ function comment_report_gist_link()
     if [[ "$TRAVIS_JOB_NUMBER" =~ $regex ]]; then
       local userName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 1)"
       # Make the comment
-      if [[ "$MORE_VERBOSE_SCRIPT_OUTPUT" == "true" ]] || [[ "$VERBOSE_SCRIPT_OUTPUT" == "true" ]]; then
-        curl --header "Authorization: token ${token}" --data "{\"body\":\"Travis CI [build ${TRAVIS_BUILD_NUMBER}](https://travis-ci.org/${TRAVIS_REPO_SLUG}/builds/${TRAVIS_BUILD_ID}) has started. Once completed the job reports will be found at:\nhttps://gist.github.com/${userName}/${gist_id}#file-${REPORT_FILENAME//./-}\"}" "https://api.github.com/repos/${TRAVIS_REPO_SLUG}/commits/${TRAVIS_COMMIT}/comments"
-      else
-        curl --header "Authorization: token ${token}" --data "{\"body\":\"Travis CI [build ${TRAVIS_BUILD_NUMBER}](https://travis-ci.org/${TRAVIS_REPO_SLUG}/builds/${TRAVIS_BUILD_ID}) has started. Once completed the job reports will be found at:\nhttps://gist.github.com/${userName}/${gist_id}#file-${REPORT_FILENAME//./-}\"}" "https://api.github.com/repos/${TRAVIS_REPO_SLUG}/commits/${TRAVIS_COMMIT}/comments" 2>&1 >/dev/null
-      fi
+      eval curl --header "Authorization: token ${token}" --data "{\"body\":\"Travis CI [build ${TRAVIS_BUILD_NUMBER}](https://travis-ci.org/${TRAVIS_REPO_SLUG}/builds/${TRAVIS_BUILD_ID}) has started. Once completed the job reports will be found at:\nhttps://gist.github.com/${userName}/${gist_id}#file-${REPORT_FILENAME//./-}\"}" "https://api.github.com/repos/${TRAVIS_REPO_SLUG}/commits/${TRAVIS_COMMIT}/comments" "$VERBOSITY_REDIRECT"
     fi
   else
     echo "GitHub token and Gist ID must be defined in your Travis CI settings for this repository to use this function. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."
   fi
 
-  unset_script_verbosity
+  disable_verbosity
 }
 
 
 # Print the contents of the report file
 function display_report()
 {
-  set_script_verbosity
+  enable_verbosity
 
   if [ -e "$REPORT_FILE_PATH" ]; then
     echo -e "\n\n\n**************Begin Report**************\n\n\n"
@@ -741,14 +768,14 @@ function display_report()
     echo "No report file available for this job"
   fi
 
-  unset_script_verbosity
+  disable_verbosity
 }
 
 
 # Add the report file to a Gist
 function publish_report_to_gist()
 {
-  set_script_verbosity
+  enable_verbosity
 
   local token="$1"
   local gist_id="$2"
@@ -761,35 +788,43 @@ function publish_report_to_gist()
       local reportContent=$(sed -e 's/\r//' -e's/\t/\\t/g' -e 's/"/\\"/g' "$REPORT_FILE_PATH" | awk '{ printf($0 "\\n") }')
 
       # Upload the report to the Gist. I have to use the here document to avoid the "Argument list too long" error from curl with long reports. Redirect output to dev/null because it dumps the whole gist to the log
-      if [[ "$MORE_VERBOSE_SCRIPT_OUTPUT" == "true" ]]; then
-        curl --header "Authorization: token ${token}" --data @- "https://api.github.com/gists/${gist_id}" <<curlDataHere
+      eval curl --header "\"Authorization: token ${token}\"" --data @- "\"https://api.github.com/gists/${gistID}\"" <<curlDataHere "$VERBOSITY_REDIRECT"
 {"files":{"${REPORT_FILENAME}":{"content": "${reportContent}"}}}
 curlDataHere
-      else
-        curl --header "Authorization: token ${token}" --data @- "https://api.github.com/gists/${gist_id}" <<curlDataHere 2>&1 >/dev/null
-{"files":{"${REPORT_FILENAME}":{"content": "${reportContent}"}}}
-curlDataHere
-      fi
-    else
+     else
       echo "No report file available for this job"
     fi
   else
     echo "GitHub token and Gist ID must be defined in your Travis CI settings for this repository to use this function. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."
   fi
 
-  unset_script_verbosity
+  disable_verbosity
+}
+
+
+# Leave a comment on the commit with a link to the report
+function comment_report_link()
+{
+  enable_verbosity
+
+  local token="$1"
+  local reportURL="$2"
+
+  eval curl --header "\"Authorization: token ${token}\"" --data \"{'\"'body'\"':'\"'Once completed, the job reports for Travis CI [build ${TRAVIS_BUILD_NUMBER}]\(https://travis-ci.org/${TRAVIS_REPO_SLUG}/builds/${TRAVIS_BUILD_ID}\) will be found at:\\n${reportURL}'\"'}\" "\"https://api.github.com/repos/${TRAVIS_REPO_SLUG}/commits/${TRAVIS_COMMIT}/comments\"" "$VERBOSITY_REDIRECT"
+
+  disable_verbosity
 }
 
 
 # Return 1 if any of the sketch builds failed
 function check_success()
 {
-  set_script_verbosity
+  enable_verbosity
 
   if [[ "$TRAVIS_BUILD_EXIT_CODE" != "" ]]; then
     set +e  # without this the build is ended immediately and none of the post-script build steps are run
     return 1
   fi
 
-  unset_script_verbosity
+  disable_verbosity
 }
