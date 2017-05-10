@@ -9,11 +9,18 @@ Bash script for continuous integration of [Arduino](http://www.arduino.cc/) proj
 - You can download a .zip of all the files from https://github.com/per1234/arduino-ci-script/archive/master.zip
 - Include the script in your project by adding the following line:
 ```bash
-source arduino-ci-script.sh
+  - source arduino-ci-script.sh
 ```
-- Or if you want to leave the files hosted in this repository:
+- It's possible to leave the script hosted at this repository.
 ```bash
-source <(curl -SLs https://raw.githubusercontent.com/per1234/arduino-ci-script/master/arduino-ci-script.sh)
+  - source <(curl -SLs https://raw.githubusercontent.com/per1234/arduino-ci-script/master/arduino-ci-script.sh)
+```
+- The above doesn't allow you control over the version and would not be a good idea for security reasons if you use the functions that take a GitHub token argument. You could use the script at a specific point in the commit history with something like this:
+```bash
+  - git clone https://github.com/per1234/arduino-ci-script.git "${HOME}/arduino-ci-script"
+  - cd "${HOME}/arduino-ci-script"
+  - git checkout 0355314d45970cd33e52ebba9967646a063ea9eb
+  - source "${HOME}/arduino-ci-script/arduino-ci-script.sh"
 ```
 
 
@@ -185,4 +192,3 @@ Some older versions of the Arduino IDE have bugs or limitations that may cause p
 
 #### Contributing
 Pull requests or issue reports are welcome! Please see the [contribution rules](https://github.com/per1234/arduino-ci-script/blob/master/CONTRIBUTING.md) for instructions.
-
