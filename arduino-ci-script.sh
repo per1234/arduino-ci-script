@@ -710,7 +710,7 @@ function comment_report_gist_link()
   if [[ "$token" != "" ]] && [[ "$gist_id" != "" ]]; then
     local commentIdentifier="(build ID: ${TRAVIS_BUILD_ID})"
     # Check if this is job 1 so the comment will only be made once
-    local regex=".1$"
+    local regex="\.1$"
     if [[ "$TRAVIS_JOB_NUMBER" =~ $regex ]]; then
       local userName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 1)"
       # Make the comment
