@@ -135,8 +135,8 @@ script:
 
 
 after_script:
-  - publish_report_to_gist "$REPORT_GITHUB_TOKEN" "$REPORT_GIST_ID"
-  - comment_report_gist_link "$REPORT_GITHUB_TOKEN" "$REPORT_GIST_ID"
+  - publish_report_to_gist "$REPORT_GITHUB_TOKEN" "$REPORT_GIST_URL" "true"
+  - publish_report_to_repository "$REPORT_GITHUB_TOKEN" "https://github.com/${TRAVIS_REPO_SLUG}" "job-reports" "build_${TRAVIS_BUILD_NUMBER}" "true"
   - display_report
 
 

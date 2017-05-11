@@ -730,31 +730,6 @@ function build_this_sketch()
 }
 
 
-# Leave a comment on the commit with a link to the report Gist
-function comment_report_gist_link()
-{
-  enable_verbosity
-
-  local token="$1"
-  local gist_id="$2"
-
-  if [[ "$token" != "" ]] && [[ "$gist_id" != "" ]]; then
-    local commentIdentifier="(build ID: ${TRAVIS_BUILD_ID})"
-    # Check if this is job 1 so the comment will only be made once
-    local regex="\.1$"
-    if [[ "$TRAVIS_JOB_NUMBER" =~ $regex ]]; then
-      local userName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 1)"
-      # Make the comment
-      eval curl --header "Authorization: token ${token}" --data "{\"body\":\"Once completed, the job reports for Travis CI [build ${TRAVIS_BUILD_NUMBER}](https://travis-ci.org/${TRAVIS_REPO_SLUG}/builds/${TRAVIS_BUILD_ID}) will be found at:\nhttps://gist.github.com/${userName}/${gist_id}#file-${REPORT_FILENAME//./-}\"}" "https://api.github.com/repos/${TRAVIS_REPO_SLUG}/commits/${TRAVIS_COMMIT}/comments" "$VERBOSITY_REDIRECT"
-    fi
-  else
-    echo "GitHub token and Gist ID must be defined in your Travis CI settings for this repository to use this function. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."
-  fi
-
-  disable_verbosity
-}
-
-
 # Print the contents of the report file
 function display_report()
 {
@@ -772,16 +747,70 @@ function display_report()
 }
 
 
-# Add the report file to a Gist
+# Add the report file to a Git repository
+function publish_report_to_repository()
+{
+  enable_verbosity
+
+  local token="$1"
+  local repositoryURL="$2"
+  local reportBranch="$3"
+  local reportFolder="$4"
+  local doLinkComment="$5"
+
+  if [[ "$token" != "" ]] && [[ "$repositoryURL" != "" ]] && [[ "$reportBranch" != "" ]]; then
+    if [ -e "$REPORT_FILE_PATH" ]; then
+      # Location is a repository
+      git clone $VERBOSITY_OPTION --branch "$reportBranch" "$repositoryURL" "${HOME}/report-repository"
+      create_folder "${HOME}/report-repository/${reportFolder}"
+      cp $VERBOSITY_OPTION "$REPORT_FILE_PATH" "${HOME}/report-repository/${reportFolder}"
+      cd "${HOME}/report-repository"
+      git add $VERBOSITY_OPTION "${HOME}/report-repository/${reportFolder}/${REPORT_FILENAME}"
+      git config user.email "arduino-ci-script@nospam.me"
+      git config user.name "arduino-ci-script-bot"
+      if [[ "$TRAVIS_BUILD_EXIT_CODE" != "" ]]; then
+        local jobSuccessMessage="FAILED"
+      else
+        local jobSuccessMessage="SUCCESSFUL"
+      fi
+      git commit $VERBOSITY_OPTION --message="Add Travis CI job ${TRAVIS_JOB_NUMBER} report (${jobSuccessMessage})" --message="Job log: https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --message="Commit: https://github.com/${TRAVIS_REPO_SLUG}/commit/${TRAVIS_COMMIT}" --message="$TRAVIS_COMMIT_MESSAGE" --message="[skip ci]"
+      git push $VERBOSITY_OPTION "https://${token}@github.com/${TRAVIS_REPO_SLUG}"
+      rm $VERBOSITY_OPTION --recursive --force "${HOME}/report-repository"
+
+      if [[ "$doLinkComment" == "true" ]]; then
+        # Only comment if it's job 1
+        local regex="\.1$"
+        if [[ "$TRAVIS_JOB_NUMBER" =~ $regex ]]; then
+          local reportURL="https://github.com/${TRAVIS_REPO_SLUG}/tree/${reportBranch}/${reportFolder}"
+          comment_report_link "$token" "$reportURL"
+        fi
+      fi
+    else
+      echo "No report file available for this job"
+    fi
+  else
+    echo "Publishing report failed. GitHub token, repository URL, and repository branch must be defined to use this function. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."
+  fi
+
+  disable_verbosity
+}
+
+
+# Add the report file to a gist
 function publish_report_to_gist()
 {
   enable_verbosity
 
   local token="$1"
-  local gist_id="$2"
+  local gistURL="$2"
+  local doLinkComment="$3"
 
-  if [[ "$token" != "" ]] && [[ "$gist_id" != "" ]]; then
+  if [[ "$token" != "" ]] && [[ "$gistURL" != "" ]]; then
     if [ -e "$REPORT_FILE_PATH" ]; then
+      # Get the gist ID from the gist URL
+      local gistID
+      gistID="$(echo "$gistURL" | rev | cut -d'/' -f 1 | rev)"
+
       # http://stackoverflow.com/a/33354920/7059512
       # Sanitize the report file content so it can be sent via a POST request without breaking the JSON
       # Remove \r (from Windows end-of-lines), replace tabs by \t, replace " by \", replace EOL by \n
@@ -791,11 +820,20 @@ function publish_report_to_gist()
       eval curl --header "\"Authorization: token ${token}\"" --data @- "\"https://api.github.com/gists/${gistID}\"" <<curlDataHere "$VERBOSITY_REDIRECT"
 {"files":{"${REPORT_FILENAME}":{"content": "${reportContent}"}}}
 curlDataHere
-     else
+
+      if [[ "$doLinkComment" == "true" ]]; then
+        # Only comment if it's job 1
+        local regex="\.1$"
+        if [[ "$TRAVIS_JOB_NUMBER" =~ $regex ]]; then
+          local reportURL="${gistURL}#file-${REPORT_FILENAME//./-}"
+          comment_report_link "$token" "$reportURL"
+        fi
+      fi
+    else
       echo "No report file available for this job"
     fi
   else
-    echo "GitHub token and Gist ID must be defined in your Travis CI settings for this repository to use this function. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."
+    echo "Publishing report failed. GitHub token and gist URL must be defined in your Travis CI settings for this repository in order to use this function. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."
   fi
 
   disable_verbosity
