@@ -43,8 +43,6 @@ before_install:
 
   - comment_report_gist_link "$REPORT_GITHUB_TOKEN" "$REPORT_GIST_ID"
 
-
-install:
   - install_ide "$INSTALL_IDE_START_VERSION" "$INSTALL_IDE_END_VERSION"
 
   # Install hardware packages
@@ -71,12 +69,11 @@ install:
   - install_library "https://github.com/mikaelpatel/Arduino-Shell.git" "ArduinoShell"
   # Test library install from Library Manager
   - install_library "Pushetta:1.0.1"
-
-
-script:
   # Test set_verbose_output_during_compilation. Setting verbose output to false is not actually necessary but it tests the function.
   - set_verbose_output_during_compilation "false"
 
+
+script:
   # Verify sketches:
   # build_sketch arguments: sketch name, fqbn, IDE version, allow failure
   # IDE version: Use "all" for IDE version argument to verify sketch with all versions of the Arduino IDE, use "newest" for IDE version argument to verify sketch with the newest version of the Arduino IDE
