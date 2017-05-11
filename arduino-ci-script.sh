@@ -688,7 +688,7 @@ function build_this_sketch()
   else
     # Parse through the output from the sketch verification to count warnings and determine the compile size
     local warningCount=0
-    while read outputFileLine; do
+    while read -r outputFileLine; do
       # Determine program storage memory usage
       local regex="Sketch uses ([0-9,]+) *"
       if [[ "$outputFileLine" =~ $regex ]] > /dev/null; then
