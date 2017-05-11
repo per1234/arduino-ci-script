@@ -213,6 +213,8 @@ function install_ide()
 
 
   # This runs the command contained in the $INSTALLED_IDE_VERSION_LIST_ARRAY string, thus declaring the array locally as $IDEversionListArray. This must be done in any function that uses the array
+  # Dummy declaration to fix the "referenced but not assigned" warning.
+  local IDEversionListArray
   eval "$INSTALLED_IDE_VERSION_LIST_ARRAY"
   local IDEversion
   for IDEversion in "${IDEversionListArray[@]}"; do
