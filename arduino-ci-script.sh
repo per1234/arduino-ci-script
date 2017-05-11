@@ -745,7 +745,7 @@ function comment_report_gist_link()
     if [[ "$TRAVIS_JOB_NUMBER" =~ $regex ]]; then
       local userName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 1)"
       # Make the comment
-      eval curl --header "Authorization: token ${token}" --data "{\"body\":\"Travis CI [build ${TRAVIS_BUILD_NUMBER}](https://travis-ci.org/${TRAVIS_REPO_SLUG}/builds/${TRAVIS_BUILD_ID}) has started. Once completed the job reports will be found at:\nhttps://gist.github.com/${userName}/${gist_id}#file-${REPORT_FILENAME//./-}\"}" "https://api.github.com/repos/${TRAVIS_REPO_SLUG}/commits/${TRAVIS_COMMIT}/comments" "$VERBOSITY_REDIRECT"
+      eval curl --header "Authorization: token ${token}" --data "{\"body\":\"Once completed, the job reports for Travis CI [build ${TRAVIS_BUILD_NUMBER}](https://travis-ci.org/${TRAVIS_REPO_SLUG}/builds/${TRAVIS_BUILD_ID}) will be found at:\nhttps://gist.github.com/${userName}/${gist_id}#file-${REPORT_FILENAME//./-}\"}" "https://api.github.com/repos/${TRAVIS_REPO_SLUG}/commits/${TRAVIS_COMMIT}/comments" "$VERBOSITY_REDIRECT"
     fi
   else
     echo "GitHub token and Gist ID must be defined in your Travis CI settings for this repository to use this function. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."

@@ -40,16 +40,6 @@ Control the level of verbosity of the script's output in the Travis CI log. Verb
 Turn on/off checking for errors with the board definition that don't affect sketch verification such as missing bootloader file. If this is turned on and an error is detected the build will be failed. This feature is off by default.
 - Parameter: **BOARD_TESTING** - `true`/`false`
 
-##### `comment_report_gist_link REPORT_GITHUB_TOKEN REPORT_GIST_ID`
-Leave a comment on the commit with a link to the report gist when the Travis CI build begins. See the [instructions for Publishing job reports](publishing-job-reports) for details.
-- Parameter: **REPORT_GITHUB_TOKEN** - The hidden or encrypted environment variable containing the GitHub personal access token.
-- Parameter: **REPORT_GIST_ID** - The ID of the report gist.
-
-##### `publish_report_to_gist REPORT_GITHUB_TOKEN REPORT_GIST_ID`
-Add the report to the report gist. See the [instructions for Publishing job reports](publishing-job-reports) for details.
-- Parameter: **REPORT_GITHUB_TOKEN** - The hidden or encrypted environment variable containing the GitHub personal access token.
-- Parameter: **REPORT_GIST_ID** - The ID of the report gist.
-
 ##### Special version names:
   - `all`: Refers to all versions of the Arduino IDE (including the hourly build). In the context of `install_ide` this means all IDE versions listed in the script (those that support the command line interface, 1.5.2 and newer). In the context of all other functions this means all IDE versions that were installed via `install_ide`.
   - `oldest`: The oldest release version of the Arduino IDE. In the context of `install_ide` this is the oldest of the IDE versions listed in the script (1.5.2, the first version to have a command line interface). In the context of build_sketch this means the oldest IDE version that was installed via `install_ide`.
@@ -105,6 +95,9 @@ Pass some parameters from .travis.yml to the script. `build_sketch` will echo th
 - Parameter: **startIDEversion** - The start (inclusive) of a range of versions of the Arduino IDE to use to verify the sketch.
 - Parameter: **endIDEversion** - The end (inclusive) of a range of versions of the Arduino IDE to use to verify the sketch.
 
+##### `check_success`
+This function returns an exit code of 1 if any sketch verification failed except for those that were allowed failure by setting the `build_sketch` function's `allowFail` argument to `"true"`. Returns 0 otherwise.
+
 ##### `display_report`
 Echo a tab separated report of all verification results to the log. The report is located at `$HOME/report.txt`. Note that Travis CI runs each build of the job in a separate virtual machine so if you have multiple jobs you will have multiple reports. The only way I have found to generate a single report for all tests is to run them as a single job. This means not setting multiple matrix environment variables in the `env` array. See https://docs.travis-ci.com/user/environment-variables. The report consists of:
 - Build timestamp
@@ -127,8 +120,15 @@ Echo a tab separated report of all verification results to the log. The report i
 - Sketch verification exit code
 - Board error
 
-##### `check_success`
-This function returns an exit code of 1 if any sketch verification failed except for those that were allowed failure by setting the `build_sketch` function's `allowFail` argument to `"true"`. Returns 0 otherwise.
+##### `comment_report_gist_link REPORT_GITHUB_TOKEN REPORT_GIST_ID`
+Leave a comment on the commit with a link to the report gist when the Travis CI build begins. See the [instructions for Publishing job reports](publishing-job-reports) for details.
+- Parameter: **REPORT_GITHUB_TOKEN** - The hidden or encrypted environment variable containing the GitHub personal access token.
+- Parameter: **REPORT_GIST_ID** - The ID of the report gist.
+
+##### `publish_report_to_gist REPORT_GITHUB_TOKEN REPORT_GIST_ID`
+Add the report to the report gist. See the [instructions for Publishing job reports](publishing-job-reports) for details.
+- Parameter: **REPORT_GITHUB_TOKEN** - The hidden or encrypted environment variable containing the GitHub personal access token.
+- Parameter: **REPORT_GIST_ID** - The ID of the report gist.
 
 
 #### Publishing job reports

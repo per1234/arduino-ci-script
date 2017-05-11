@@ -41,8 +41,6 @@ before_install:
   # Check for board definition errors that don't affect compilation
   - set_board_testing "true"
 
-  - comment_report_gist_link "$REPORT_GITHUB_TOKEN" "$REPORT_GIST_ID"
-
   - install_ide "$INSTALL_IDE_START_VERSION" "$INSTALL_IDE_END_VERSION"
 
   # Install hardware packages
@@ -138,6 +136,7 @@ script:
 
 after_script:
   - publish_report_to_gist "$REPORT_GITHUB_TOKEN" "$REPORT_GIST_ID"
+  - comment_report_gist_link "$REPORT_GITHUB_TOKEN" "$REPORT_GIST_ID"
   - display_report
 
 
