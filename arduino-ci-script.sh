@@ -452,7 +452,7 @@ function install_package()
     # Install hardware package from this repository
     # https://docs.travis-ci.com/user/environment-variables#Global-Variables
     local packageName
-    packageName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
+    packageName="$(echo "$TRAVIS_REPO_SLUG" | cut -d'/' -f 2)"
     mkdir --parents "${SKETCHBOOK_FOLDER}/hardware/$packageName"
     cd "$TRAVIS_BUILD_DIR"
     cp --recursive $VERBOSITY_OPTION ./* "${SKETCHBOOK_FOLDER}/hardware/${packageName}"
@@ -538,7 +538,7 @@ function install_library()
     # Install library from the repository
     # https://docs.travis-ci.com/user/environment-variables#Global-Variables
     local libraryName
-    libraryName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
+    libraryName="$(echo "$TRAVIS_REPO_SLUG" | cut -d'/' -f 2)"
     mkdir --parents "${SKETCHBOOK_FOLDER}/libraries/$libraryName"
     cd "$TRAVIS_BUILD_DIR"
     cp --recursive $VERBOSITY_OPTION ./* "${SKETCHBOOK_FOLDER}/libraries/${libraryName}"
@@ -634,11 +634,11 @@ function build_sketch()
       for sketchName in "${sketches[@]}"; do
         # Only verify the sketch that matches the name of the sketch folder, otherwise it will cause redundant verifications for sketches that have multiple .ino files
         local sketchFolder
-        sketchFolder="$(echo $sketchName | rev | cut -d'/' -f 2 | rev)"
+        sketchFolder="$(echo "$sketchName" | rev | cut -d'/' -f 2 | rev)"
         local sketchNameWithoutPathWithExtension
-        sketchNameWithoutPathWithExtension="$(echo $sketchName | rev | cut -d'/' -f 1 | rev)"
+        sketchNameWithoutPathWithExtension="$(echo "$sketchName" | rev | cut -d'/' -f 1 | rev)"
         local sketchNameWithoutPathWithoutExtension
-        sketchNameWithoutPathWithoutExtension="$(echo $sketchNameWithoutPathWithExtension | cut -d'.' -f1)"
+        sketchNameWithoutPathWithoutExtension="$(echo "$sketchNameWithoutPathWithExtension" | cut -d'.' -f1)"
         if [[ "$sketchFolder" == "$sketchNameWithoutPathWithoutExtension" ]]; then
           build_this_sketch "$sketchName" "$boardID" "$IDEversion" "$allowFail"
         fi
