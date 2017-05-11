@@ -448,7 +448,8 @@ function install_package()
   elif [[ "$1" == "" ]]; then
     # Install hardware package from this repository
     # https://docs.travis-ci.com/user/environment-variables#Global-Variables
-    local packageName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
+    local packageName
+    packageName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
     mkdir --parents "${SKETCHBOOK_FOLDER}/hardware/$packageName"
     cd "$TRAVIS_BUILD_DIR"
     cp --recursive $VERBOSITY_OPTION * "${SKETCHBOOK_FOLDER}/hardware/${packageName}"
@@ -532,7 +533,8 @@ function install_library()
   elif [[ "$libraryIdentifier" == "" ]]; then
     # Install library from the repository
     # https://docs.travis-ci.com/user/environment-variables#Global-Variables
-    local libraryName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
+    local libraryName
+    libraryName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
     mkdir --parents "${SKETCHBOOK_FOLDER}/libraries/$libraryName"
     cd "$TRAVIS_BUILD_DIR"
     cp --recursive $VERBOSITY_OPTION * "${SKETCHBOOK_FOLDER}/libraries/${libraryName}"
@@ -627,9 +629,12 @@ function build_sketch()
       local sketchName
       for sketchName in "${sketches[@]}"; do
         # Only verify the sketch that matches the name of the sketch folder, otherwise it will cause redundant verifications for sketches that have multiple .ino files
-        local sketchFolder="$(echo $sketchName | rev | cut -d'/' -f 2 | rev)"
-        local sketchNameWithoutPathWithExtension="$(echo $sketchName | rev | cut -d'/' -f 1 | rev)"
-        local sketchNameWithoutPathWithoutExtension="$(echo $sketchNameWithoutPathWithExtension | cut -d'.' -f1)"
+        local sketchFolder
+        sketchFolder="$(echo $sketchName | rev | cut -d'/' -f 2 | rev)"
+        local sketchNameWithoutPathWithExtension
+        sketchNameWithoutPathWithExtension="$(echo $sketchName | rev | cut -d'/' -f 1 | rev)"
+        local sketchNameWithoutPathWithoutExtension
+        sketchNameWithoutPathWithoutExtension="$(echo $sketchNameWithoutPathWithExtension | cut -d'.' -f1)"
         if [[ "$sketchFolder" == "$sketchNameWithoutPathWithoutExtension" ]]; then
           build_this_sketch "$sketchName" "$boardID" "$IDEversion" "$allowFail"
         fi
@@ -660,7 +665,8 @@ function build_this_sketch()
 
   # Arduino IDE 1.8.0 and 1.8.1 fail to verify a sketch if the absolute path to it is not specified
   # http://stackoverflow.com/a/3915420/7059512
-  local sketchName="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
+  local sketchName
+  sketchName="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 
   local sketchBuildExitCode=255
   # Retry the verification if it returns exit code 255
@@ -813,7 +819,8 @@ function publish_report_to_gist()
       # http://stackoverflow.com/a/33354920/7059512
       # Sanitize the report file content so it can be sent via a POST request without breaking the JSON
       # Remove \r (from Windows end-of-lines), replace tabs by \t, replace " by \", replace EOL by \n
-      local reportContent=$(sed -e 's/\r//' -e's/\t/\\t/g' -e 's/"/\\"/g' "$REPORT_FILE_PATH" | awk '{ printf($0 "\\n") }')
+      local reportContent
+      reportContent=$(sed -e 's/\r//' -e's/\t/\\t/g' -e 's/"/\\"/g' "$REPORT_FILE_PATH" | awk '{ printf($0 "\\n") }')
 
       # Upload the report to the Gist. I have to use the here document to avoid the "Argument list too long" error from curl with long reports. Redirect output to dev/null because it dumps the whole gist to the log
       eval curl --header "\"Authorization: token ${token}\"" --data @- "\"https://api.github.com/gists/${gistID}\"" <<curlDataHere "$VERBOSITY_REDIRECT"
