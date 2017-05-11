@@ -103,6 +103,7 @@ Echo a tab separated report of all verification results to the log. The report i
 - Build timestamp
 - Travis CI build number
 - Travis CI job number
+- Travis CI job URL
 - Travis CI build trigger
 - Allow Travis CI job failure
 - Pull request number
