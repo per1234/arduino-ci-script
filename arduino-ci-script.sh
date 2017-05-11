@@ -124,12 +124,12 @@ function set_more_verbose_script_output()
 # Turn on verbosity based on the preferences set by set_script_verbosity
 function enable_verbosity()
 {
-  if [[ "$SCRIPT_VERBOSITY_LEVEL" > 0 ]]; then
+  if [[ "$SCRIPT_VERBOSITY_LEVEL" -gt 0 ]]; then
     # "Print shell input lines as they are read."
     # https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
     set -o verbose
   fi
-  if [[ "$SCRIPT_VERBOSITY_LEVEL" > 1 ]]; then
+  if [[ "$SCRIPT_VERBOSITY_LEVEL" -gt 1 ]]; then
     set -o verbose
     # "Print a trace of simple commands, for commands, case commands, select commands, and arithmetic for commands and their arguments or associated word lists after they are expanded and before they are executed. The value of the PS4 variable is expanded and the resultant value is printed before the command and its expanded arguments."
     # https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
