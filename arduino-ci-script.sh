@@ -627,9 +627,9 @@ function build_sketch()
       build_this_sketch "$sketchPath" "$boardID" "$IDEversion" "$allowFail"
     else
       # Search for all sketches in the path and put them in an array
-      # https://github.com/adafruit/travis-ci-arduino/blob/eeaeaf8fa253465d18785c2bb589e14ea9893f9f/install.sh#L100
+      # https://github.com/koalaman/shellcheck/wiki/SC2207
       declare -a sketches
-      sketches=($(find "$sketchPath" -name "*.pde" -o -name "*.ino"))
+      mapfile -t sketches < <(find "$sketchPath" -name "*.pde" -o -name "*.ino")
       local sketchName
       for sketchName in "${sketches[@]}"; do
         # Only verify the sketch that matches the name of the sketch folder, otherwise it will cause redundant verifications for sketches that have multiple .ino files
