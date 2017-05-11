@@ -190,7 +190,7 @@ function set_board_testing()
 {
   enable_verbosity
 
-  BOARD_TESTING="$1"
+  TEST_BOARD="$1"
 
   disable_verbosity
 }
@@ -699,7 +699,7 @@ function build_this_sketch()
       fi
 
       # Check for missing bootloader
-      if [[ "$TEST_PACKAGE" == "true" ]]; then
+      if [[ "$TEST_BOARD" == "true" ]]; then
         local regex="Bootloader file specified but missing: "
         if [[ "$outputFileLine" =~ $regex ]] > /dev/null; then
           local boardError="missing bootloader"
