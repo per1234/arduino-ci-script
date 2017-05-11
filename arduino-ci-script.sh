@@ -1,7 +1,7 @@
+#!/bin/bash
 # This script is used to automate continuous integration tasks for Arduino projects
 # https://github.com/per1234/arduino-ci-script
 
-#!/bin/bash
 
 # https://docs.travis-ci.com/user/customizing-the-build/#Implementing-Complex-Build-Steps
 # -e will cause the script to exit as soon as one command returns a non-zero exit code
