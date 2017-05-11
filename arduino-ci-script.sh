@@ -25,7 +25,7 @@ FULL_IDE_VERSION_LIST_ARRAY="${IDE_VERSION_LIST_ARRAY_DECLARATION}"'("1.5.2" "1.
 
 TEMPORARY_FOLDER="${HOME}/temporary/arduino-ci-script"
 VERIFICATION_OUTPUT_FILENAME="${TEMPORARY_FOLDER}/verification_output.txt"
-REPORT_FILENAME="travis_ci_job_report_${TRAVIS_JOB_NUMBER}.tsv"
+REPORT_FILENAME="travis_ci_job_report_$(printf "%05d\n" "${TRAVIS_BUILD_NUMBER}").$(printf "%03d\n" "$(echo "$TRAVIS_JOB_NUMBER" | cut -d'.' -f 2)").tsv"
 REPORT_FOLDER="${HOME}/arduino-ci-script_report"
 REPORT_FILE_PATH="${REPORT_FOLDER}/${REPORT_FILENAME}"
 # The Arduino IDE returns exit code 255 after a failed file signature verification of the boards manager JSON file. This does not indicate an issue with the sketch and the problem may go away after a retry.
