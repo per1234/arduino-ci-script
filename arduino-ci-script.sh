@@ -437,6 +437,7 @@ function install_package()
 
       # Uncompress the package
       # This script handles any compressed file type
+      # shellcheck source=/dev/null
       source "${ARDUINO_CI_SCRIPT_FOLDER}/extract.sh"
       extract ./*.*
 
@@ -524,6 +525,7 @@ function install_library()
       wget "$libraryIdentifier"
 
       # This script handles any compressed file type
+      # shellcheck source=/dev/null
       source "${ARDUINO_CI_SCRIPT_FOLDER}/extract.sh"
       extract ./*.*
       # Clean up the temporary folder
