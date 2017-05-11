@@ -428,7 +428,7 @@ function install_package()
       cd "$TEMPORARY_FOLDER"
 
       # Clean up the temporary folder
-      rm -f *.*
+      rm -f ./*.*
 
       # Download the package
       wget "$packageURL"
@@ -436,13 +436,13 @@ function install_package()
       # Uncompress the package
       # This script handles any compressed file type
       source "${ARDUINO_CI_SCRIPT_FOLDER}/extract.sh"
-      extract *.*
+      extract ./*.*
 
       # Clean up the temporary folder
-      rm -f *.*
+      rm -f ./*.*
 
       # Install the package
-      mv * "${SKETCHBOOK_FOLDER}/hardware/"
+      mv ./* "${SKETCHBOOK_FOLDER}/hardware/"
     fi
 
   elif [[ "$1" == "" ]]; then
@@ -452,7 +452,7 @@ function install_package()
     packageName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
     mkdir --parents "${SKETCHBOOK_FOLDER}/hardware/$packageName"
     cd "$TRAVIS_BUILD_DIR"
-    cp --recursive $VERBOSITY_OPTION * "${SKETCHBOOK_FOLDER}/hardware/${packageName}"
+    cp --recursive $VERBOSITY_OPTION ./* "${SKETCHBOOK_FOLDER}/hardware/${packageName}"
     # * doesn't copy .travis.yml but that file will be present in the user's installation so it should be there for the tests too
     cp $VERBOSITY_OPTION "${TRAVIS_BUILD_DIR}/.travis.yml" "${SKETCHBOOK_FOLDER}/hardware/${packageName}"
 
@@ -518,16 +518,16 @@ function install_library()
       # Download the file to the temporary folder
       cd "$TEMPORARY_FOLDER"
       # Clean up the temporary folder
-      rm -f *.*
+      rm -f ./*.*
       wget "$libraryIdentifier"
 
       # This script handles any compressed file type
       source "${ARDUINO_CI_SCRIPT_FOLDER}/extract.sh"
-      extract *.*
+      extract ./*.*
       # Clean up the temporary folder
-      rm -f *.*
+      rm -f ./*.*
       # Install the library
-      mv * "${SKETCHBOOK_FOLDER}/libraries/${newFolderName}"
+      mv ./* "${SKETCHBOOK_FOLDER}/libraries/${newFolderName}"
     fi
 
   elif [[ "$libraryIdentifier" == "" ]]; then
@@ -537,7 +537,7 @@ function install_library()
     libraryName="$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f 2)"
     mkdir --parents "${SKETCHBOOK_FOLDER}/libraries/$libraryName"
     cd "$TRAVIS_BUILD_DIR"
-    cp --recursive $VERBOSITY_OPTION * "${SKETCHBOOK_FOLDER}/libraries/${libraryName}"
+    cp --recursive $VERBOSITY_OPTION ./* "${SKETCHBOOK_FOLDER}/libraries/${libraryName}"
     # * doesn't copy .travis.yml but that file will be present in the user's installation so it should be there for the tests too
     cp $VERBOSITY_OPTION "${TRAVIS_BUILD_DIR}/.travis.yml" "${SKETCHBOOK_FOLDER}/libraries/${libraryName}"
 
