@@ -798,9 +798,9 @@ function publish_report_to_repository()
               reportURL="${repositoryURL%.*}/tree/${reportBranch}/${reportFolder}"
               comment_report_link "$token" "$reportURL"
             fi
-          else
-            echo "ERROR: Failed to push to remote branch."
           fi
+        else
+          echo "ERROR: Failed to push to remote branch."
         fi
       else
         echo "ERROR: Failed to clone branch ${reportBranch} of repository URL ${repositoryURL}. Do they exist?"
