@@ -787,7 +787,7 @@ function publish_report_to_repository()
           local jobSuccessMessage="SUCCESSFUL"
         fi
         git commit $VERBOSITY_OPTION --message="Add Travis CI job ${TRAVIS_JOB_NUMBER} report (${jobSuccessMessage})" --message="Job log: https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --message="Commit: https://github.com/${TRAVIS_REPO_SLUG}/commit/${TRAVIS_COMMIT}" --message="$TRAVIS_COMMIT_MESSAGE" --message="[skip ci]"
-        git push $VERBOSITY_OPTION "https://${token}@github.com/${TRAVIS_REPO_SLUG}"; local gitPushExitCode="${PIPESTATUS[0]}"
+        git push $VERBOSITY_OPTION "https://${token}@${repositoryURL#*//}"; local gitPushExitCode="${PIPESTATUS[0]}"
         rm $VERBOSITY_OPTION --recursive --force "${HOME}/report-repository"
         if [[ "$gitPushExitCode" == "0" ]]; then
           if [[ "$doLinkComment" == "true" ]]; then
