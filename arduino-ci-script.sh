@@ -638,7 +638,7 @@ function build_sketch()
         local sketchNameWithoutPathWithExtension
         sketchNameWithoutPathWithExtension="$(echo "$sketchName" | rev | cut -d'/' -f 1 | rev)"
         local sketchNameWithoutPathWithoutExtension
-        sketchNameWithoutPathWithoutExtension="$(echo "$sketchNameWithoutPathWithExtension" | cut -d'.' -f1)"
+        sketchNameWithoutPathWithoutExtension="${sketchNameWithoutPathWithExtension%.*}"
         if [[ "$sketchFolder" == "$sketchNameWithoutPathWithoutExtension" ]]; then
           build_this_sketch "$sketchName" "$boardID" "$IDEversion" "$allowFail"
         fi
