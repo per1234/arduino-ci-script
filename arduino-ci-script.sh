@@ -770,29 +770,37 @@ function publish_report_to_repository()
   if [[ "$token" != "" ]] && [[ "$repositoryURL" != "" ]] && [[ "$reportBranch" != "" ]]; then
     if [ -e "$REPORT_FILE_PATH" ]; then
       # Location is a repository
-      git clone $VERBOSITY_OPTION --branch "$reportBranch" "$repositoryURL" "${HOME}/report-repository"
-      create_folder "${HOME}/report-repository/${reportFolder}"
-      cp $VERBOSITY_OPTION "$REPORT_FILE_PATH" "${HOME}/report-repository/${reportFolder}"
-      cd "${HOME}/report-repository"
-      git add $VERBOSITY_OPTION "${HOME}/report-repository/${reportFolder}/${REPORT_FILENAME}"
-      git config user.email "arduino-ci-script@nospam.me"
-      git config user.name "arduino-ci-script-bot"
-      if [[ "$TRAVIS_BUILD_EXIT_CODE" != "" ]]; then
-        local jobSuccessMessage="FAILED"
-      else
-        local jobSuccessMessage="SUCCESSFUL"
-      fi
-      git commit $VERBOSITY_OPTION --message="Add Travis CI job ${TRAVIS_JOB_NUMBER} report (${jobSuccessMessage})" --message="Job log: https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --message="Commit: https://github.com/${TRAVIS_REPO_SLUG}/commit/${TRAVIS_COMMIT}" --message="$TRAVIS_COMMIT_MESSAGE" --message="[skip ci]"
-      git push $VERBOSITY_OPTION "https://${token}@github.com/${TRAVIS_REPO_SLUG}"
-      rm $VERBOSITY_OPTION --recursive --force "${HOME}/report-repository"
-
-      if [[ "$doLinkComment" == "true" ]]; then
-        # Only comment if it's job 1
-        local regex="\.1$"
-        if [[ "$TRAVIS_JOB_NUMBER" =~ $regex ]]; then
-          local reportURL="https://github.com/${TRAVIS_REPO_SLUG}/tree/${reportBranch}/${reportFolder}"
-          comment_report_link "$token" "$reportURL"
+      git clone $VERBOSITY_OPTION --branch "$reportBranch" "$repositoryURL" "${HOME}/report-repository"; local gitCloneExitCode="${PIPESTATUS[0]}"
+      if [[ "$gitCloneExitCode" == 0 ]]; then
+        # Clone was successful
+        create_folder "${HOME}/report-repository/${reportFolder}"
+        cp $VERBOSITY_OPTION "$REPORT_FILE_PATH" "${HOME}/report-repository/${reportFolder}"
+        cd "${HOME}/report-repository"
+        git add $VERBOSITY_OPTION "${HOME}/report-repository/${reportFolder}/${REPORT_FILENAME}"
+        git config user.email "arduino-ci-script@nospam.me"
+        git config user.name "arduino-ci-script-bot"
+        if [[ "$TRAVIS_BUILD_EXIT_CODE" != "" ]]; then
+          local jobSuccessMessage="FAILED"
+        else
+          local jobSuccessMessage="SUCCESSFUL"
         fi
+        git commit $VERBOSITY_OPTION --message="Add Travis CI job ${TRAVIS_JOB_NUMBER} report (${jobSuccessMessage})" --message="Job log: https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --message="Commit: https://github.com/${TRAVIS_REPO_SLUG}/commit/${TRAVIS_COMMIT}" --message="$TRAVIS_COMMIT_MESSAGE" --message="[skip ci]"
+        git push $VERBOSITY_OPTION "https://${token}@github.com/${TRAVIS_REPO_SLUG}"; local gitPushExitCode="${PIPESTATUS[0]}"
+        rm $VERBOSITY_OPTION --recursive --force "${HOME}/report-repository"
+        if [[ "$gitPushExitCode" == "0" ]]; then
+          if [[ "$doLinkComment" == "true" ]]; then
+            # Only comment if it's job 1
+            local regex="\.1$"
+            if [[ "$TRAVIS_JOB_NUMBER" =~ $regex ]]; then
+              local reportURL="https://github.com/${TRAVIS_REPO_SLUG}/tree/${reportBranch}/${reportFolder}"
+              comment_report_link "$token" "$reportURL"
+            fi
+          else
+            echo "ERROR: Failed to push to remote branch."
+          fi
+        fi
+      else
+        echo "ERROR: Failed to clone branch ${reportBranch} of repository URL ${repositoryURL}. Do they exist?"
       fi
     else
       echo "No report file available for this job"
