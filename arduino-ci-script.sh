@@ -779,6 +779,8 @@ function publish_report_to_repository()
         git add $VERBOSITY_OPTION "${HOME}/report-repository/${reportFolder}/${REPORT_FILENAME}"
         git config user.email "arduino-ci-script@nospam.me"
         git config user.name "arduino-ci-script-bot"
+        # Only pushes the current branch to the corresponding remote branch that 'git pull' uses to update the current branch.
+        git config push.default simple
         if [[ "$TRAVIS_BUILD_EXIT_CODE" != "" ]]; then
           local jobSuccessMessage="FAILED"
         else
