@@ -794,7 +794,8 @@ function publish_report_to_repository()
             # Only comment if it's job 1
             local regex="\.1$"
             if [[ "$TRAVIS_JOB_NUMBER" =~ $regex ]]; then
-              local reportURL="https://github.com/${TRAVIS_REPO_SLUG}/tree/${reportBranch}/${reportFolder}"
+              local reportURL
+              reportURL="${repositoryURL%.*}/tree/${reportBranch}/${reportFolder}"
               comment_report_link "$token" "$reportURL"
             fi
           else
