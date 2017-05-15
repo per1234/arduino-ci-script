@@ -30,6 +30,7 @@ REPORT_FOLDER="${HOME}/arduino-ci-script_report"
 REPORT_FILE_PATH="${REPORT_FOLDER}/${REPORT_FILENAME}"
 # The Arduino IDE returns exit code 255 after a failed file signature verification of the boards manager JSON file. This does not indicate an issue with the sketch and the problem may go away after a retry.
 SKETCH_VERIFY_RETRIES=3
+REPORT_PUSH_RETRIES=10
 
 
 # Create the folder if it doesn't exist
@@ -789,9 +790,14 @@ function publish_report_to_repository()
         # Do a pull now in case another job has finished about the same time and pushed a report after the clone happened, which would otherwise cause the push to fail. This is the last chance to pull without having to deal with a merge or rebase.
         git pull
         git commit $VERBOSITY_OPTION --message="Add Travis CI job ${TRAVIS_JOB_NUMBER} report (${jobSuccessMessage})" --message="Job log: https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --message="Commit: https://github.com/${TRAVIS_REPO_SLUG}/commit/${TRAVIS_COMMIT}" --message="$TRAVIS_COMMIT_MESSAGE" --message="[skip ci]"
-        # Do a pull now in case another job has finished about the same time and pushed a report since the last pull. This would require a merge or rebase. Rebase should be safe since the commits will be separate files.
-        git pull --rebase
-        git push $VERBOSITY_OPTION "https://${token}@${repositoryURL#*//}"; local gitPushExitCode="${PIPESTATUS[0]}"
+        local gitPushExitCode="1"
+        local pushCount=0
+        while [[ "$gitPushExitCode" != "0" && $pushCount -le $REPORT_PUSH_RETRIES ]]; do
+          pushCount=$((pushCount + 1))
+          # Do a pull now in case another job has finished about the same time and pushed a report since the last pull. This would require a merge or rebase. Rebase should be safe since the commits will be separate files.
+          git pull --rebase
+          git push $VERBOSITY_OPTION "https://${token}@${repositoryURL#*//}"; local gitPushExitCode="${PIPESTATUS[0]}"
+        done
         rm $VERBOSITY_OPTION --recursive --force "${HOME}/report-repository"
         if [[ "$gitPushExitCode" == "0" ]]; then
           if [[ "$doLinkComment" == "true" ]]; then
