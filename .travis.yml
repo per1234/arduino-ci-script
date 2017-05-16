@@ -140,8 +140,6 @@ script:
 
   - display_report
 
-  - check_success
-
 
 notifications:
   email:

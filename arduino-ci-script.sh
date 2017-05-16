@@ -3,10 +3,6 @@
 # https://github.com/per1234/arduino-ci-script
 
 
-# https://docs.travis-ci.com/user/customizing-the-build/#Implementing-Complex-Build-Steps
-# -e will cause the script to exit as soon as one command returns a non-zero exit code
-set -e
-
 # Save the location of the script
 # http://stackoverflow.com/a/246128/7059512
 ARDUINO_CI_SCRIPT_FOLDER="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -205,6 +201,10 @@ function install_ide()
   local startIDEversion="$1"
   local endIDEversion="$2"
 
+  # https://docs.travis-ci.com/user/customizing-the-build/#Implementing-Complex-Build-Steps
+  # set -o errexit will cause the script to exit as soon as any command returns a non-zero exit code. Without this the success of the function call is determined by the exit code of the last command in the function
+  set -o errexit
+
   generate_ide_version_list_array "$FULL_IDE_VERSION_LIST_ARRAY" "$startIDEversion" "$endIDEversion"
   INSTALLED_IDE_VERSION_LIST_ARRAY="$GENERATED_IDE_VERSION_LIST_ARRAY"
 
@@ -267,6 +267,9 @@ function install_ide()
 
   # Uninstall the IDE
   uninstall_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
+
+  # Return errexit to the default state
+  set +o errexit
 
   disable_verbosity
 }
@@ -412,6 +415,8 @@ function install_package()
 {
   enable_verbosity
 
+  set -o errexit
+
   local regex="://"
   if [[ "$1" =~ $regex ]]; then
     # First argument is a URL, do a manual hardware package installation
@@ -489,6 +494,8 @@ function install_package()
     fi
   fi
 
+  set +o errexit
+
   disable_verbosity
 }
 
@@ -496,6 +503,8 @@ function install_package()
 function install_library()
 {
   enable_verbosity
+
+  set -o errexit
 
   local libraryIdentifier="$1"
   local newFolderName="$2"
@@ -568,6 +577,8 @@ function install_library()
     fi
   fi
 
+  set +o errexit
+
   disable_verbosity
 }
 
@@ -598,6 +609,9 @@ function build_sketch()
   local startIDEversion="$4"
   local endIDEversion="$5"
 
+  # Set default value for buildSketchExitCode
+  local buildSketchExitCode=0
+
   generate_ide_version_list_array "$INSTALLED_IDE_VERSION_LIST_ARRAY" "$startIDEversion" "$endIDEversion"
 
   eval "$GENERATED_IDE_VERSION_LIST_ARRAY"
@@ -607,8 +621,6 @@ function build_sketch()
     # This must be done before searching for sketches in case the path specified is in the Arduino IDE installation folder
     install_ide_version "$IDEversion"
 
-    # For some reason the failure to install the dummy package causes the build to immediately fail with some IDE versions so I need to configure it to not do that
-    set +e
     # The package_index files installed by some versions of the IDE (1.6.5, 1.6.5) can cause compilation to fail for other versions (1.6.5-r4, 1.6.5-r5). Attempting to install a dummy package ensures that the correct version of those files will be installed before the sketch verification.
     # Check if the newest installed IDE version supports --install-boards
     local regex1="1.5.[0-9]"
@@ -620,12 +632,11 @@ function build_sketch()
         echo "NOTE: The warning above \"Selected board is not available\" is caused intentionally and does not indicate a problem."
       fi
     fi
-    # Apparently the default state should be set -e, this will still allow the build to complete through failed verifications before failing rather than immediately failing
-    set -e
 
     if [[ "$sketchPath" =~ \.ino$ || "$sketchPath" =~ \.pde$ ]]; then
       # A sketch was specified
       build_this_sketch "$sketchPath" "$boardID" "$IDEversion" "$allowFail"
+      buildSketchExitCode=$?
     else
       # Search for all sketches in the path and put them in an array
       # https://github.com/koalaman/shellcheck/wiki/SC2207
@@ -641,7 +652,9 @@ function build_sketch()
         local sketchNameWithoutPathWithoutExtension
         sketchNameWithoutPathWithoutExtension="${sketchNameWithoutPathWithExtension%.*}"
         if [[ "$sketchFolder" == "$sketchNameWithoutPathWithoutExtension" ]]; then
-          build_this_sketch "$sketchName" "$boardID" "$IDEversion" "$allowFail"
+          if ! build_this_sketch "$sketchName" "$boardID" "$IDEversion" "$allowFail"; then
+            buildSketchExitCode=1;
+          fi
         fi
       done
     fi
@@ -650,6 +663,8 @@ function build_sketch()
   done
 
   disable_verbosity
+
+  return $buildSketchExitCode
 }
 
 
@@ -673,18 +688,21 @@ function build_this_sketch()
   local sketchName
   sketchName="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 
-  local sketchBuildExitCode=255
+  # Set default value of buildThisSketchExitCode
+  local buildThisSketchExitCode=0
+
+  local arduinoExitCode=255
   # Retry the verification if it returns exit code 255
-  while [[ "$sketchBuildExitCode" == "255" && $verifyCount -le $SKETCH_VERIFY_RETRIES ]]; do
+  while [[ "$arduinoExitCode" == "255" && $verifyCount -le $SKETCH_VERIFY_RETRIES ]]; do
     # Verify the sketch
-    arduino $VERBOSE_BUILD --verify "$sketchName" --board "$boardID" 2>&1 | tee "$VERIFICATION_OUTPUT_FILENAME"; local sketchBuildExitCode="${PIPESTATUS[0]}"
+    arduino $VERBOSE_BUILD --verify "$sketchName" --board "$boardID" 2>&1 | tee "$VERIFICATION_OUTPUT_FILENAME"; local arduinoExitCode="${PIPESTATUS[0]}"
     local verifyCount=$((verifyCount + 1))
   done
 
   # If the sketch build failed and failure is not allowed for this test then fail the Travis build after completing all sketch builds
-  if [[ "$sketchBuildExitCode" != 0 ]]; then
+  if [[ "$arduinoExitCode" != 0 ]]; then
     if [[ "$allowFail" != "true" ]]; then
-      TRAVIS_BUILD_EXIT_CODE=1
+      buildThisSketchExitCode=1
     fi
   else
     # Parse through the output from the sketch verification to count warnings and determine the compile size
@@ -714,7 +732,7 @@ function build_this_sketch()
         if [[ "$outputFileLine" =~ $regex ]] > /dev/null; then
           local boardError="missing bootloader"
           if [[ "$allowFail" != "true" ]]; then
-            TRAVIS_BUILD_EXIT_CODE=1
+            buildThisSketchExitCode=1
           fi
         fi
       fi
@@ -728,7 +746,7 @@ function build_this_sketch()
   fi
 
   # Add the build data to the report file
-  echo "$(date -u "+%Y-%m-%d %H:%M:%S")"$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_JOB_NUMBER"$'\t'"https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}"$'\t'"$TRAVIS_EVENT_TYPE"$'\t'"$TRAVIS_ALLOW_FAILURE"$'\t'"$TRAVIS_PULL_REQUEST"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"$TRAVIS_COMMIT_RANGE"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail"$'\t'"$sketchBuildExitCode"$'\t'"$boardError"$'\r' >> "$REPORT_FILE_PATH"
+  echo "$(date -u "+%Y-%m-%d %H:%M:%S")"$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_JOB_NUMBER"$'\t'"https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}"$'\t'"$TRAVIS_EVENT_TYPE"$'\t'"$TRAVIS_ALLOW_FAILURE"$'\t'"$TRAVIS_PULL_REQUEST"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"$TRAVIS_COMMIT_RANGE"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail"$'\t'"$arduinoExitCode"$'\t'"$boardError"$'\r' >> "$REPORT_FILE_PATH"
 
   # End the folded section of the Travis CI build log
   echo -e "travis_fold:end:build_sketch"
@@ -736,7 +754,9 @@ function build_this_sketch()
 
   disable_verbosity
 
-  echo "arduino exit code: $sketchBuildExitCode"
+  echo "arduino exit code: $arduinoExitCode"
+
+  return $buildThisSketchExitCode
 }
 
 
@@ -782,7 +802,7 @@ function publish_report_to_repository()
         git config user.name "arduino-ci-script-bot"
         # Only pushes the current branch to the corresponding remote branch that 'git pull' uses to update the current branch.
         git config push.default simple
-        if [[ "$TRAVIS_BUILD_EXIT_CODE" != "" ]]; then
+        if [[ "$TRAVIS_TEST_RESULT" != "" ]]; then
           local jobSuccessMessage="FAILED"
         else
           local jobSuccessMessage="SUCCESSFUL"
@@ -811,15 +831,18 @@ function publish_report_to_repository()
           fi
         else
           echo "ERROR: Failed to push to remote branch."
+          return 3
         fi
       else
         echo "ERROR: Failed to clone branch ${reportBranch} of repository URL ${repositoryURL}. Do they exist?"
+        return 2
       fi
     else
       echo "No report file available for this job"
     fi
   else
     echo "Publishing report failed. GitHub token, repository URL, and repository branch must be defined to use this function. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."
+    return 1
   fi
 
   disable_verbosity
@@ -865,6 +888,7 @@ curlDataHere
     fi
   else
     echo "Publishing report failed. GitHub token and gist URL must be defined in your Travis CI settings for this repository in order to use this function. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."
+    return 1
   fi
 
   disable_verbosity
@@ -885,15 +909,8 @@ function comment_report_link()
 }
 
 
-# Return 1 if any of the sketch builds failed
+# Deprecated because no longer necessary. Left only to maintain backwards compatibility
 function check_success()
 {
-  enable_verbosity
-
-  if [[ "$TRAVIS_BUILD_EXIT_CODE" != "" ]]; then
-    set +e  # without this the build is ended immediately and none of the post-script build steps are run
-    return 1
-  fi
-
-  disable_verbosity
+  echo "The check_success function is no longer necessary and has been deprecated"
 }

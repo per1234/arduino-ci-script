@@ -95,9 +95,6 @@ Pass some parameters from .travis.yml to the script. `build_sketch` will echo th
 - Parameter: **startIDEversion** - The start (inclusive) of a range of versions of the Arduino IDE to use to verify the sketch.
 - Parameter: **endIDEversion** - The end (inclusive) of a range of versions of the Arduino IDE to use to verify the sketch.
 
-##### `check_success`
-This function returns an exit code of 1 if any sketch verification failed except for those that were allowed failure by setting the `build_sketch` function's `allowFail` argument to `"true"`. Returns 0 otherwise.
-
 ##### `display_report`
 Echo a tab separated report of all verification results to the log. The report is located at `$HOME/report.txt`. Note that Travis CI runs each build of the job in a separate virtual machine so if you have multiple jobs you will have multiple reports. The only way I have found to generate a single report for all tests is to run them as a single job. This means not setting multiple matrix environment variables in the `env` array. See https://docs.travis-ci.com/user/environment-variables. The report consists of:
 - Build timestamp
