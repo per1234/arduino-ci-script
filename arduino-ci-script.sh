@@ -802,7 +802,7 @@ function publish_report_to_repository()
         git config user.name "arduino-ci-script-bot"
         # Only pushes the current branch to the corresponding remote branch that 'git pull' uses to update the current branch.
         git config push.default simple
-        if [[ "$TRAVIS_TEST_RESULT" != "" ]]; then
+        if [[ "$TRAVIS_TEST_RESULT" != "0" ]]; then
           local jobSuccessMessage="FAILED"
         else
           local jobSuccessMessage="SUCCESSFUL"
