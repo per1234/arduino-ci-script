@@ -635,8 +635,10 @@ function build_sketch()
 
     if [[ "$sketchPath" =~ \.ino$ || "$sketchPath" =~ \.pde$ ]]; then
       # A sketch was specified
-      build_this_sketch "$sketchPath" "$boardID" "$IDEversion" "$allowFail"
-      buildSketchExitCode=$?
+      if ! build_this_sketch "$sketchPath" "$boardID" "$IDEversion" "$allowFail"; then
+        # build_this_sketch returned a non-zero exit code
+        buildSketchExitCode=1
+      fi
     else
       # Search for all sketches in the path and put them in an array
       # https://github.com/koalaman/shellcheck/wiki/SC2207
