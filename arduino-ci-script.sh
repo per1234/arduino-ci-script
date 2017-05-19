@@ -24,7 +24,8 @@ VERIFICATION_OUTPUT_FILENAME="${TEMPORARY_FOLDER}/verification_output.txt"
 REPORT_FILENAME="travis_ci_job_report_$(printf "%05d\n" "${TRAVIS_BUILD_NUMBER}").$(printf "%03d\n" "$(echo "$TRAVIS_JOB_NUMBER" | cut -d'.' -f 2)").tsv"
 REPORT_FOLDER="${HOME}/arduino-ci-script_report"
 REPORT_FILE_PATH="${REPORT_FOLDER}/${REPORT_FILENAME}"
-# The Arduino IDE returns exit code 255 after a failed file signature verification of the boards manager JSON file. This does not indicate an issue with the sketch and the problem may go away after a retry.
+# The arduino manpage(https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#exit-status) documents a range of exit codes. These exit codes indicate success, invalid arduino command, or compilation failed due to legitimate code errors. arduino sometimes returns other exit codes that may indicate problems that may go away after a retry.
+HIGHEST_ACCEPTABLE_ARDUINO_EXIT_CODE=4
 SKETCH_VERIFY_RETRIES=3
 REPORT_PUSH_RETRIES=10
 
@@ -694,9 +695,10 @@ function build_this_sketch()
   # Set default value of buildThisSketchExitCode
   local buildThisSketchExitCode=0
 
+  # Define a dummy value for arduinoExitCode so that the while loop will run at least once
   local arduinoExitCode=255
-  # Retry the verification if it returns exit code 255
-  while [[ "$arduinoExitCode" == "255" && $verifyCount -le $SKETCH_VERIFY_RETRIES ]]; do
+  # Retry the verification if arduino returns an exit code that indicates there may have been a temporary error not caused by a bug in the sketch or the arduino command
+  while [[ $arduinoExitCode -gt $HIGHEST_ACCEPTABLE_ARDUINO_EXIT_CODE && $verifyCount -le $SKETCH_VERIFY_RETRIES ]]; do
     # Verify the sketch
     arduino $VERBOSE_BUILD --verify "$sketchName" --board "$boardID" 2>&1 | tee "$VERIFICATION_OUTPUT_FILENAME"; local arduinoExitCode="${PIPESTATUS[0]}"
     local verifyCount=$((verifyCount + 1))
