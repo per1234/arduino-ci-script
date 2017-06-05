@@ -16,7 +16,7 @@ env:
     # Test install_ide using full version list
     - INSTALL_IDE_START_VERSION="all"
     # Test install_ide using custom version list. Test the use of the special version names "oldest" and "newest" in a version list. Test use of "hourly" version name.
-    - INSTALL_IDE_START_VERSION='("oldest" "1.8.1" "newest" "hourly")'
+    - INSTALL_IDE_START_VERSION='("oldest" "1.8.1" "1.8.2" "newest" "hourly")'
     # Allowed to fail
     # Test install_ide using single version
     # test the failure behavior of install_package when a Boards Manager installation is attempted using an IDE version that doesn't support it.
