@@ -1,14 +1,11 @@
 # This file is used to test the script with Travis CI
 
 language: bash
-sudo: required
 
 
 env:
   global:
     # The Arduino IDE will be installed at APPLICATION_FOLDER/arduino
-    - APPLICATION_FOLDER="/usr/local/share"
-    - SKETCHBOOK_FOLDER="${HOME}/Arduino"
 
   matrix:
     # Test install_ide with no argument (using full version list). This would cause the Travis CI build to take much longer so I have it disabled

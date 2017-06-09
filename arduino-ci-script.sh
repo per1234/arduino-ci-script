@@ -20,6 +20,7 @@ FULL_IDE_VERSION_LIST_ARRAY="${IDE_VERSION_LIST_ARRAY_DECLARATION}"'("1.5.2" "1.
 
 
 TEMPORARY_FOLDER="${HOME}/temporary/arduino-ci-script"
+IDE_INSTALLATION_FOLDER="arduino"
 VERIFICATION_OUTPUT_FILENAME="${TEMPORARY_FOLDER}/verification_output.txt"
 REPORT_FILENAME="travis_ci_job_report_$(printf "%05d\n" "${TRAVIS_BUILD_NUMBER}").$(printf "%03d\n" "$(echo "$TRAVIS_JOB_NUMBER" | cut -d'.' -f 2)").tsv"
 REPORT_FOLDER="${HOME}/arduino-ci-script_report"
@@ -213,6 +214,7 @@ function install_ide()
   determine_ide_version_extremes "$INSTALLED_IDE_VERSION_LIST_ARRAY"
   NEWEST_INSTALLED_IDE_VERSION="$DETERMINED_NEWEST_IDE_VERSION"
 
+  create_folder "$APPLICATION_FOLDER"
 
   # This runs the command contained in the $INSTALLED_IDE_VERSION_LIST_ARRAY string, thus declaring the array locally as $IDEversionListArray. This must be done in any function that uses the array
   # Dummy declaration to fix the "referenced but not assigned" warning.
@@ -234,20 +236,18 @@ function install_ide()
       wget "http://downloads.arduino.cc/arduino-nightly-linux64.${downloadFileExtension}"
       tar xf "arduino-nightly-linux64.${downloadFileExtension}"
       rm "arduino-nightly-linux64.${downloadFileExtension}"
-      sudo mv "arduino-nightly" "$APPLICATION_FOLDER/arduino-${IDEversion}"
+      mv "arduino-nightly" "$APPLICATION_FOLDER/arduino-${IDEversion}"
 
     else
       wget "http://downloads.arduino.cc/arduino-${IDEversion}-linux64.${downloadFileExtension}"
       tar xf "arduino-${IDEversion}-linux64.${downloadFileExtension}"
       rm "arduino-${IDEversion}-linux64.${downloadFileExtension}"
-      sudo mv "arduino-${IDEversion}" "$APPLICATION_FOLDER/arduino-${IDEversion}"
+      mv "arduino-${IDEversion}" "$APPLICATION_FOLDER/arduino-${IDEversion}"
     fi
   done
 
   # Temporarily install the latest IDE version
   install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
-  # Create the link that will be used for all IDE installations
-  sudo ln --symbolic "$APPLICATION_FOLDER/arduino/arduino" /usr/local/bin/arduino
 
   # Set the preferences
   # --pref option is only supported by Arduino IDE 1.5.6 and newer
@@ -259,15 +259,12 @@ function install_ide()
     # --save-prefs was added in Arduino IDE 1.5.8
     local regex="1.5.[6-7]"
     if ! [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $regex ]]; then
-      arduino --pref compiler.warning_level=all --pref sketchbook.path="$SKETCHBOOK_FOLDER" --save-prefs
+      ${APPLICATION_FOLDER}/${IDE_INSTALLATION_FOLDER}/arduino --pref compiler.warning_level=all --pref sketchbook.path="$SKETCHBOOK_FOLDER" --save-prefs
     else
       # Arduino IDE 1.5.6 - 1.5.7 load the GUI if you only set preferences without doing a verify. So I am doing an unnecessary verification just to set the preferences in those versions. Definitely a hack but I prefer to keep the preferences setting code all here instead of cluttering build_sketch and this will pretty much never be used.
-      arduino --pref compiler.warning_level=all --pref sketchbook.path="$SKETCHBOOK_FOLDER" --verify "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino"
+      ${APPLICATION_FOLDER}/${IDE_INSTALLATION_FOLDER}/arduino --pref compiler.warning_level=all --pref sketchbook.path="$SKETCHBOOK_FOLDER" --verify "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino"
     fi
   fi
-
-  # Uninstall the IDE
-  uninstall_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
 
   # Return errexit to the default state
   set +o errexit
@@ -394,18 +391,9 @@ function install_ide_version()
   enable_verbosity
 
   local IDEversion="$1"
-  sudo mv "${APPLICATION_FOLDER}/arduino-${IDEversion}" "${APPLICATION_FOLDER}/arduino"
 
-  disable_verbosity
-}
-
-
-function uninstall_ide_version()
-{
-  enable_verbosity
-
-  local IDEversion="$1"
-  sudo mv "${APPLICATION_FOLDER}/arduino" "${APPLICATION_FOLDER}/arduino-${IDEversion}"
+  # Create a symbolic link so that the Arduino IDE can always be referenced from the same path no matter which version is being used.
+  ln -sf "${APPLICATION_FOLDER}/arduino-${IDEversion}" "${APPLICATION_FOLDER}/${IDE_INSTALLATION_FOLDER}"
 
   disable_verbosity
 }
@@ -484,14 +472,12 @@ function install_package()
 
       # If defined add the boards manager URL to preferences
       if [[ "$packageURL" != "" ]]; then
-        arduino --pref boardsmanager.additional.urls="$packageURL" --save-prefs
+        ${APPLICATION_FOLDER}/${IDE_INSTALLATION_FOLDER}/arduino --pref boardsmanager.additional.urls="$packageURL" --save-prefs
       fi
 
       # Install the package
-      arduino --install-boards "$packageID"
+      ${APPLICATION_FOLDER}/${IDE_INSTALLATION_FOLDER}/arduino --install-boards "$packageID"
 
-      # Uninstall the IDE
-      uninstall_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
     fi
   fi
 
@@ -571,10 +557,8 @@ function install_library()
       install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
 
        # Install the library
-      arduino --install-library "$libraryName"
+      ${APPLICATION_FOLDER}/${IDE_INSTALLATION_FOLDER}/arduino --install-library "$libraryName"
 
-      # Uninstall the IDE
-      uninstall_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
     fi
   fi
 
@@ -662,8 +646,6 @@ function build_sketch()
         fi
       done
     fi
-    # Uninstall the IDE
-    uninstall_ide_version "$IDEversion"
   done
 
   disable_verbosity
@@ -700,7 +682,7 @@ function build_this_sketch()
   # Retry the verification if arduino returns an exit code that indicates there may have been a temporary error not caused by a bug in the sketch or the arduino command
   while [[ $arduinoExitCode -gt $HIGHEST_ACCEPTABLE_ARDUINO_EXIT_CODE && $verifyCount -le $SKETCH_VERIFY_RETRIES ]]; do
     # Verify the sketch
-    arduino $VERBOSE_BUILD --verify "$sketchName" --board "$boardID" 2>&1 | tee "$VERIFICATION_OUTPUT_FILENAME"; local arduinoExitCode="${PIPESTATUS[0]}"
+    ${APPLICATION_FOLDER}/${IDE_INSTALLATION_FOLDER}/arduino $VERBOSE_BUILD --verify "$sketchName" --board "$boardID" 2>&1 | tee "$VERIFICATION_OUTPUT_FILENAME"; local arduinoExitCode="${PIPESTATUS[0]}"
     local verifyCount=$((verifyCount + 1))
   done
 
