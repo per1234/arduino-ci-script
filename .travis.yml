@@ -6,6 +6,8 @@ language: bash
 env:
   global:
     # The Arduino IDE will be installed at APPLICATION_FOLDER/arduino
+    - APPLICATION_FOLDER="${HOME}/arduino-ide"
+    - SKETCHBOOK_FOLDER="${HOME}/arduino-sketchbook"
 
   matrix:
     # Test install_ide with no argument (using full version list). This would cause the Travis CI build to take much longer so I have it disabled
