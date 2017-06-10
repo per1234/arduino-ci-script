@@ -393,7 +393,7 @@ function install_ide_version()
   local IDEversion="$1"
 
   # Create a symbolic link so that the Arduino IDE can always be referenced from the same path no matter which version is being used.
-  ln -sf "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/arduino-${IDEversion}" "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}"
+  ln --symbolic --force "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/arduino-${IDEversion}" "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}"
 
   disable_verbosity
 }
@@ -425,7 +425,7 @@ function install_package()
       cd "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER"
 
       # Clean up the temporary folder
-      rm -f ./*.*
+      rm --force ./*.*
 
       # Download the package
       wget "$packageURL"
@@ -437,7 +437,7 @@ function install_package()
       extract ./*.*
 
       # Clean up the temporary folder
-      rm -f ./*.*
+      rm --force ./*.*
 
       # Install the package
       mv ./* "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/hardware/"
@@ -518,7 +518,7 @@ function install_library()
       # Download the file to the temporary folder
       cd "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER"
       # Clean up the temporary folder
-      rm -f ./*.*
+      rm --force ./*.*
       wget "$libraryIdentifier"
 
       # This script handles any compressed file type
@@ -526,7 +526,7 @@ function install_library()
       source "${ARDUINO_CI_SCRIPT_FOLDER}/extract.sh"
       extract ./*.*
       # Clean up the temporary folder
-      rm -f ./*.*
+      rm --force ./*.*
       # Install the library
       mv ./* "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/libraries/${newFolderName}"
     fi
