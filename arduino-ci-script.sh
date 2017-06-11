@@ -611,7 +611,7 @@ function build_sketch()
     local regex1="1.5.[0-9]"
     local regex2="1.6.[0-3]"
     if ! [[ "$IDEversion" =~ $regex1 || "$IDEversion" =~ $regex2 ]]; then
-      eval arduino --install-boards arduino:dummy "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+      eval ${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino --install-boards arduino:dummy "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
       if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -gt 1 ]]; then
         # The warning is printed to stdout
         echo "NOTE: The warning above \"Selected board is not available\" is caused intentionally and does not indicate a problem."
