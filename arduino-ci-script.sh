@@ -3,11 +3,6 @@
 # https://github.com/per1234/arduino-ci-script
 
 
-# Save the location of the script
-# http://stackoverflow.com/a/246128/7059512
-ARDUINO_CI_SCRIPT_FOLDER="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-
 # Based on https://github.com/adafruit/travis-ci-arduino/blob/eeaeaf8fa253465d18785c2bb589e14ea9893f9f/install.sh#L11
 # It seems that arrays can't been seen in other functions. So instead I'm setting $IDE_VERSIONS to a string that is the command to create the array
 ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION="declare -a IDEversionListArray="
@@ -36,27 +31,10 @@ function create_folder()
 {
   local folderName="$1"
   if ! [[ -d "$folderName" ]]; then
-    mkdir --parents "$folderName"
+    # shellcheck disable=SC2086
+    mkdir --parents $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "$folderName"
   fi
 }
-
-
-# Create the temporary folder
-create_folder "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER"
-
-# Create the report folder
-create_folder "$ARDUINO_CI_SCRIPT_REPORT_FOLDER"
-
-
-# Add column names to report
-echo "Build Timestamp (UTC)"$'\t'"Build"$'\t'"Job"$'\t'"Job URL"$'\t'"Build Trigger"$'\t'"Allow Job Failure"$'\t'"PR#"$'\t'"Branch"$'\t'"Commit"$'\t'"Commit Range"$'\t'"Commit Message"$'\t'"Sketch Filename"$'\t'"Board ID"$'\t'"IDE Version"$'\t'"Program Storage (bytes)"$'\t'"Dynamic Memory (bytes)"$'\t'"# Warnings"$'\t'"Allow Failure"$'\t'"Exit Code"$'\t'"Board Error"$'\r' > "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
-
-
-# Start the virtual display required by the Arduino IDE CLI: https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#bugs
-# based on https://learn.adafruit.com/continuous-integration-arduino-and-you/testing-your-project
-/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16
-sleep 3
-export DISPLAY=:1.0
 
 
 function set_script_verbosity()
@@ -71,17 +49,19 @@ function set_script_verbosity()
 
   if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" == 1 ]]; then
     ARDUINO_CI_SCRIPT_VERBOSITY_OPTION="--verbose"
+    ARDUINO_CI_SCRIPT_QUIET_OPTION=""
     # Show stderr only
     ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT="1>/dev/null"
   elif [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" == 2 ]]; then
-    ARDUINO_CI_SCRIPT_VERBOSE_SCRIPT_OUTPUT="true"
-    ARDUINO_CI_SCRIPT_MORE_VERBOSE_SCRIPT_OUTPUT="true"
     ARDUINO_CI_SCRIPT_VERBOSITY_OPTION="--verbose"
+    ARDUINO_CI_SCRIPT_QUIET_OPTION=""
     # Show stdout and stderr
     ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT=""
   else
     ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL=0
     ARDUINO_CI_SCRIPT_VERBOSITY_OPTION=""
+    # cabextract only takes the short option name so this is more universally useful than --quiet
+    ARDUINO_CI_SCRIPT_QUIET_OPTION="-q"
     # Don't show stderr or stdout
     ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT="&>/dev/null"
   fi
@@ -95,11 +75,7 @@ function set_verbose_script_output()
 {
   enable_verbosity
 
-  if [[ "$ARDUINO_CI_SCRIPT_VERBOSE_SCRIPT_OUTPUT" == "true" ]]; then
     set_script_verbosity 1
-  else
-    set_script_verbosity 0
-  fi
 
   disable_verbosity
 }
@@ -110,11 +86,7 @@ function set_more_verbose_script_output()
 {
   enable_verbosity
 
-  if [[ "$ARDUINO_CI_SCRIPT_MORE_VERBOSE_SCRIPT_OUTPUT" == "true" ]]; then
     set_script_verbosity 2
-  else
-    set_script_verbosity 0
-  fi
 
   disable_verbosity
 }
@@ -129,7 +101,6 @@ function enable_verbosity()
     set -o verbose
   fi
   if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -gt 1 ]]; then
-    set -o verbose
     # "Print a trace of simple commands, for commands, case commands, select commands, and arithmetic for commands and their arguments or associated word lists after they are expanded and before they are executed. The value of the PS4 variable is expanded and the resultant value is printed before the command and its expanded arguments."
     # https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
     set -o xtrace
@@ -137,16 +108,11 @@ function enable_verbosity()
 }
 
 
-# Turn off verbosity based on the preferences set by set_verbose_script_output and set_more_verbose_script_output
 function disable_verbosity()
 {
   set +o verbose
   set +o xtrace
 }
-
-
-# Set default verbosity (must be called after the function definitions
-set_script_verbosity 0
 
 
 function set_application_folder()
@@ -233,16 +199,16 @@ function install_ide()
 
     if [[ "$IDEversion" == "hourly" ]]; then
       # Deal with the inaccurate name given to the hourly build download
-      wget "http://downloads.arduino.cc/arduino-nightly-linux64.${downloadFileExtension}"
+      wget --no-verbose $ARDUINO_CI_SCRIPT_QUIET_OPTION "http://downloads.arduino.cc/arduino-nightly-linux64.${downloadFileExtension}"
       tar xf "arduino-nightly-linux64.${downloadFileExtension}"
-      rm "arduino-nightly-linux64.${downloadFileExtension}"
-      mv "arduino-nightly" "$ARDUINO_CI_SCRIPT_APPLICATION_FOLDER/arduino-${IDEversion}"
+      rm $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "arduino-nightly-linux64.${downloadFileExtension}"
+      mv $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "arduino-nightly" "$ARDUINO_CI_SCRIPT_APPLICATION_FOLDER/arduino-${IDEversion}"
 
     else
-      wget "http://downloads.arduino.cc/arduino-${IDEversion}-linux64.${downloadFileExtension}"
+      wget --no-verbose $ARDUINO_CI_SCRIPT_QUIET_OPTION "http://downloads.arduino.cc/arduino-${IDEversion}-linux64.${downloadFileExtension}"
       tar xf "arduino-${IDEversion}-linux64.${downloadFileExtension}"
-      rm "arduino-${IDEversion}-linux64.${downloadFileExtension}"
-      mv "arduino-${IDEversion}" "$ARDUINO_CI_SCRIPT_APPLICATION_FOLDER/arduino-${IDEversion}"
+      rm $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "arduino-${IDEversion}-linux64.${downloadFileExtension}"
+      mv $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "arduino-${IDEversion}" "$ARDUINO_CI_SCRIPT_APPLICATION_FOLDER/arduino-${IDEversion}"
     fi
   done
 
@@ -259,10 +225,12 @@ function install_ide()
     # --save-prefs was added in Arduino IDE 1.5.8
     local regex="1.5.[6-7]"
     if ! [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $regex ]]; then
-      ${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino --pref compiler.warning_level=all --pref sketchbook.path="$ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER" --save-prefs
+      # shellcheck disable=SC2086
+      eval ${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino --pref compiler.warning_level=all --pref sketchbook.path="$ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER" --save-prefs "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
     else
       # Arduino IDE 1.5.6 - 1.5.7 load the GUI if you only set preferences without doing a verify. So I am doing an unnecessary verification just to set the preferences in those versions. Definitely a hack but I prefer to keep the preferences setting code all here instead of cluttering build_sketch and this will pretty much never be used.
-      ${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino --pref compiler.warning_level=all --pref sketchbook.path="$ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER" --verify "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino"
+      # shellcheck disable=SC2086
+      eval ${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino --pref compiler.warning_level=all --pref sketchbook.path="$ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER" --verify "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
     fi
   fi
 
@@ -393,7 +361,7 @@ function install_ide_version()
   local IDEversion="$1"
 
   # Create a symbolic link so that the Arduino IDE can always be referenced from the same path no matter which version is being used.
-  ln --symbolic --force "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/arduino-${IDEversion}" "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}"
+  ln --symbolic --force $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/arduino-${IDEversion}" "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}"
 
   disable_verbosity
 }
@@ -419,28 +387,25 @@ function install_package()
     if [[ "$packageURL" =~ \.git$ ]]; then
       # Clone the repository
       cd "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/hardware"
-      git clone "$packageURL"
+      git clone --quiet "$packageURL"
 
     else
       cd "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER"
 
       # Clean up the temporary folder
-      rm --force ./*.*
+      rm --force $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./*.*
 
       # Download the package
-      wget "$packageURL"
+      wget --no-verbose $ARDUINO_CI_SCRIPT_QUIET_OPTION "$packageURL"
 
       # Uncompress the package
-      # This script handles any compressed file type
-      # shellcheck source=/dev/null
-      source "${ARDUINO_CI_SCRIPT_FOLDER}/extract.sh"
       extract ./*.*
 
       # Clean up the temporary folder
-      rm --force ./*.*
+      rm --force $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./*.*
 
       # Install the package
-      mv ./* "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/hardware/"
+      mv $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./* "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/hardware/"
     fi
 
   elif [[ "$1" == "" ]]; then
@@ -448,7 +413,7 @@ function install_package()
     # https://docs.travis-ci.com/user/environment-variables#Global-Variables
     local packageName
     packageName="$(echo "$TRAVIS_REPO_SLUG" | cut -d'/' -f 2)"
-    mkdir --parents "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/hardware/$packageName"
+    mkdir --parents $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/hardware/$packageName"
     cd "$TRAVIS_BUILD_DIR"
     cp --recursive $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./* "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/hardware/${packageName}"
     # * doesn't copy .travis.yml but that file will be present in the user's installation so it should be there for the tests too
@@ -472,11 +437,13 @@ function install_package()
 
       # If defined add the boards manager URL to preferences
       if [[ "$packageURL" != "" ]]; then
-        ${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino --pref boardsmanager.additional.urls="$packageURL" --save-prefs
+        # shellcheck disable=SC2086
+        eval ${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino --pref boardsmanager.additional.urls="$packageURL" --save-prefs "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
       fi
 
       # Install the package
-      ${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino --install-boards "$packageID"
+      # shellcheck disable=SC2086
+      eval ${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino --install-boards "$packageID" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
 
     fi
   fi
@@ -507,9 +474,9 @@ function install_library()
       # Clone the repository
       cd "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/libraries"
       if [[ "$newFolderName" == "" ]]; then
-        git clone "$libraryIdentifier"
+        git clone --quiet "$libraryIdentifier"
       else
-        git clone "$libraryIdentifier" "$newFolderName"
+        git clone --quiet "$libraryIdentifier" "$newFolderName"
       fi
 
     else
@@ -518,17 +485,14 @@ function install_library()
       # Download the file to the temporary folder
       cd "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER"
       # Clean up the temporary folder
-      rm --force ./*.*
-      wget "$libraryIdentifier"
+      rm --force $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./*.*
+      wget --no-verbose $ARDUINO_CI_SCRIPT_QUIET_OPTION "$libraryIdentifier"
 
-      # This script handles any compressed file type
-      # shellcheck source=/dev/null
-      source "${ARDUINO_CI_SCRIPT_FOLDER}/extract.sh"
       extract ./*.*
       # Clean up the temporary folder
-      rm --force ./*.*
+      rm --force $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./*.*
       # Install the library
-      mv ./* "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/libraries/${newFolderName}"
+      mv $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./* "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/libraries/${newFolderName}"
     fi
 
   elif [[ "$libraryIdentifier" == "" ]]; then
@@ -536,7 +500,7 @@ function install_library()
     # https://docs.travis-ci.com/user/environment-variables#Global-Variables
     local libraryName
     libraryName="$(echo "$TRAVIS_REPO_SLUG" | cut -d'/' -f 2)"
-    mkdir --parents "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/libraries/$libraryName"
+    mkdir --parents $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/libraries/$libraryName"
     cd "$TRAVIS_BUILD_DIR"
     cp --recursive $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./* "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/libraries/${libraryName}"
     # * doesn't copy .travis.yml but that file will be present in the user's installation so it should be there for the tests too
@@ -557,7 +521,8 @@ function install_library()
       install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
 
        # Install the library
-      ${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino --install-library "$libraryName"
+      # shellcheck disable=SC2086
+      eval ${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino --install-library "$libraryName" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
 
     fi
   fi
@@ -565,6 +530,64 @@ function install_library()
   set +o errexit
 
   disable_verbosity
+}
+
+
+# Extract common file formats
+# https://github.com/xvoland/Extract
+function extract
+{
+  if [ -z "$1" ]; then
+    # display usage if no parameters given
+    echo "Usage: extract <path/file_name>.<zip|rar|bz2|gz|tar|tbz2|tgz|Z|7z|xz|ex|tar.bz2|tar.gz|tar.xz>"
+    echo "       extract <path/file_name_1.ext> [path/file_name_2.ext] [path/file_name_3.ext]"
+    return 1
+  else
+    for n in "$@"
+    do
+      if [ -f "$n" ]; then
+        case "${n%,}" in
+          *.tar.bz2|*.tar.gz|*.tar.xz|*.tbz2|*.tgz|*.txz|*.tar)
+            tar xf "$n"
+          ;;
+          *.lzma)
+            unlzma $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$n"
+          ;;
+          *.bz2)
+            bunzip2 $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$n"
+          ;;
+          *.rar)
+            eval unrar x -ad ./"$n" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+          ;;
+          *.gz)
+            gunzip ./"$n"
+          ;;
+          *.zip)
+            unzip -qq ./"$n"
+          ;;
+          *.z)
+            eval uncompress ./"$n" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+          ;;
+          *.7z|*.arj|*.cab|*.chm|*.deb|*.dmg|*.iso|*.lzh|*.msi|*.rpm|*.udf|*.wim|*.xar)
+            7z x ./"$n"
+          ;;
+          *.xz)
+            unxz $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$n"
+          ;;
+          *.exe)
+            cabextract $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$n"
+          ;;
+          *)
+            echo "extract: '$n' - unknown archive method"
+            return 1
+          ;;
+        esac
+      else
+        echo "extract: '$n' - file does not exist"
+        return 1
+      fi
+    done
+  fi
 }
 
 
@@ -611,6 +634,7 @@ function build_sketch()
     local regex1="1.5.[0-9]"
     local regex2="1.6.[0-3]"
     if ! [[ "$IDEversion" =~ $regex1 || "$IDEversion" =~ $regex2 ]]; then
+      # shellcheck disable=SC2086
       eval ${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino --install-boards arduino:dummy "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
       if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -gt 1 ]]; then
         # The warning is printed to stdout
@@ -682,6 +706,7 @@ function build_this_sketch()
   # Retry the verification if arduino returns an exit code that indicates there may have been a temporary error not caused by a bug in the sketch or the arduino command
   while [[ $arduinoExitCode -gt $ARDUINO_CI_SCRIPT_HIGHEST_ACCEPTABLE_ARDUINO_EXIT_CODE && $verifyCount -le $ARDUINO_CI_SCRIPT_SKETCH_VERIFY_RETRIES ]]; do
     # Verify the sketch
+    # shellcheck disable=SC2086
     ${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino $ARDUINO_CI_SCRIPT_DETERMINED_VERBOSE_BUILD --verify "$sketchName" --board "$boardID" 2>&1 | tee "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"; local arduinoExitCode="${PIPESTATUS[0]}"
     local verifyCount=$((verifyCount + 1))
   done
@@ -725,7 +750,7 @@ function build_this_sketch()
       fi
     done < "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"
 
-    rm "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"
+    rm $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"
 
     # Remove the stupid comma from the memory values if present
     local programStorage=${programStorage//,}
@@ -778,7 +803,7 @@ function publish_report_to_repository()
   if [[ "$token" != "" ]] && [[ "$repositoryURL" != "" ]] && [[ "$reportBranch" != "" ]]; then
     if [ -e "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH" ]; then
       # Location is a repository
-      git clone $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION --branch "$reportBranch" "$repositoryURL" "${HOME}/report-repository"; local gitCloneExitCode="${PIPESTATUS[0]}"
+      git clone --quiet --branch "$reportBranch" "$repositoryURL" "${HOME}/report-repository"; local gitCloneExitCode="${PIPESTATUS[0]}"
       if [[ "$gitCloneExitCode" == 0 ]]; then
         # Clone was successful
         create_folder "${HOME}/report-repository/${reportFolder}"
@@ -795,17 +820,17 @@ function publish_report_to_repository()
           local jobSuccessMessage="SUCCESSFUL"
         fi
         # Do a pull now in case another job has finished about the same time and pushed a report after the clone happened, which would otherwise cause the push to fail. This is the last chance to pull without having to deal with a merge or rebase.
-        git pull
-        git commit $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION --message="Add Travis CI job ${TRAVIS_JOB_NUMBER} report (${jobSuccessMessage})" --message="Job log: https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --message="Commit: https://github.com/${TRAVIS_REPO_SLUG}/commit/${TRAVIS_COMMIT}" --message="$TRAVIS_COMMIT_MESSAGE" --message="[skip ci]"
+        git pull $ARDUINO_CI_SCRIPT_QUIET_OPTION
+        git commit $ARDUINO_CI_SCRIPT_QUIET_OPTION $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION --message="Add Travis CI job ${TRAVIS_JOB_NUMBER} report (${jobSuccessMessage})" --message="Job log: https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --message="Commit: https://github.com/${TRAVIS_REPO_SLUG}/commit/${TRAVIS_COMMIT}" --message="$TRAVIS_COMMIT_MESSAGE" --message="[skip ci]"
         local gitPushExitCode="1"
         local pushCount=0
         while [[ "$gitPushExitCode" != "0" && $pushCount -le $ARDUINO_CI_SCRIPT_REPORT_PUSH_RETRIES ]]; do
           pushCount=$((pushCount + 1))
           # Do a pull now in case another job has finished about the same time and pushed a report since the last pull. This would require a merge or rebase. Rebase should be safe since the commits will be separate files.
-          git pull --rebase
-          git push $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "https://${token}@${repositoryURL#*//}"; local gitPushExitCode="${PIPESTATUS[0]}"
+          git pull $ARDUINO_CI_SCRIPT_QUIET_OPTION --rebase
+          git push $ARDUINO_CI_SCRIPT_QUIET_OPTION $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "https://${token}@${repositoryURL#*//}"; local gitPushExitCode="${PIPESTATUS[0]}"
         done
-        rm $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION --recursive --force "${HOME}/report-repository"
+        rm --recursive --force "${HOME}/report-repository"
         if [[ "$gitPushExitCode" == "0" ]]; then
           if [[ "$doLinkComment" == "true" ]]; then
             # Only comment if it's job 1
@@ -855,7 +880,7 @@ function publish_report_to_gist()
       # Sanitize the report file content so it can be sent via a POST request without breaking the JSON
       # Remove \r (from Windows end-of-lines), replace tabs by \t, replace " by \", replace EOL by \n
       local reportContent
-      reportContent=$(sed -e 's/\r//' -e's/\t/\\t/g' -e 's/"/\\"/g' "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH" | awk '{ printf($0 "\\n") }')
+      reportContent=$(sed $ARDUINO_CI_SCRIPT_QUIET_OPTION -e 's/\r//' -e's/\t/\\t/g' -e 's/"/\\"/g' "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH" | awk '{ printf($0 "\\n") }')
 
       # Upload the report to the Gist. I have to use the here document to avoid the "Argument list too long" error from curl with long reports. Redirect output to dev/null because it dumps the whole gist to the log
       eval curl --header "\"Authorization: token ${token}\"" --data @- "\"https://api.github.com/gists/${gistID}\"" <<curlDataHere "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
@@ -890,7 +915,7 @@ function comment_report_link()
   local token="$1"
   local reportURL="$2"
 
-  eval curl --header "\"Authorization: token ${token}\"" --data \"{'\"'body'\"':'\"'Once completed, the job reports for Travis CI [build ${TRAVIS_BUILD_NUMBER}]\(https://travis-ci.org/${TRAVIS_REPO_SLUG}/builds/${TRAVIS_BUILD_ID}\) will be found at:\\n${reportURL}'\"'}\" "\"https://api.github.com/repos/${TRAVIS_REPO_SLUG}/commits/${TRAVIS_COMMIT}/comments\"" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+  eval curl $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION --header "\"Authorization: token ${token}\"" --data \"{'\"'body'\"':'\"'Once completed, the job reports for Travis CI [build ${TRAVIS_BUILD_NUMBER}]\(https://travis-ci.org/${TRAVIS_REPO_SLUG}/builds/${TRAVIS_BUILD_ID}\) will be found at:\\n${reportURL}'\"'}\" "\"https://api.github.com/repos/${TRAVIS_REPO_SLUG}/commits/${TRAVIS_COMMIT}/comments\"" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
 
   disable_verbosity
 }
@@ -901,3 +926,25 @@ function check_success()
 {
   echo "The check_success function is no longer necessary and has been deprecated"
 }
+
+
+# Set default verbosity (must be called after the function definitions
+set_script_verbosity 0
+
+
+# Create the temporary folder
+create_folder "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER"
+
+# Create the report folder
+create_folder "$ARDUINO_CI_SCRIPT_REPORT_FOLDER"
+
+
+# Add column names to report
+echo "Build Timestamp (UTC)"$'\t'"Build"$'\t'"Job"$'\t'"Job URL"$'\t'"Build Trigger"$'\t'"Allow Job Failure"$'\t'"PR#"$'\t'"Branch"$'\t'"Commit"$'\t'"Commit Range"$'\t'"Commit Message"$'\t'"Sketch Filename"$'\t'"Board ID"$'\t'"IDE Version"$'\t'"Program Storage (bytes)"$'\t'"Dynamic Memory (bytes)"$'\t'"# Warnings"$'\t'"Allow Failure"$'\t'"Exit Code"$'\t'"Board Error"$'\r' > "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
+
+
+# Start the virtual display required by the Arduino IDE CLI: https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#bugs
+# based on https://learn.adafruit.com/continuous-integration-arduino-and-you/testing-your-project
+/sbin/start-stop-daemon --start $ARDUINO_CI_SCRIPT_QUIET_OPTION $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16
+sleep 3
+export DISPLAY=:1.0
