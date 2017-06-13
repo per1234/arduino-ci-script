@@ -13,27 +13,27 @@ env:
     # Test install_ide with no argument (using full version list). This would cause the Travis CI build to take much longer so I have it disabled
     # - INSTALL_IDE_START_VERSION=""
     # Test install_ide using full version list
-    - INSTALL_IDE_START_VERSION="all"
+    - INSTALL_IDE_START_VERSION="all" SCRIPT_VERBOSITY_LEVEL=0 VERBOSE_COMPILATION="false"
     # Test install_ide using custom version list. Test the use of the special version names "oldest" and "newest" in a version list. Test use of "hourly" version name.
-    - INSTALL_IDE_START_VERSION='("oldest" "1.8.1" "1.8.2" "newest" "hourly")'
+    - INSTALL_IDE_START_VERSION='("oldest" "1.8.1" "1.8.2" "newest" "hourly")' VERBOSITY_LEVEL=1 VERBOSE_COMPILATION="true"
     # Allowed to fail
     # Test install_ide using single version
     # test the failure behavior of install_package when a Boards Manager installation is attempted using an IDE version that doesn't support it.
-    - INSTALL_IDE_START_VERSION="1.6.3"
+    - INSTALL_IDE_START_VERSION="1.6.3" VERBOSITY_LEVEL=2 VERBOSE_COMPILATION="false"
     # Test install_ide using version range. Test the use of the special version names "oldest" and "newest" in a version range.
-    - INSTALL_IDE_START_VERSION="oldest" INSTALL_IDE_END_VERSION="newest"
+    - INSTALL_IDE_START_VERSION="oldest" INSTALL_IDE_END_VERSION="newest" VERBOSITY_LEVEL=0 VERBOSE_COMPILATION="false"
 
 
 matrix:
   allow_failures:
     # The expected behavior is failure because 1.6.3 doesn't support boards manager installation.
-    - env: INSTALL_IDE_START_VERSION="1.6.3"
+    - env: INSTALL_IDE_START_VERSION="1.6.3" VERBOSITY_LEVEL=2 VERBOSE_COMPILATION="false"
 
 
 before_install:
   - source "${TRAVIS_BUILD_DIR}/arduino-ci-script.sh"
 
-  - set_script_verbosity 0
+  - set_script_verbosity "$VERBOSITY_LEVEL"
 
   - set_application_folder "$APPLICATION_FOLDER"
   - set_sketchbook_folder "$SKETCHBOOK_FOLDER"
@@ -46,10 +46,6 @@ before_install:
   # Install hardware packages
   # Test package install from this repository (can't do this because the repository isn't a hardware package)
   # - install_package
-  # Test Boards Manager package install without URL. Test error handling of attempting to do a Boards Manager installation when the newest installed IDE version doesn't support it (should print a helpful error message and fail instead of hanging).
-  - install_package "arduino:sam"
-  # Test Boards Manager package install with URL
-  - install_package "MiniCore:avr" "https://mcudude.github.io/MiniCore/package_MCUdude_MiniCore_index.json"
   # Test manual package install from compressed file download
   - install_package "https://github.com/SpenceKonde/ATTinyCore/archive/master.zip"
   # Test manual package install from Git repository clone
@@ -65,10 +61,18 @@ before_install:
   - install_library "https://github.com/sfrwmaker/WirelessOregonV2.git"
   # Test library install from git repo with rename
   - install_library "https://github.com/mikaelpatel/Arduino-Shell.git" "ArduinoShell"
+  # Test set_verbose_output_during_compilation.
+  - set_verbose_output_during_compilation "$VERBOSE_COMPILATION"
+
+  # Boards Manager and Library Manager tests are done as late as possible to allow job 3 to do more thorough testing of script verbosity level 2 before the job fails
+
+  # Test Boards Manager package install without URL. Test error handling of attempting to do a Boards Manager installation when the newest installed IDE version doesn't support it (should print a helpful error message and fail instead of hanging).
+  - install_package "arduino:sam"
+  # Test Boards Manager package install with URL
+  - install_package "MiniCore:avr" "https://mcudude.github.io/MiniCore/package_MCUdude_MiniCore_index.json"
+
   # Test library install from Library Manager
   - install_library "Pushetta:1.0.1"
-  # Test set_verbose_output_during_compilation. Setting verbose output to false is not actually necessary but it tests the function.
-  - set_verbose_output_during_compilation "false"
 
 
 script:
