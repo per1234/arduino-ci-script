@@ -377,9 +377,15 @@ function install_package()
 
     if [[ "$packageURL" =~ \.git$ ]]; then
       # Clone the repository
-      cd "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/hardware"
-      git clone --quiet "$packageURL"
+      local -r branchName="$2"
 
+      cd "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/hardware"
+
+      if [[ "$branchName" == "" ]]; then
+        git clone --quiet "$packageURL"
+      else
+        git clone --quiet --branch "$branchName" "$packageURL"
+      fi
     else
       cd "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER"
 
@@ -452,7 +458,6 @@ function install_library()
   set -o errexit
 
   local -r libraryIdentifier="$1"
-  local -r newFolderName="$2"
 
   # Create the libraries folder if it doesn't already exist
   create_folder "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/libraries"
@@ -463,16 +468,23 @@ function install_library()
     # Note: this assumes the library is in the root of the file
     if [[ "$libraryIdentifier" =~ \.git$ ]]; then
       # Clone the repository
-      cd "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/libraries"
-      if [[ "$newFolderName" == "" ]]; then
-        git clone --quiet "$libraryIdentifier"
-      else
-        git clone --quiet "$libraryIdentifier" "$newFolderName"
-      fi
+      local -r branchName="$2"
+      local -r newFolderName="$3"
 
+      cd "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/libraries"
+
+      if [[ "$branchName" == "" && "$newFolderName" == "" ]]; then
+        git clone --quiet "$libraryIdentifier"
+      elif [[ "$branchName" == "" ]]; then
+        git clone --quiet "$libraryIdentifier"
+      elif [[ "$newFolderName" == "" ]]; then
+        git clone --quiet --branch "$branchName" "$libraryIdentifier"
+      else
+        git clone --quiet --branch "$branchName" "$libraryIdentifier" "$newFolderName"
+      fi
     else
       # Assume it's a compressed file
-
+      local -r newFolderName="$2"
       # Download the file to the temporary folder
       cd "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER"
       # Clean up the temporary folder

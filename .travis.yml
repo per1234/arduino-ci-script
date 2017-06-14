@@ -50,6 +50,8 @@ before_install:
   - install_package "https://github.com/SpenceKonde/ATTinyCore/archive/master.zip"
   # Test manual package install from Git repository clone
   - install_package "https://github.com/MCUdude/MightyCore.git"
+  # Test manual package install from Git repository clone
+  - install_package "https://github.com/JChristensen/mighty-1284p.git" "v1.6.3"
 
   # Test library installation from repository (can't do this because there is no library in this repository)
   # - install_library
@@ -59,8 +61,12 @@ before_install:
   - install_library "https://github.com/brianc118/MPU9250/archive/master.zip" "MPU9250"
   # Test library install from git repo
   - install_library "https://github.com/sfrwmaker/WirelessOregonV2.git"
+  # Test library install from git repo with branch
+  - install_library "https://github.com/sde1000/NanodeUNIO.git" "master"
   # Test library install from git repo with rename
-  - install_library "https://github.com/mikaelpatel/Arduino-Shell.git" "ArduinoShell"
+  - install_library "https://github.com/mikaelpatel/Arduino-Shell.git" "" "ArduinoShell"
+  # Test library install from git repo with branch and rename
+  - install_library "https://github.com/Avamander/max7456.git" "master" "max_7456"
   # Test set_verbose_output_during_compilation.
   - set_verbose_output_during_compilation "$VERBOSE_COMPILATION"
 
@@ -93,6 +99,8 @@ script:
   # Test board from hardware package manually installed by cloning Git repository
   # Test build_sketch with an IDE version range
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "MightyCore:avr:1284:pinout=standard,variant=modelP,BOD=2v7,LTO=Os,clock=16MHz_external" "false" "1.8.1" "1.8.2"
+  # Test board from hardware package manually installed by cloning Git repository with non-default branch
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "mighty-1284p:avr:avr_developers" "false" "newest"
 
   # Installed library tests:
   # Test build_sketch without absolute path
@@ -104,8 +112,12 @@ script:
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/NewPing/examples/NewPingExample/NewPingExample.pde" "arduino:avr:uno" "false" "all"
   # Test library installed from .git
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WirelessOregonV2/examples/OregonReceiver/OregonReceiver.ino" "arduino:avr:uno" "false" "newest"
+  # Test library installed from .git with branch
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/NanodeUNIO/examples/NanodeUNIO_test/NanodeUNIO_test.ino" "arduino:avr:uno" "false" "newest"
   # Test library installed from .git with rename
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/ArduinoShell/examples/ShellBlink/ShellBlink.ino" "arduino:avr:uno" "false" "newest"
+  # Test library installed from .git with branch and rename
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/max_7456/examples/HelloWorld/HelloWorld.ino" "arduino:avr:uno" "false" "newest"
   # Test library installed from Library Manager
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/Pushetta/examples/simple_notification/simple_notification.ino" "arduino:avr:uno" "false" "newest"
 

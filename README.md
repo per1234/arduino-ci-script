@@ -59,8 +59,13 @@ Install a range of version(s) of the Arduino IDE.
 "Manually" install the hardware package from the current repository. Packages are installed to `$SKETCHBOOK_FOLDER/hardware. Assumes the hardware package is located in the root of the download or repository and has the correct folder structure.
 
 ##### `install_package packageURL`
-"Manually" install a hardware package. Packages are installed to `$SKETCHBOOK_FOLDER/hardware. Assumes the hardware package is located in the root of the download or repository and has the correct folder structure.
-- Parameter: **packageURL** - The URL of the hardware package download or Git repository. The protocol component of the URL (e.g. `http://`, `https://`) is required.
+"Manually" install a hardware package downloaded as a compressed file. Packages are installed to `$SKETCHBOOK_FOLDER/hardware. Assumes the hardware package is located in the root of the file and has the correct folder structure.
+- Parameter: **packageURL** - The URL of the hardware package download. The protocol component of the URL (e.g. `http://`, `https://`) is required.
+
+##### `install_package packageURL [branchName]`
+"Manually" install a hardware package. Packages are installed to `$SKETCHBOOK_FOLDER/hardware. Assumes the hardware package is located in the root of the repository and has the correct folder structure.
+- Parameter: **packageURL** - The URL of the Git repository. The protocol component of the URL (e.g. `http://`, `https://`) is required.
+- Parameter(optional): **branchName** - Branch of the repository to install. If this argument is not specified or is left blank the default branch will be used.
 
 ##### `install_package packageID [packageURL]`
 Install a hardware package using the Arduino IDE (Boards Manager). Only the **Arduino AVR Boards** package is included with the Arduino IDE installation. Packages are installed to `$HOME/.arduino15/packages. You must call `install_ide` before this function. This feature is only available with Arduino IDE 1.6.4 and newer.
@@ -75,9 +80,15 @@ Install a library that is listed in the Arduino Library Manager index. The libra
 - Parameter: **libraryName** - The name of the library to install. You can specify a version separated from the name by a colon, e.g. "LiquidCrystal I2C:1.1.2". If no version is specified the most recent version will be installed. You can also specify comma-separated lists of library names.
 
 ##### `install_library libraryURL [newFolderName]`
-Install a library from a URL (either compressed file download or clone Git repository). The library is installed to the `libraries` subfolder of the sketchbook folder.
-- Parameter: **libraryURL** - The URL of the library download or library name in the Arduino Library Manager. The protocol component of the URL (e.g. `http://`, `https://`) is required. This can be any compressed file format or a .git file will cause that repository to be cloned. Assumes the library is located in the root of the file.
-- Parameter(optional): **newFolderName** - Folder name to rename the installed library folder to. This parameter is only used if the library identifier is a URL (installation from a compressed file or Git repository) This can be useful if the default folder name of the downloaded file is problematic. The Arduino IDE gives include file preference when the filename matches the library folder name. GitHub's "Download ZIP" file is given the folder name {repository name}-{branch name}. Library folder names that contain `-` or `.` are not compatible with Arduino IDE 1.5.6 and older, arduino will hang if it's started with a library using an invalid folder name installed.
+Download a library in a compressed file from a URL. The library is installed to the `libraries` subfolder of the sketchbook folder.
+- Parameter: **libraryURL** - The URL of the library download or library name in the Arduino Library Manager. The protocol component of the URL (e.g. `http://`, `https://`) is required. This can be any compressed file format. Assumes the library is located in the root of the file.
+- Parameter(optional): **newFolderName** - Folder name to rename the installed library folder to. This can be useful if the default folder name of the downloaded file is problematic. The Arduino IDE gives include file preference when the filename matches the library folder name. GitHub's "Download ZIP" file is given the folder name {repository name}-{branch name}. Library folder names that contain `-` or `.` are not compatible with Arduino IDE 1.5.6 and older, arduino will hang if it's started with a library using an invalid folder name installed.
+
+##### `install_library libraryURL [branchName [newFolderName]]`
+Install a library by cloning a Git repository). The library is installed to the `libraries` subfolder of the sketchbook folder.
+- Parameter: **libraryURL** - The URL of the library download or library name in the Arduino Library Manager. The protocol component of the URL (e.g. `http://`, `https://`) is required. Assumes the library is located in the root of the repository.
+- Parameter(optional): **branchName** - Branch of the repository to install. If this argument is not specified or is left blank the default branch will be used.
+- Parameter(optional): **newFolderName** - Folder name to rename the installed library folder to. This can be useful if the default folder name of the downloaded file is problematic. The Arduino IDE gives include file preference when the filename matches the library folder name. Library folder names that contain `-` or `.` are not compatible with Arduino IDE 1.5.6 and older, arduino will hang if it's started with a library using an invalid folder name installed. If the `newFolderName` argument is specified the `branchName` argument must also be specified. If you don't want to specify a branch then use `""` for the `branchName` argument.
 
 ##### `set_verbose_output_during_compilation verboseOutputDuringCompilation`
 Turn on/off arduino verbose output during compilation. This will show all the commands arduino runs during the process rather than just the compiler output. This is usually not very useful output and only clutters up the log.
