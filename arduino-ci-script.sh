@@ -801,8 +801,7 @@ function publish_report_to_repository()
   if [[ "$token" != "" ]] && [[ "$repositoryURL" != "" ]] && [[ "$reportBranch" != "" ]]; then
     if [ -e "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH" ]; then
       # Location is a repository
-      git clone --quiet --branch "$reportBranch" "$repositoryURL" "${HOME}/report-repository"; local gitCloneExitCode="${PIPESTATUS[0]}"
-      if [[ "$gitCloneExitCode" == 0 ]]; then
+      if git clone --quiet --branch "$reportBranch" "$repositoryURL" "${HOME}/report-repository"; then
         # Clone was successful
         create_folder "${HOME}/report-repository/${reportFolder}"
         cp $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH" "${HOME}/report-repository/${reportFolder}"
@@ -826,7 +825,8 @@ function publish_report_to_repository()
           pushCount=$((pushCount + 1))
           # Do a pull now in case another job has finished about the same time and pushed a report since the last pull. This would require a merge or rebase. Rebase should be safe since the commits will be separate files.
           git pull $ARDUINO_CI_SCRIPT_QUIET_OPTION --rebase
-          git push $ARDUINO_CI_SCRIPT_QUIET_OPTION $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "https://${token}@${repositoryURL#*//}"; local gitPushExitCode="${PIPESTATUS[0]}"
+          git push $ARDUINO_CI_SCRIPT_QUIET_OPTION $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "https://${token}@${repositoryURL#*//}"
+          local gitPushExitCode="$?"
         done
         rm --recursive --force "${HOME}/report-repository"
         if [[ "$gitPushExitCode" == "0" ]]; then
