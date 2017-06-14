@@ -199,17 +199,15 @@ function install_ide()
 
     if [[ "$IDEversion" == "hourly" ]]; then
       # Deal with the inaccurate name given to the hourly build download
-      wget --no-verbose $ARDUINO_CI_SCRIPT_QUIET_OPTION "http://downloads.arduino.cc/arduino-nightly-linux64.${downloadFileExtension}"
-      tar --extract --file="arduino-nightly-linux64.${downloadFileExtension}"
-      rm $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "arduino-nightly-linux64.${downloadFileExtension}"
-      mv $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "arduino-nightly" "$ARDUINO_CI_SCRIPT_APPLICATION_FOLDER/arduino-${IDEversion}"
-
+      local downloadVersion="nightly"
     else
-      wget --no-verbose $ARDUINO_CI_SCRIPT_QUIET_OPTION "http://downloads.arduino.cc/arduino-${IDEversion}-linux64.${downloadFileExtension}"
-      tar --extract --file="arduino-${IDEversion}-linux64.${downloadFileExtension}"
-      rm $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "arduino-${IDEversion}-linux64.${downloadFileExtension}"
-      mv $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "arduino-${IDEversion}" "$ARDUINO_CI_SCRIPT_APPLICATION_FOLDER/arduino-${IDEversion}"
+      local downloadVersion="$IDEversion"
     fi
+
+    wget --no-verbose $ARDUINO_CI_SCRIPT_QUIET_OPTION "http://downloads.arduino.cc/arduino-${downloadVersion}-linux64.${downloadFileExtension}"
+    tar --extract --file="arduino-${downloadVersion}-linux64.${downloadFileExtension}"
+    rm $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "arduino-${downloadVersion}-linux64.${downloadFileExtension}"
+    mv $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "arduino-${downloadVersion}" "$ARDUINO_CI_SCRIPT_APPLICATION_FOLDER/arduino-${IDEversion}"
   done
 
   # Temporarily install the latest IDE version
