@@ -73,28 +73,27 @@ function set_script_verbosity()
 # Deprecated, use set_script_verbosity
 function set_verbose_script_output()
 {
-  enable_verbosity
-
-    set_script_verbosity 1
-
-  disable_verbosity
+  set_script_verbosity 1
 }
 
 
 # Deprecated, use set_script_verbosity
 function set_more_verbose_script_output()
 {
-  enable_verbosity
-
-    set_script_verbosity 2
-
-  disable_verbosity
+  set_script_verbosity 2
 }
 
 
 # Turn on verbosity based on the preferences set by set_script_verbosity
 function enable_verbosity()
 {
+  # Store previous verbosity settings so they can be set back to their original values at the end of the function
+  shopt -q -o verbose
+  ARDUINO_CI_SCRIPT_PREVIOUS_VERBOSE_SETTING="$?"
+
+  shopt -q -o xtrace
+  ARDUINO_CI_SCRIPT_PREVIOUS_XTRACE_SETTING="$?"
+
   if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -gt 0 ]]; then
     # "Print shell input lines as they are read."
     # https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
@@ -108,10 +107,20 @@ function enable_verbosity()
 }
 
 
+# Return verbosity settings to their previous values
 function disable_verbosity()
 {
-  set +o verbose
-  set +o xtrace
+  if [[ "$ARDUINO_CI_SCRIPT_PREVIOUS_VERBOSE_SETTING" == "0" ]]; then
+    set -o verbose
+  else
+    set +o verbose
+  fi
+
+  if [[ "$ARDUINO_CI_SCRIPT_PREVIOUS_XTRACE_SETTING" == "0" ]]; then
+    set -o xtrace
+  else
+    set +o xtrace
+  fi
 }
 
 
@@ -141,12 +150,8 @@ function set_sketchbook_folder()
 # Deprecated
 function set_parameters()
 {
-  enable_verbosity
-
   set_application_folder "$1"
   set_sketchbook_folder "$2"
-
-  disable_verbosity
 }
 
 
@@ -243,8 +248,6 @@ function install_ide()
 # This function allows the same code to be shared by install_ide and build_sketch. The generated array is "returned" as a global named "$ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY"
 function generate_ide_version_list_array()
 {
-  enable_verbosity
-
   local baseIDEversionArray="$1"
   local startIDEversion="$2"
   local endIDEversion="$3"
@@ -319,8 +322,6 @@ function generate_ide_version_list_array()
     # Finish the list
     ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY="$ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY"')'
   fi
-
-  disable_verbosity
 }
 
 
@@ -328,8 +329,6 @@ function generate_ide_version_list_array()
 # The determined versions are "returned" by setting the global variables "$ARDUINO_CI_SCRIPT_DETERMINED_OLDEST_IDE_VERSION" and "$ARDUINO_CI_SCRIPT_DETERMINED_NEWEST_IDE_VERSION"
 function determine_ide_version_extremes()
 {
-  enable_verbosity
-
   local baseIDEversionArray="$1"
 
   # Reset the variables from any value they were assigned the last time the function was ran
@@ -347,21 +346,15 @@ function determine_ide_version_extremes()
       ARDUINO_CI_SCRIPT_DETERMINED_NEWEST_IDE_VERSION="$IDEversion"
     fi
   done
-
-  disable_verbosity
 }
 
 
 function install_ide_version()
 {
-  enable_verbosity
-
   local IDEversion="$1"
 
   # Create a symbolic link so that the Arduino IDE can always be referenced from the same path no matter which version is being used.
   ln --symbolic --force $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/arduino-${IDEversion}" "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}"
-
-  disable_verbosity
 }
 
 
@@ -681,8 +674,6 @@ function build_this_sketch()
   # Fold this section of output in the Travis CI build log to make it easier to read
   echo -e "travis_fold:start:build_sketch"
 
-  enable_verbosity
-
   local sketchName="$1"
   local boardID="$2"
   local IDEversion="$3"
@@ -761,8 +752,6 @@ function build_this_sketch()
   # End the folded section of the Travis CI build log
   echo -e "travis_fold:end:build_sketch"
   # Add a useful message to the Travis CI build log
-
-  disable_verbosity
 
   echo "arduino exit code: $arduinoExitCode"
 
@@ -908,14 +897,10 @@ curlDataHere
 # Leave a comment on the commit with a link to the report
 function comment_report_link()
 {
-  enable_verbosity
-
   local token="$1"
   local reportURL="$2"
 
   eval curl $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION --header "\"Authorization: token ${token}\"" --data \"{'\"'body'\"':'\"'Once completed, the job reports for Travis CI [build ${TRAVIS_BUILD_NUMBER}]\(https://travis-ci.org/${TRAVIS_REPO_SLUG}/builds/${TRAVIS_BUILD_ID}\) will be found at:\\n${reportURL}'\"'}\" "\"https://api.github.com/repos/${TRAVIS_REPO_SLUG}/commits/${TRAVIS_COMMIT}/comments\"" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
-
-  disable_verbosity
 }
 
 
