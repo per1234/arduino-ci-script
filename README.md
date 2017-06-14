@@ -89,7 +89,7 @@ Turn on/off arduino verbose output during compilation. This will show all the co
 Pass some parameters from .travis.yml to the script. `build_sketch` will echo the arduino exit code to the log, which is documented at https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#exit-status.
 - Parameter: **sketchPath** - Path to a sketch or folder containing sketches. If a folder is specified it will be recursively searched and all sketches will be verified.
 - Parameter: **boardID** - `package:arch:board[:parameters]` ID of the board to be compiled for. e.g. `arduino:avr:uno`. Board-specific parameters are only supported by Arduino IDE 1.5.5 and newer.
-- Parameter: **allowFail** - `true` or `false`. Allow the verification to fail without causing the CI build to fail.
+- Parameter: **allowFail** - `true`, `require`, or `false`. Allow the verification to fail without causing the CI build to fail. `require` will cause the build to fail if the sketch verification doesn't fail.
 - Parameter: **IDEversion** - A single version of the Arduino IDE to use to verify the sketch.
 - Parameter(optional): **IDEversionList** - A list of versions of the Arduino IDE to use to verify the sketch. e.g. `'("1.6.5-r5" "1.6.9" "1.8.2")'`. If no version list is provided all installed IDE versions will be used.
 - Parameter: **startIDEversion** - The start (inclusive) of a range of versions of the Arduino IDE to use to verify the sketch.

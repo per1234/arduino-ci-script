@@ -687,9 +687,6 @@ function build_this_sketch()
   local absoluteSketchName
   absoluteSketchName="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 
-  # Set default value of buildThisSketchExitCode
-  local buildThisSketchExitCode=0
-
   # Define a dummy value for arduinoExitCode so that the while loop will run at least once
   local arduinoExitCode=255
   # Retry the verification if arduino returns an exit code that indicates there may have been a temporary error not caused by a bug in the sketch or the arduino command
@@ -700,12 +697,25 @@ function build_this_sketch()
     local verifyCount=$((verifyCount + 1))
   done
 
-  # If the sketch build failed and failure is not allowed for this test then fail the Travis build after completing all sketch builds
   if [[ "$arduinoExitCode" != "0" ]]; then
-    if [[ "$allowFail" != "true" ]]; then
-      buildThisSketchExitCode=1
+    # Sketch build failed
+    if [[ "$allowFail" == "true" || "$allowFail" == "require" ]]; then
+      # Failure is allowed for this test
+      local -r buildThisSketchExitCode=0
+    else
+      # Failure is not allowed for this test, fail the Travis build after completing all sketch builds
+      local -r buildThisSketchExitCode=1
     fi
   else
+    # Sketch build succeeded
+    if [[ "$allowFail" == "require" ]]; then
+      # Failure is required for this test, fail the Travis build after completing all sketch builds
+      local -r buildThisSketchExitCode=1
+    else
+      # Success is allowed
+      local -r buildThisSketchExitCode=0
+    fi
+
     # Parse through the output from the sketch verification to count warnings and determine the compile size
     local warningCount=0
     while read -r outputFileLine; do
