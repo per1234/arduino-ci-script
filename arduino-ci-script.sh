@@ -5,31 +5,31 @@
 
 # Based on https://github.com/adafruit/travis-ci-arduino/blob/eeaeaf8fa253465d18785c2bb589e14ea9893f9f/install.sh#L11
 # It seems that arrays can't been seen in other functions. So instead I'm setting $IDE_VERSIONS to a string that is the command to create the array
-ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION="declare -a IDEversionListArray="
+readonly ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION="declare -a -r IDEversionListArray="
 
 # https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#history shows CLI was added in IDE 1.5.2, Boards and Library Manager support added in 1.6.4
 # This is a list of every version of the Arduino IDE that supports CLI. As new versions are released they will be added to the list.
 # The newest IDE version must always be placed at the end of the array because the code for setting $NEWEST_INSTALLED_IDE_VERSION assumes that
 # Arduino IDE 1.6.2 has the nasty behavior of moving the included hardware cores to the .arduino15 folder, causing those versions to be used for all builds after Arduino IDE 1.6.2 is used. For this reason 1.6.2 has been left off the list.
-ARDUINO_CI_SCRIPT_FULL_IDE_VERSION_LIST_ARRAY="${ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION}"'("1.5.2" "1.5.3" "1.5.4" "1.5.5" "1.5.6" "1.5.6-r2" "1.5.7" "1.5.8" "1.6.0" "1.6.1" "1.6.3" "1.6.4" "1.6.5" "1.6.5-r4" "1.6.5-r5" "1.6.6" "1.6.7" "1.6.8" "1.6.9" "1.6.10" "1.6.11" "1.6.12" "1.6.13" "1.8.0" "1.8.1" "1.8.2" "1.8.3" "hourly")'
+readonly ARDUINO_CI_SCRIPT_FULL_IDE_VERSION_LIST_ARRAY="${ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION}"'("1.5.2" "1.5.3" "1.5.4" "1.5.5" "1.5.6" "1.5.6-r2" "1.5.7" "1.5.8" "1.6.0" "1.6.1" "1.6.3" "1.6.4" "1.6.5" "1.6.5-r4" "1.6.5-r5" "1.6.6" "1.6.7" "1.6.8" "1.6.9" "1.6.10" "1.6.11" "1.6.12" "1.6.13" "1.8.0" "1.8.1" "1.8.2" "1.8.3" "hourly")'
 
 
-ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER="${HOME}/temporary/arduino-ci-script"
-ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER="arduino"
-ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME="${ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER}/verification_output.txt"
-ARDUINO_CI_SCRIPT_REPORT_FILENAME="travis_ci_job_report_$(printf "%05d\n" "${TRAVIS_BUILD_NUMBER}").$(printf "%03d\n" "$(echo "$TRAVIS_JOB_NUMBER" | cut -d'.' -f 2)").tsv"
-ARDUINO_CI_SCRIPT_REPORT_FOLDER="${HOME}/arduino-ci-script_report"
-ARDUINO_CI_SCRIPT_REPORT_FILE_PATH="${ARDUINO_CI_SCRIPT_REPORT_FOLDER}/${ARDUINO_CI_SCRIPT_REPORT_FILENAME}"
+readonly ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER="${HOME}/temporary/arduino-ci-script"
+readonly ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER="arduino"
+readonly ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME="${ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER}/verification_output.txt"
+readonly ARDUINO_CI_SCRIPT_REPORT_FILENAME="travis_ci_job_report_$(printf "%05d\n" "${TRAVIS_BUILD_NUMBER}").$(printf "%03d\n" "$(echo "$TRAVIS_JOB_NUMBER" | cut -d'.' -f 2)").tsv"
+readonly ARDUINO_CI_SCRIPT_REPORT_FOLDER="${HOME}/arduino-ci-script_report"
+readonly ARDUINO_CI_SCRIPT_REPORT_FILE_PATH="${ARDUINO_CI_SCRIPT_REPORT_FOLDER}/${ARDUINO_CI_SCRIPT_REPORT_FILENAME}"
 # The arduino manpage(https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#exit-status) documents a range of exit codes. These exit codes indicate success, invalid arduino command, or compilation failed due to legitimate code errors. arduino sometimes returns other exit codes that may indicate problems that may go away after a retry.
-ARDUINO_CI_SCRIPT_HIGHEST_ACCEPTABLE_ARDUINO_EXIT_CODE=4
-ARDUINO_CI_SCRIPT_SKETCH_VERIFY_RETRIES=3
-ARDUINO_CI_SCRIPT_REPORT_PUSH_RETRIES=10
+readonly ARDUINO_CI_SCRIPT_HIGHEST_ACCEPTABLE_ARDUINO_EXIT_CODE=4
+readonly ARDUINO_CI_SCRIPT_SKETCH_VERIFY_RETRIES=3
+readonly ARDUINO_CI_SCRIPT_REPORT_PUSH_RETRIES=10
 
 
 # Create the folder if it doesn't exist
 function create_folder()
 {
-  local folderName="$1"
+  local -r folderName="$1"
   if ! [[ -d "$folderName" ]]; then
     # shellcheck disable=SC2086
     mkdir --parents $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "$folderName"
@@ -171,8 +171,8 @@ function install_ide()
 {
   enable_verbosity
 
-  local startIDEversion="$1"
-  local endIDEversion="$2"
+  local -r startIDEversion="$1"
+  local -r endIDEversion="$2"
 
   # https://docs.travis-ci.com/user/customizing-the-build/#Implementing-Complex-Build-Steps
   # set -o errexit will cause the script to exit as soon as any command returns a non-zero exit code. Without this the success of the function call is determined by the exit code of the last command in the function
@@ -194,8 +194,8 @@ function install_ide()
   local IDEversion
   for IDEversion in "${IDEversionListArray[@]}"; do
     # Determine download file extension
-    local regex="1.5.[0-9]"
-    if [[ "$IDEversion" =~ $regex ]]; then
+    local tgzExtensionVersionsRegex="1.5.[0-9]"
+    if [[ "$IDEversion" =~ $tgzExtensionVersionsRegex ]]; then
       # The download file extension prior to 1.6.0 is .tgz
       local downloadFileExtension="tgz"
     else
@@ -220,14 +220,14 @@ function install_ide()
 
   # Set the preferences
   # --pref option is only supported by Arduino IDE 1.5.6 and newer
-  local regex="1.5.[0-5]"
-  if ! [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $regex ]]; then
+  local -r unsupportedPrefOptionVersionsRegex="1.5.[0-5]"
+  if ! [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedPrefOptionVersionsRegex ]]; then
     # Create the sketchbook folder if it doesn't already exist. The location can't be set in preferences if the folder doesn't exist.
     create_folder "$ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER"
 
     # --save-prefs was added in Arduino IDE 1.5.8
-    local regex="1.5.[6-7]"
-    if ! [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $regex ]]; then
+    local -r unsupportedSavePrefsOptionVersionsRegex="1.5.[6-7]"
+    if ! [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedSavePrefsOptionVersionsRegex ]]; then
       # shellcheck disable=SC2086
       eval ${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino --pref compiler.warning_level=all --pref sketchbook.path="$ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER" --save-prefs "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
     else
@@ -248,22 +248,22 @@ function install_ide()
 # This function allows the same code to be shared by install_ide and build_sketch. The generated array is "returned" as a global named "$ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY"
 function generate_ide_version_list_array()
 {
-  local baseIDEversionArray="$1"
+  local -r baseIDEversionArray="$1"
   local startIDEversion="$2"
   local endIDEversion="$3"
 
   # Convert "oldest" or "newest" to actual version numbers
   determine_ide_version_extremes "$baseIDEversionArray"
   if [[ "$startIDEversion" == "oldest" ]]; then
-    local startIDEversion="$ARDUINO_CI_SCRIPT_DETERMINED_OLDEST_IDE_VERSION"
+    startIDEversion="$ARDUINO_CI_SCRIPT_DETERMINED_OLDEST_IDE_VERSION"
   elif [[ "$startIDEversion" == "newest" ]]; then
-    local startIDEversion="$ARDUINO_CI_SCRIPT_DETERMINED_NEWEST_IDE_VERSION"
+    startIDEversion="$ARDUINO_CI_SCRIPT_DETERMINED_NEWEST_IDE_VERSION"
   fi
 
   if [[ "$endIDEversion" == "oldest" ]]; then
-    local endIDEversion="$ARDUINO_CI_SCRIPT_DETERMINED_OLDEST_IDE_VERSION"
+    endIDEversion="$ARDUINO_CI_SCRIPT_DETERMINED_OLDEST_IDE_VERSION"
   elif [[ "$endIDEversion" == "newest" ]]; then
-    local endIDEversion="$ARDUINO_CI_SCRIPT_DETERMINED_NEWEST_IDE_VERSION"
+    endIDEversion="$ARDUINO_CI_SCRIPT_DETERMINED_NEWEST_IDE_VERSION"
   fi
 
 
@@ -275,19 +275,19 @@ function generate_ide_version_list_array()
     # Start the array
     ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY="$ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION"'('
 
-    local regex="\("
-    if [[ "$startIDEversion" =~ $regex ]]; then
+    local -r IDEversionListRegex="\("
+    if [[ "$startIDEversion" =~ $IDEversionListRegex ]]; then
       # IDE versions list was supplied
       # Convert it to a temporary array
-      local suppliedIDEversionListArray="${ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION}${startIDEversion}"
+      local -r suppliedIDEversionListArray="${ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION}${startIDEversion}"
       eval "$suppliedIDEversionListArray"
       local IDEversion
       for IDEversion in "${IDEversionListArray[@]}"; do
         # Convert any use of "oldest" or "newest" special version names to the actual version number
         if [[ "$IDEversion" == "oldest" ]]; then
-          local IDEversion="$ARDUINO_CI_SCRIPT_DETERMINED_OLDEST_IDE_VERSION"
+          IDEversion="$ARDUINO_CI_SCRIPT_DETERMINED_OLDEST_IDE_VERSION"
         elif [[ "$IDEversion" == "newest" ]]; then
-          local IDEversion="$ARDUINO_CI_SCRIPT_DETERMINED_NEWEST_IDE_VERSION"
+          IDEversion="$ARDUINO_CI_SCRIPT_DETERMINED_NEWEST_IDE_VERSION"
         fi
         # Add the version to the array
         ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY="${ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY} "'"'"$IDEversion"'"'
@@ -304,7 +304,7 @@ function generate_ide_version_list_array()
       for IDEversion in "${IDEversionListArray[@]}"; do
         if [[ "$IDEversion" == "$startIDEversion" ]]; then
           # Start of the list reached, set a flag
-          local listIsStarted="true"
+          local -r listIsStarted="true"
         fi
 
         if [[ "$listIsStarted" == "true" ]]; then
@@ -329,7 +329,7 @@ function generate_ide_version_list_array()
 # The determined versions are "returned" by setting the global variables "$ARDUINO_CI_SCRIPT_DETERMINED_OLDEST_IDE_VERSION" and "$ARDUINO_CI_SCRIPT_DETERMINED_NEWEST_IDE_VERSION"
 function determine_ide_version_extremes()
 {
-  local baseIDEversionArray="$1"
+  local -r baseIDEversionArray="$1"
 
   # Reset the variables from any value they were assigned the last time the function was ran
   ARDUINO_CI_SCRIPT_DETERMINED_OLDEST_IDE_VERSION=""
@@ -351,7 +351,7 @@ function determine_ide_version_extremes()
 
 function install_ide_version()
 {
-  local IDEversion="$1"
+  local -r IDEversion="$1"
 
   # Create a symbolic link so that the Arduino IDE can always be referenced from the same path no matter which version is being used.
   ln --symbolic --force $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/arduino-${IDEversion}" "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}"
@@ -365,12 +365,12 @@ function install_package()
 
   set -o errexit
 
-  local regex="://"
-  if [[ "$1" =~ $regex ]]; then
+  local -r URLregex="://"
+  if [[ "$1" =~ $URLregex ]]; then
     # First argument is a URL, do a manual hardware package installation
     # Note: Assumes the package is in the root of the download and has the correct folder structure (e.g. architecture folder added in Arduino IDE 1.5+)
 
-    local packageURL="$1"
+    local -r packageURL="$1"
 
     # Create the hardware folder if it doesn't exist
     create_folder "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/hardware"
@@ -413,13 +413,13 @@ function install_package()
   else
     # Install package via Boards Manager
 
-    local packageID="$1"
-    local packageURL="$2"
+    local -r packageID="$1"
+    local -r packageURL="$2"
 
     # Check if the newest installed IDE version supports --install-boards
-    local regex1="1.5.[0-9]"
-    local regex2="1.6.[0-3]"
-    if [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $regex1 || "$NEWEST_INSTALLED_IDE_VERSION" =~ $regex2 ]]; then
+    local -r unsupportedInstallBoardsOptionVersionsRange1regex="1.5.[0-9]"
+    local -r unsupportedInstallBoardsOptionVersionsRange2regex="1.6.[0-3]"
+    if [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallBoardsOptionVersionsRange1regex || "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallBoardsOptionVersionsRange2regex ]]; then
       echo "ERROR: --install-boards option is not supported by the newest version of the Arduino IDE you have installed. You must have Arduino IDE 1.6.4 or newer installed to use this function."
       return 1
     else
@@ -451,14 +451,14 @@ function install_library()
 
   set -o errexit
 
-  local libraryIdentifier="$1"
-  local newFolderName="$2"
+  local -r libraryIdentifier="$1"
+  local -r newFolderName="$2"
 
   # Create the libraries folder if it doesn't already exist
   create_folder "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/libraries"
 
-  local regex="://"
-  if [[ "$libraryIdentifier" =~ $regex ]]; then
+  local -r URLregex="://"
+  if [[ "$libraryIdentifier" =~ $URLregex ]]; then
     # The argument is a URL
     # Note: this assumes the library is in the root of the file
     if [[ "$libraryIdentifier" =~ \.git$ ]]; then
@@ -500,13 +500,13 @@ function install_library()
   else
     # Install a library that is part of the Library Manager index
     # Check if the newest installed IDE version supports --install-library
-    local regex1="1.5.[0-9]"
-    local regex2="1.6.[0-3]"
-    if [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $regex1 || "$NEWEST_INSTALLED_IDE_VERSION" =~ $regex2 ]]; then
+    local -r unsupportedInstallLibraryOptionVersionsRange1regex="1.5.[0-9]"
+    local -r unsupportedInstallLibraryOptionVersionsRange2regex="1.6.[0-3]"
+    if [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallLibraryOptionVersionsRange1regex || "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallLibraryOptionVersionsRange2regex ]]; then
       echo "ERROR: --install-library option is not supported by the newest version of the Arduino IDE you have installed. You must have Arduino IDE 1.6.4 or newer installed to use this function."
       return 1
     else
-      local libraryName="$1"
+      local -r libraryName="$1"
 
       # Temporarily install the latest IDE version to use for the library installation
       install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
@@ -586,7 +586,7 @@ function set_verbose_output_during_compilation()
 {
   enable_verbosity
 
-  local verboseOutputDuringCompilation="$1"
+  local -r verboseOutputDuringCompilation="$1"
   if [[ "$verboseOutputDuringCompilation" == "true" ]]; then
     ARDUINO_CI_SCRIPT_DETERMINED_VERBOSE_BUILD="--verbose"
   else
@@ -602,11 +602,11 @@ function build_sketch()
 {
   enable_verbosity
 
-  local sketchPath="$1"
-  local boardID="$2"
-  local allowFail="$3"
-  local startIDEversion="$4"
-  local endIDEversion="$5"
+  local -r sketchPath="$1"
+  local -r boardID="$2"
+  local -r allowFail="$3"
+  local -r startIDEversion="$4"
+  local -r endIDEversion="$5"
 
   # Set default value for buildSketchExitCode
   local buildSketchExitCode=0
@@ -622,9 +622,9 @@ function build_sketch()
 
     # The package_index files installed by some versions of the IDE (1.6.5, 1.6.5) can cause compilation to fail for other versions (1.6.5-r4, 1.6.5-r5). Attempting to install a dummy package ensures that the correct version of those files will be installed before the sketch verification.
     # Check if the newest installed IDE version supports --install-boards
-    local regex1="1.5.[0-9]"
-    local regex2="1.6.[0-3]"
-    if ! [[ "$IDEversion" =~ $regex1 || "$IDEversion" =~ $regex2 ]]; then
+    local unsupportedInstallBoardsOptionVersionsRange1regex="1.5.[0-9]"
+    local unsupportedInstallBoardsOptionVersionsRange2regex="1.6.[0-3]"
+    if ! [[ "$IDEversion" =~ $unsupportedInstallBoardsOptionVersionsRange1regex || "$IDEversion" =~ $unsupportedInstallBoardsOptionVersionsRange2regex ]]; then
       # shellcheck disable=SC2086
       eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino\" --install-boards arduino:dummy "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
       if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -gt 1 ]]; then
@@ -674,18 +674,18 @@ function build_this_sketch()
   # Fold this section of output in the Travis CI build log to make it easier to read
   echo -e "travis_fold:start:build_sketch"
 
-  local sketchName="$1"
-  local boardID="$2"
-  local IDEversion="$3"
-  local allowFail="$4"
+  local -r sketchName="$1"
+  local -r boardID="$2"
+  local -r IDEversion="$3"
+  local -r allowFail="$4"
 
   # Produce a useful label for the fold in the Travis log for this function call
   echo "build_sketch $sketchName $boardID $IDEversion $allowFail"
 
   # Arduino IDE 1.8.0 and 1.8.1 fail to verify a sketch if the absolute path to it is not specified
   # http://stackoverflow.com/a/3915420/7059512
-  local sketchName
-  sketchName="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
+  local absoluteSketchName
+  absoluteSketchName="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 
   # Set default value of buildThisSketchExitCode
   local buildThisSketchExitCode=0
@@ -696,7 +696,7 @@ function build_this_sketch()
   while [[ $arduinoExitCode -gt $ARDUINO_CI_SCRIPT_HIGHEST_ACCEPTABLE_ARDUINO_EXIT_CODE && $verifyCount -le $ARDUINO_CI_SCRIPT_SKETCH_VERIFY_RETRIES ]]; do
     # Verify the sketch
     # shellcheck disable=SC2086
-    "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino" $ARDUINO_CI_SCRIPT_DETERMINED_VERBOSE_BUILD --verify "$sketchName" --board "$boardID" 2>&1 | tee "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"; local arduinoExitCode="${PIPESTATUS[0]}"
+    "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino" $ARDUINO_CI_SCRIPT_DETERMINED_VERBOSE_BUILD --verify "$absoluteSketchName" --board "$boardID" 2>&1 | tee "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"; local arduinoExitCode="${PIPESTATUS[0]}"
     local verifyCount=$((verifyCount + 1))
   done
 
@@ -710,27 +710,27 @@ function build_this_sketch()
     local warningCount=0
     while read -r outputFileLine; do
       # Determine program storage memory usage
-      local regex="Sketch uses ([0-9,]+) *"
-      if [[ "$outputFileLine" =~ $regex ]] > /dev/null; then
-        local programStorage=${BASH_REMATCH[1]}
+      local programStorageRegex="Sketch uses ([0-9,]+) *"
+      if [[ "$outputFileLine" =~ $programStorageRegex ]] > /dev/null; then
+        local -r programStorageWithComma=${BASH_REMATCH[1]}
       fi
 
       # Determine dynamic memory usage
-      local regex="Global variables use ([0-9,]+) *"
-      if [[ "$outputFileLine" =~ $regex ]] > /dev/null; then
-        local dynamicMemory=${BASH_REMATCH[1]}
+      local dynamicMemoryRegex="Global variables use ([0-9,]+) *"
+      if [[ "$outputFileLine" =~ $dynamicMemoryRegex ]] > /dev/null; then
+        local -r dynamicMemoryWithComma=${BASH_REMATCH[1]}
       fi
 
       # Increment warning count
-      local regex="warning: "
-      if [[ "$outputFileLine" =~ $regex ]] > /dev/null; then
-        local warningCount=$((warningCount + 1))
+      local warningRegex="warning: "
+      if [[ "$outputFileLine" =~ $warningRegex ]] > /dev/null; then
+        warningCount=$((warningCount + 1))
       fi
 
       # Check for missing bootloader
       if [[ "$ARDUINO_CI_SCRIPT_TEST_BOARD" == "true" ]]; then
-        local regex="Bootloader file specified but missing: "
-        if [[ "$outputFileLine" =~ $regex ]] > /dev/null; then
+        local bootloaderMissingRegex="Bootloader file specified but missing: "
+        if [[ "$outputFileLine" =~ $bootloaderMissingRegex ]] > /dev/null; then
           local boardError="missing bootloader"
           if [[ "$allowFail" != "true" ]]; then
             buildThisSketchExitCode=1
@@ -742,8 +742,8 @@ function build_this_sketch()
     rm $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"
 
     # Remove the stupid comma from the memory values if present
-    local programStorage=${programStorage//,}
-    local dynamicMemory=${dynamicMemory//,}
+    local -r programStorage=${programStorageWithComma//,}
+    local -r dynamicMemory=${dynamicMemoryWithComma//,}
   fi
 
   # Add the build data to the report file
@@ -781,11 +781,11 @@ function publish_report_to_repository()
 {
   enable_verbosity
 
-  local token="$1"
-  local repositoryURL="$2"
-  local reportBranch="$3"
-  local reportFolder="$4"
-  local doLinkComment="$5"
+  local -r token="$1"
+  local -r repositoryURL="$2"
+  local -r reportBranch="$3"
+  local -r reportFolder="$4"
+  local -r doLinkComment="$5"
 
   if [[ "$token" != "" ]] && [[ "$repositoryURL" != "" ]] && [[ "$reportBranch" != "" ]]; then
     if [ -e "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH" ]; then
@@ -801,9 +801,9 @@ function publish_report_to_repository()
         # Only pushes the current branch to the corresponding remote branch that 'git pull' uses to update the current branch.
         git config push.default simple
         if [[ "$TRAVIS_TEST_RESULT" != "0" ]]; then
-          local jobSuccessMessage="FAILED"
+          local -r jobSuccessMessage="FAILED"
         else
-          local jobSuccessMessage="SUCCESSFUL"
+          local -r jobSuccessMessage="SUCCESSFUL"
         fi
         # Do a pull now in case another job has finished about the same time and pushed a report after the clone happened, which would otherwise cause the push to fail. This is the last chance to pull without having to deal with a merge or rebase.
         git pull $ARDUINO_CI_SCRIPT_QUIET_OPTION
@@ -815,14 +815,14 @@ function publish_report_to_repository()
           # Do a pull now in case another job has finished about the same time and pushed a report since the last pull. This would require a merge or rebase. Rebase should be safe since the commits will be separate files.
           git pull $ARDUINO_CI_SCRIPT_QUIET_OPTION --rebase
           git push $ARDUINO_CI_SCRIPT_QUIET_OPTION $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "https://${token}@${repositoryURL#*//}"
-          local gitPushExitCode="$?"
+          gitPushExitCode="$?"
         done
         rm --recursive --force "${HOME}/report-repository"
         if [[ "$gitPushExitCode" == "0" ]]; then
           if [[ "$doLinkComment" == "true" ]]; then
             # Only comment if it's job 1
-            local regex="\.1$"
-            if [[ "$TRAVIS_JOB_NUMBER" =~ $regex ]]; then
+            local -r firstJobRegex="\.1$"
+            if [[ "$TRAVIS_JOB_NUMBER" =~ $firstJobRegex ]]; then
               local reportURL
               reportURL="${repositoryURL%.*}/tree/${reportBranch}/${reportFolder}"
               comment_report_link "$token" "$reportURL"
@@ -853,9 +853,9 @@ function publish_report_to_gist()
 {
   enable_verbosity
 
-  local token="$1"
-  local gistURL="$2"
-  local doLinkComment="$3"
+  local -r token="$1"
+  local -r gistURL="$2"
+  local -r doLinkComment="$3"
 
   if [[ "$token" != "" ]] && [[ "$gistURL" != "" ]]; then
     if [ -e "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH" ]; then
@@ -876,8 +876,8 @@ curlDataHere
 
       if [[ "$doLinkComment" == "true" ]]; then
         # Only comment if it's job 1
-        local regex="\.1$"
-        if [[ "$TRAVIS_JOB_NUMBER" =~ $regex ]]; then
+        local -r firstJobRegex="\.1$"
+        if [[ "$TRAVIS_JOB_NUMBER" =~ $firstJobRegex ]]; then
           local reportURL="${gistURL}#file-${ARDUINO_CI_SCRIPT_REPORT_FILENAME//./-}"
           comment_report_link "$token" "$reportURL"
         fi
@@ -897,8 +897,8 @@ curlDataHere
 # Leave a comment on the commit with a link to the report
 function comment_report_link()
 {
-  local token="$1"
-  local reportURL="$2"
+  local -r token="$1"
+  local -r reportURL="$2"
 
   eval curl $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION --header "\"Authorization: token ${token}\"" --data \"{'\"'body'\"':'\"'Once completed, the job reports for Travis CI [build ${TRAVIS_BUILD_NUMBER}]\(https://travis-ci.org/${TRAVIS_REPO_SLUG}/builds/${TRAVIS_BUILD_ID}\) will be found at:\\n${reportURL}'\"'}\" "\"https://api.github.com/repos/${TRAVIS_REPO_SLUG}/commits/${TRAVIS_COMMIT}/comments\"" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
 }
