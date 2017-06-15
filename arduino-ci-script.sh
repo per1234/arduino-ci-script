@@ -25,6 +25,9 @@ readonly ARDUINO_CI_SCRIPT_HIGHEST_ACCEPTABLE_ARDUINO_EXIT_CODE=4
 readonly ARDUINO_CI_SCRIPT_SKETCH_VERIFY_RETRIES=3
 readonly ARDUINO_CI_SCRIPT_REPORT_PUSH_RETRIES=10
 
+readonly ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS=0
+readonly ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS=1
+
 
 # Create the folder if it doesn't exist
 function create_folder()
@@ -621,7 +624,7 @@ function build_sketch()
   local -r endIDEversion="$5"
 
   # Set default value for buildSketchExitCode
-  local buildSketchExitCode=0
+  local buildSketchExitCode="$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS"
 
   generate_ide_version_list_array "$INSTALLED_IDE_VERSION_LIST_ARRAY" "$startIDEversion" "$endIDEversion"
 
@@ -709,23 +712,23 @@ function build_this_sketch()
     local verifyCount=$((verifyCount + 1))
   done
 
-  if [[ "$arduinoExitCode" != "0" ]]; then
+  if [[ "$arduinoExitCode" != "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]]; then
     # Sketch build failed
     if [[ "$allowFail" == "true" || "$allowFail" == "require" ]]; then
       # Failure is allowed for this test
-      local -r buildThisSketchExitCode=0
+      local -r buildThisSketchExitCode="$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS"
     else
       # Failure is not allowed for this test, fail the Travis build after completing all sketch builds
-      local -r buildThisSketchExitCode=1
+      local -r buildThisSketchExitCode="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
     fi
   else
     # Sketch build succeeded
     if [[ "$allowFail" == "require" ]]; then
       # Failure is required for this test, fail the Travis build after completing all sketch builds
-      local -r buildThisSketchExitCode=1
+      local -r buildThisSketchExitCode="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
     else
       # Success is allowed
-      local -r buildThisSketchExitCode=0
+      local -r buildThisSketchExitCode="$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS"
     fi
 
     # Parse through the output from the sketch verification to count warnings and determine the compile size
@@ -832,7 +835,7 @@ function publish_report_to_repository()
         git commit $ARDUINO_CI_SCRIPT_QUIET_OPTION $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION --message="Add Travis CI job ${TRAVIS_JOB_NUMBER} report (${jobSuccessMessage})" --message="Job log: https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --message="Commit: https://github.com/${TRAVIS_REPO_SLUG}/commit/${TRAVIS_COMMIT}" --message="$TRAVIS_COMMIT_MESSAGE" --message="[skip ci]"
         local gitPushExitCode="1"
         local pushCount=0
-        while [[ "$gitPushExitCode" != "0" && $pushCount -le $ARDUINO_CI_SCRIPT_REPORT_PUSH_RETRIES ]]; do
+        while [[ "$gitPushExitCode" != "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" && $pushCount -le $ARDUINO_CI_SCRIPT_REPORT_PUSH_RETRIES ]]; do
           pushCount=$((pushCount + 1))
           # Do a pull now in case another job has finished about the same time and pushed a report since the last pull. This would require a merge or rebase. Rebase should be safe since the commits will be separate files.
           git pull $ARDUINO_CI_SCRIPT_QUIET_OPTION --rebase
@@ -840,7 +843,7 @@ function publish_report_to_repository()
           gitPushExitCode="$?"
         done
         rm --recursive --force "${HOME}/report-repository"
-        if [[ "$gitPushExitCode" == "0" ]]; then
+        if [[ "$gitPushExitCode" == "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]]; then
           if [[ "$doLinkComment" == "true" ]]; then
             # Only comment if it's job 1
             local -r firstJobRegex="\.1$"
