@@ -549,47 +549,48 @@ function extract
     echo "       extract <path/file_name_1.ext> [path/file_name_2.ext] [path/file_name_3.ext]"
     return 1
   else
-    for n in "$@"
+    local filename
+    for filename in "$@"
     do
-      if [ -f "$n" ]; then
-        case "${n%,}" in
+      if [ -f "$filename" ]; then
+        case "${filename%,}" in
           *.tar.bz2|*.tar.gz|*.tar.xz|*.tbz2|*.tgz|*.txz|*.tar)
-            tar --extract --file="$n"
+            tar --extract --file="$filename"
           ;;
           *.lzma)
-            unlzma $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$n"
+            unlzma $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$filename"
           ;;
           *.bz2)
-            bunzip2 $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$n"
+            bunzip2 $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$filename"
           ;;
           *.rar)
-            eval unrar x -ad ./"$n" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+            eval unrar x -ad ./"$filename" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
           ;;
           *.gz)
-            gunzip ./"$n"
+            gunzip ./"$filename"
           ;;
           *.zip)
-            unzip -qq ./"$n"
+            unzip -qq ./"$filename"
           ;;
           *.z)
-            eval uncompress ./"$n" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+            eval uncompress ./"$filename" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
           ;;
           *.7z|*.arj|*.cab|*.chm|*.deb|*.dmg|*.iso|*.lzh|*.msi|*.rpm|*.udf|*.wim|*.xar)
-            7z x ./"$n"
+            7z x ./"$filename"
           ;;
           *.xz)
-            unxz $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$n"
+            unxz $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$filename"
           ;;
           *.exe)
-            cabextract $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$n"
+            cabextract $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$filename"
           ;;
           *)
-            echo "extract: '$n' - unknown archive method"
+            echo "extract: '$filename' - unknown archive method"
             return 1
           ;;
         esac
       else
-        echo "extract: '$n' - file does not exist"
+        echo "extract: '$filename' - file does not exist"
         return 1
       fi
     done
