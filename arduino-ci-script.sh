@@ -50,12 +50,12 @@ function set_script_verbosity()
     ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL=1
   fi
 
-  if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" == 1 ]]; then
+  if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -eq 1 ]]; then
     ARDUINO_CI_SCRIPT_VERBOSITY_OPTION="--verbose"
     ARDUINO_CI_SCRIPT_QUIET_OPTION=""
     # Show stderr only
     ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT="1>/dev/null"
-  elif [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" == 2 ]]; then
+  elif [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -eq 2 ]]; then
     ARDUINO_CI_SCRIPT_VERBOSITY_OPTION="--verbose"
     ARDUINO_CI_SCRIPT_QUIET_OPTION=""
     # Show stdout and stderr
