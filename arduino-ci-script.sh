@@ -188,6 +188,10 @@ function install_ide()
   determine_ide_version_extremes "$INSTALLED_IDE_VERSION_LIST_ARRAY"
   NEWEST_INSTALLED_IDE_VERSION="$ARDUINO_CI_SCRIPT_DETERMINED_NEWEST_IDE_VERSION"
 
+  if [[ "$ARDUINO_CI_SCRIPT_APPLICATION_FOLDER" == "" ]]; then
+    echo "ERROR: Application folder was not set. Please use the set_application_folder function to define the location of the application folder."
+    return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+  fi
   create_folder "$ARDUINO_CI_SCRIPT_APPLICATION_FOLDER"
 
   # This runs the command contained in the $INSTALLED_IDE_VERSION_LIST_ARRAY string, thus declaring the array locally as $IDEversionListArray. This must be done in any function that uses the array
