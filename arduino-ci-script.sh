@@ -20,8 +20,8 @@ readonly ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME="${ARDUINO_CI_SCRIPT_TEM
 readonly ARDUINO_CI_SCRIPT_REPORT_FILENAME="travis_ci_job_report_$(printf "%05d\n" "${TRAVIS_BUILD_NUMBER}").$(printf "%03d\n" "$(echo "$TRAVIS_JOB_NUMBER" | cut -d'.' -f 2)").tsv"
 readonly ARDUINO_CI_SCRIPT_REPORT_FOLDER="${HOME}/arduino-ci-script_report"
 readonly ARDUINO_CI_SCRIPT_REPORT_FILE_PATH="${ARDUINO_CI_SCRIPT_REPORT_FOLDER}/${ARDUINO_CI_SCRIPT_REPORT_FILENAME}"
-# The arduino manpage(https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#exit-status) documents a range of exit codes. These exit codes indicate success, invalid arduino command, or compilation failed due to legitimate code errors. arduino sometimes returns other exit codes that may indicate problems that may go away after a retry.
-readonly ARDUINO_CI_SCRIPT_HIGHEST_ACCEPTABLE_ARDUINO_EXIT_CODE=4
+# The arduino manpage(https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#exit-status) documents a range of exit statuses. These exit statuses indicate success, invalid arduino command, or compilation failed due to legitimate code errors. arduino sometimes returns other exit statuses that may indicate problems that may go away after a retry.
+readonly ARDUINO_CI_SCRIPT_HIGHEST_ACCEPTABLE_ARDUINO_EXIT_STATUS=4
 readonly ARDUINO_CI_SCRIPT_SKETCH_VERIFY_RETRIES=3
 readonly ARDUINO_CI_SCRIPT_REPORT_PUSH_RETRIES=10
 
@@ -183,7 +183,7 @@ function install_ide()
   local -r endIDEversion="$2"
 
   # https://docs.travis-ci.com/user/customizing-the-build/#Implementing-Complex-Build-Steps
-  # set -o errexit will cause the script to exit as soon as any command returns a non-zero exit code. Without this the success of the function call is determined by the exit code of the last command in the function
+  # set -o errexit will cause the script to exit as soon as any command returns a non-zero exit status. Without this the success of the function call is determined by the exit status of the last command in the function
   set -o errexit
 
   generate_ide_version_list_array "$ARDUINO_CI_SCRIPT_FULL_IDE_VERSION_LIST_ARRAY" "$startIDEversion" "$endIDEversion"
@@ -654,8 +654,8 @@ function build_sketch()
   local -r startIDEversion="$4"
   local -r endIDEversion="$5"
 
-  # Set default value for buildSketchExitCode
-  local buildSketchExitCode="$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS"
+  # Set default value for buildSketchExitStatus
+  local buildSketchExitStatus="$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS"
 
   generate_ide_version_list_array "$INSTALLED_IDE_VERSION_LIST_ARRAY" "$startIDEversion" "$endIDEversion"
 
@@ -682,8 +682,8 @@ function build_sketch()
     if [[ "$sketchPath" =~ \.ino$ || "$sketchPath" =~ \.pde$ ]]; then
       # A sketch was specified
       if ! build_this_sketch "$sketchPath" "$boardID" "$IDEversion" "$allowFail"; then
-        # build_this_sketch returned a non-zero exit code
-        buildSketchExitCode=1
+        # build_this_sketch returned a non-zero exit status
+        buildSketchExitStatus=1
       fi
     else
       # Search for all sketches in the path and put them in an array
@@ -701,8 +701,8 @@ function build_sketch()
         sketchNameWithoutPathWithoutExtension="${sketchNameWithoutPathWithExtension%.*}"
         if [[ "$sketchFolder" == "$sketchNameWithoutPathWithoutExtension" ]]; then
           if ! build_this_sketch "$sketchName" "$boardID" "$IDEversion" "$allowFail"; then
-            # build_this_sketch returned a non-zero exit code
-            buildSketchExitCode=1;
+            # build_this_sketch returned a non-zero exit status
+            buildSketchExitStatus=1;
           fi
         fi
       done
@@ -711,7 +711,7 @@ function build_sketch()
 
   disable_verbosity
 
-  return $buildSketchExitCode
+  return $buildSketchExitStatus
 }
 
 
@@ -733,33 +733,33 @@ function build_this_sketch()
   local absoluteSketchName
   absoluteSketchName="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 
-  # Define a dummy value for arduinoExitCode so that the while loop will run at least once
-  local arduinoExitCode=255
-  # Retry the verification if arduino returns an exit code that indicates there may have been a temporary error not caused by a bug in the sketch or the arduino command
-  while [[ $arduinoExitCode -gt $ARDUINO_CI_SCRIPT_HIGHEST_ACCEPTABLE_ARDUINO_EXIT_CODE && $verifyCount -le $ARDUINO_CI_SCRIPT_SKETCH_VERIFY_RETRIES ]]; do
+  # Define a dummy value for arduinoExitStatus so that the while loop will run at least once
+  local arduinoExitStatus=255
+  # Retry the verification if arduino returns an exit status that indicates there may have been a temporary error not caused by a bug in the sketch or the arduino command
+  while [[ $arduinoExitStatus -gt $ARDUINO_CI_SCRIPT_HIGHEST_ACCEPTABLE_ARDUINO_EXIT_STATUS && $verifyCount -le $ARDUINO_CI_SCRIPT_SKETCH_VERIFY_RETRIES ]]; do
     # Verify the sketch
     # shellcheck disable=SC2086
-    "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino" $ARDUINO_CI_SCRIPT_DETERMINED_VERBOSE_BUILD --verify "$absoluteSketchName" --board "$boardID" 2>&1 | tee "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"; local arduinoExitCode="${PIPESTATUS[0]}"
+    "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino" $ARDUINO_CI_SCRIPT_DETERMINED_VERBOSE_BUILD --verify "$absoluteSketchName" --board "$boardID" 2>&1 | tee "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"; local arduinoExitStatus="${PIPESTATUS[0]}"
     local verifyCount=$((verifyCount + 1))
   done
 
-  if [[ "$arduinoExitCode" != "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]]; then
+  if [[ "$arduinoExitStatus" != "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]]; then
     # Sketch build failed
     if [[ "$allowFail" == "true" || "$allowFail" == "require" ]]; then
       # Failure is allowed for this test
-      local -r buildThisSketchExitCode="$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS"
+      local -r buildThisSketchExitStatus="$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS"
     else
       # Failure is not allowed for this test, fail the Travis build after completing all sketch builds
-      local -r buildThisSketchExitCode="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+      local -r buildThisSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
     fi
   else
     # Sketch build succeeded
     if [[ "$allowFail" == "require" ]]; then
       # Failure is required for this test, fail the Travis build after completing all sketch builds
-      local -r buildThisSketchExitCode="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+      local -r buildThisSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
     else
       # Success is allowed
-      local -r buildThisSketchExitCode="$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS"
+      local -r buildThisSketchExitStatus="$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS"
     fi
 
     # Parse through the output from the sketch verification to count warnings and determine the compile size
@@ -800,20 +800,20 @@ function build_this_sketch()
 
     if [[ "$boardIssue" != "" && "$ARDUINO_CI_SCRIPT_TEST_BOARD" == "true" && "$allowFail" != "true" ]]; then
       # There was a board issue and board testing is enabled so fail the build
-      local -r buildThisSketchExitCode="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+      local -r buildThisSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
     fi
   fi
 
   # Add the build data to the report file
-  echo "$(date -u "+%Y-%m-%d %H:%M:%S")"$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_JOB_NUMBER"$'\t'"https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}"$'\t'"$TRAVIS_EVENT_TYPE"$'\t'"$TRAVIS_ALLOW_FAILURE"$'\t'"$TRAVIS_PULL_REQUEST"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"$TRAVIS_COMMIT_RANGE"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail"$'\t'"$arduinoExitCode"$'\t'"$boardIssueCount"$'\t'"$boardIssue"$'\r' >> "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
+  echo "$(date -u "+%Y-%m-%d %H:%M:%S")"$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_JOB_NUMBER"$'\t'"https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}"$'\t'"$TRAVIS_EVENT_TYPE"$'\t'"$TRAVIS_ALLOW_FAILURE"$'\t'"$TRAVIS_PULL_REQUEST"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"$TRAVIS_COMMIT_RANGE"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail"$'\t'"$arduinoExitStatus"$'\t'"$boardIssueCount"$'\t'"$boardIssue"$'\r' >> "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
 
   # End the folded section of the Travis CI build log
   echo -e "travis_fold:end:build_sketch"
   # Add a useful message to the Travis CI build log
 
-  echo "arduino exit code: $arduinoExitCode"
+  echo "arduino exit status: $arduinoExitStatus"
 
-  return $buildThisSketchExitCode
+  return $buildThisSketchExitStatus
 }
 
 
@@ -866,17 +866,17 @@ function publish_report_to_repository()
         # Do a pull now in case another job has finished about the same time and pushed a report after the clone happened, which would otherwise cause the push to fail. This is the last chance to pull without having to deal with a merge or rebase.
         git pull $ARDUINO_CI_SCRIPT_QUIET_OPTION
         git commit $ARDUINO_CI_SCRIPT_QUIET_OPTION $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION --message="Add Travis CI job ${TRAVIS_JOB_NUMBER} report (${jobSuccessMessage})" --message="Job log: https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --message="Commit: https://github.com/${TRAVIS_REPO_SLUG}/commit/${TRAVIS_COMMIT}" --message="$TRAVIS_COMMIT_MESSAGE" --message="[skip ci]"
-        local gitPushExitCode="1"
+        local gitPushExitStatus="1"
         local pushCount=0
-        while [[ "$gitPushExitCode" != "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" && $pushCount -le $ARDUINO_CI_SCRIPT_REPORT_PUSH_RETRIES ]]; do
+        while [[ "$gitPushExitStatus" != "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" && $pushCount -le $ARDUINO_CI_SCRIPT_REPORT_PUSH_RETRIES ]]; do
           pushCount=$((pushCount + 1))
           # Do a pull now in case another job has finished about the same time and pushed a report since the last pull. This would require a merge or rebase. Rebase should be safe since the commits will be separate files.
           git pull $ARDUINO_CI_SCRIPT_QUIET_OPTION --rebase
           git push $ARDUINO_CI_SCRIPT_QUIET_OPTION $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "https://${token}@${repositoryURL#*//}"
-          gitPushExitCode="$?"
+          gitPushExitStatus="$?"
         done
         rm --recursive --force "${HOME}/report-repository"
-        if [[ "$gitPushExitCode" == "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]]; then
+        if [[ "$gitPushExitStatus" == "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]]; then
           if [[ "$doLinkComment" == "true" ]]; then
             # Only comment if it's job 1
             local -r firstJobRegex="\.1$"
@@ -981,7 +981,7 @@ create_folder "$ARDUINO_CI_SCRIPT_REPORT_FOLDER"
 
 
 # Add column names to report
-echo "Build Timestamp (UTC)"$'\t'"Build"$'\t'"Job"$'\t'"Job URL"$'\t'"Build Trigger"$'\t'"Allow Job Failure"$'\t'"PR#"$'\t'"Branch"$'\t'"Commit"$'\t'"Commit Range"$'\t'"Commit Message"$'\t'"Sketch Filename"$'\t'"Board ID"$'\t'"IDE Version"$'\t'"Program Storage (bytes)"$'\t'"Dynamic Memory (bytes)"$'\t'"# Warnings"$'\t'"Allow Failure"$'\t'"Exit Code"$'\t'"# Board Issues"$'\t'"Board Issue"$'\r' > "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
+echo "Build Timestamp (UTC)"$'\t'"Build"$'\t'"Job"$'\t'"Job URL"$'\t'"Build Trigger"$'\t'"Allow Job Failure"$'\t'"PR#"$'\t'"Branch"$'\t'"Commit"$'\t'"Commit Range"$'\t'"Commit Message"$'\t'"Sketch Filename"$'\t'"Board ID"$'\t'"IDE Version"$'\t'"Program Storage (bytes)"$'\t'"Dynamic Memory (bytes)"$'\t'"# Warnings"$'\t'"Allow Failure"$'\t'"Exit Status"$'\t'"# Board Issues"$'\t'"Board Issue"$'\r' > "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
 
 
 # Start the virtual display required by the Arduino IDE CLI: https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#bugs

@@ -97,7 +97,7 @@ Turn on/off arduino verbose output during compilation. This will show all the co
 ##### `build_sketch sketchPath boardID allowFail IDEversion`
 ##### `build_sketch sketchPath boardID allowFail [IDEversionList]`
 ##### `build_sketch sketchPath boardID allowFail startIDEversion endIDEversion`
-Pass some parameters from .travis.yml to the script. `build_sketch` will echo the arduino exit code to the log, which is documented at https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#exit-status.
+Pass some parameters from .travis.yml to the script. `build_sketch` will echo the arduino exit status to the log, which is documented at https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#exit-status.
 - Parameter: **sketchPath** - Path to a sketch or folder containing sketches. If a folder is specified it will be recursively searched and all sketches will be verified.
 - Parameter: **boardID** - `package:arch:board[:parameters]` ID of the board to be compiled for. e.g. `arduino:avr:uno`. Board-specific parameters are only supported by Arduino IDE 1.5.5 and newer.
 - Parameter: **allowFail** - `true`, `require`, or `false`. Allow the verification to fail without causing the CI build to fail. `require` will cause the build to fail if the sketch verification doesn't fail.
@@ -126,7 +126,7 @@ Echo a tab separated report of all verification results to the log. The report i
 - Dynamic Memory (bytes) - Dynamic memory usage by global variables in the compiled sketch (not available for some boards).
 - # Warnings - Number of warnings reported by the compiler during the sketch compilation.
 - Allow Failure - Whether the sketch verification was allowed to fail (set by the `allowFail` argument of `build_sketch`).
-- Exit Code - Exit code returned by arduino after the sketch verification.
+- Exit Status - Exit status returned by arduino after the sketch verification.
 - # Board Issues - The number of board issues detected.
 - Board Issue - Short description of the last board issue detected.
 
