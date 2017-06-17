@@ -790,6 +790,19 @@ function build_this_sketch()
         local boardIssue="missing bootloader"
         boardIssueCount=$((boardIssueCount + 1))
       fi
+
+      local boardsDotTxtMissingRegex="Could not find boards.txt"
+      if [[ "$outputFileLine" =~ $boardsDotTxtMissingRegex ]] > /dev/null; then
+        local boardIssue="Could not find boards.txt"
+        boardIssueCount=$((boardIssueCount + 1))
+      fi
+
+      local buildDotBoardNotDefinedRegex="doesn't define a 'build.board' preference"
+      if [[ "$outputFileLine" =~ $buildDotBoardNotDefinedRegex ]] > /dev/null; then
+        local boardIssue="doesn't define a 'build.board' preference"
+        boardIssueCount=$((boardIssueCount + 1))
+      fi
+
     done < "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"
 
     rm $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"
