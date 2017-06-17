@@ -442,6 +442,12 @@ function install_package()
     local -r packageID="$1"
     local -r packageURL="$2"
 
+    # Check if Arduino IDE is installed
+    if [[ "$INSTALLED_IDE_VERSION_LIST_ARRAY" == "" ]]; then
+      echo "ERROR: Installing a hardware package via Boards Manager requires the Arduino IDE to be installed. Please call install_ide before this command."
+      return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+    fi
+
     # Check if the newest installed IDE version supports --install-boards
     local -r unsupportedInstallBoardsOptionVersionsRange1regex="1.5.[0-9]"
     local -r unsupportedInstallBoardsOptionVersionsRange2regex="1.6.[0-3]"
@@ -531,6 +537,13 @@ function install_library()
 
   else
     # Install a library that is part of the Library Manager index
+
+    # Check if Arduino IDE is installed
+    if [[ "$INSTALLED_IDE_VERSION_LIST_ARRAY" == "" ]]; then
+      echo "ERROR: Installing a library via Library Manager requires the Arduino IDE to be installed. Please call install_ide before this command."
+      return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+    fi
+
     # Check if the newest installed IDE version supports --install-library
     local -r unsupportedInstallLibraryOptionVersionsRange1regex="1.5.[0-9]"
     local -r unsupportedInstallLibraryOptionVersionsRange2regex="1.6.[0-3]"
