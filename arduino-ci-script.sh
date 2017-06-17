@@ -911,7 +911,15 @@ function publish_report_to_repository()
       echo "No report file available for this job"
     fi
   else
-    echo "Publishing report failed. GitHub token, repository URL, and repository branch must be defined to use this function. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."
+    if [[ "$token" == "" ]]; then
+      echo "ERROR: GitHub token not specified. Failed to publish build report. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."
+    fi
+    if [[ "$repositoryURL" == "" ]]; then
+      echo "ERROR: Repository URL not specified. Failed to publish build report."
+    fi
+    if [[ "$reportBranch" == "" ]]; then
+      echo "ERROR: Repository branch not specified. Failed to publish build report."
+    fi
     return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
   fi
 
@@ -957,7 +965,12 @@ curlDataHere
       echo "No report file available for this job"
     fi
   else
-    echo "Publishing report failed. GitHub token and gist URL must be defined in your Travis CI settings for this repository in order to use this function. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."
+    if [[ "$token" == "" ]]; then
+      echo "ERROR: GitHub token not specified. Failed to publish build report. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."
+    fi
+    if [[ "$gistURL" == "" ]]; then
+      echo "ERROR: Gist URL not specified. Failed to publish build report. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."
+    fi
     return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
   fi
 
