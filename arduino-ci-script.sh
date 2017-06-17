@@ -764,6 +764,7 @@ function build_this_sketch()
 
     # Parse through the output from the sketch verification to count warnings and determine the compile size
     local warningCount=0
+    local boardIssueCount=0
     while read -r outputFileLine; do
       # Determine program storage memory usage
       local programStorageRegex="Sketch uses ([0-9,]+) *"
@@ -787,6 +788,7 @@ function build_this_sketch()
       local bootloaderMissingRegex="Bootloader file specified but missing: "
       if [[ "$outputFileLine" =~ $bootloaderMissingRegex ]] > /dev/null; then
         local boardIssue="missing bootloader"
+        boardIssueCount=$((boardIssueCount + 1))
       fi
     done < "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"
 
@@ -803,7 +805,7 @@ function build_this_sketch()
   fi
 
   # Add the build data to the report file
-  echo "$(date -u "+%Y-%m-%d %H:%M:%S")"$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_JOB_NUMBER"$'\t'"https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}"$'\t'"$TRAVIS_EVENT_TYPE"$'\t'"$TRAVIS_ALLOW_FAILURE"$'\t'"$TRAVIS_PULL_REQUEST"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"$TRAVIS_COMMIT_RANGE"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail"$'\t'"$arduinoExitCode"$'\t'"$boardIssue"$'\r' >> "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
+  echo "$(date -u "+%Y-%m-%d %H:%M:%S")"$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_JOB_NUMBER"$'\t'"https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}"$'\t'"$TRAVIS_EVENT_TYPE"$'\t'"$TRAVIS_ALLOW_FAILURE"$'\t'"$TRAVIS_PULL_REQUEST"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"$TRAVIS_COMMIT_RANGE"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail"$'\t'"$arduinoExitCode"$'\t'"$boardIssueCount"$'\t'"$boardIssue"$'\r' >> "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
 
   # End the folded section of the Travis CI build log
   echo -e "travis_fold:end:build_sketch"
@@ -979,7 +981,7 @@ create_folder "$ARDUINO_CI_SCRIPT_REPORT_FOLDER"
 
 
 # Add column names to report
-echo "Build Timestamp (UTC)"$'\t'"Build"$'\t'"Job"$'\t'"Job URL"$'\t'"Build Trigger"$'\t'"Allow Job Failure"$'\t'"PR#"$'\t'"Branch"$'\t'"Commit"$'\t'"Commit Range"$'\t'"Commit Message"$'\t'"Sketch Filename"$'\t'"Board ID"$'\t'"IDE Version"$'\t'"Program Storage (bytes)"$'\t'"Dynamic Memory (bytes)"$'\t'"# Warnings"$'\t'"Allow Failure"$'\t'"Exit Code"$'\t'"Board Issue"$'\r' > "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
+echo "Build Timestamp (UTC)"$'\t'"Build"$'\t'"Job"$'\t'"Job URL"$'\t'"Build Trigger"$'\t'"Allow Job Failure"$'\t'"PR#"$'\t'"Branch"$'\t'"Commit"$'\t'"Commit Range"$'\t'"Commit Message"$'\t'"Sketch Filename"$'\t'"Board ID"$'\t'"IDE Version"$'\t'"Program Storage (bytes)"$'\t'"Dynamic Memory (bytes)"$'\t'"# Warnings"$'\t'"Allow Failure"$'\t'"Exit Code"$'\t'"# Board Issues"$'\t'"Board Issue"$'\r' > "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
 
 
 # Start the virtual display required by the Arduino IDE CLI: https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#bugs

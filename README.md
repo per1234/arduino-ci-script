@@ -127,7 +127,6 @@ Echo a tab separated report of all verification results to the log. The report i
 - Number of warnings
 - Sketch verification allowed to fail
 - Sketch verification exit code
-- Board issue
 
 ##### `publish_report_to_repository REPORT_GITHUB_TOKEN repositoryURL reportBranch reportFolder doLinkComment`
 Add the report to a repository. See the [instructions for publishing job reports](publishing-job-reports) for details.
