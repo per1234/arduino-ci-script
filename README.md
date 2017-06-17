@@ -27,7 +27,7 @@ Bash script for continuous integration of [Arduino](http://www.arduino.cc/) proj
 #### Usage
 See https://github.com/per1234/WatchdogLog/blob/master/.travis.yml for an example of the script in use. Please configure your continuous integration system to make the minimum number of downloads and sketch verifications necessary to effectively test your code. This will prevent wasting Arduino and Travis CI's bandwidth while making the builds run fast.
 ##### `set_script_verbosity SCRIPT_VERBOSITY_LEVEL`
-Control the level of verbosity of the script's output in the Travis CI log. Verbose output can be helpful for debugging but in normal usage it makes the log hard to read and may cause the log to exceed Travis CI's maximum log size of 4 MB, which causes the job to be terminated.
+Control the level of verbosity of the script's output in the Travis CI log. Verbose output can be helpful for debugging but in normal usage it makes the log hard to read and may cause the log to exceed Travis CI's maximum log size of 4 MB, which causes the job to be terminated. The default verbosity level is `0`.
 - Parameter: **SCRIPT_VERBOSITY_LEVEL** - `0`, `1` or `2` (least to most verbosity).
 
 ##### `set_application_folder APPLICATION_FOLDER`
@@ -91,7 +91,7 @@ Install a library by cloning a Git repository). The library is installed to the 
 - Parameter(optional): **newFolderName** - Folder name to rename the installed library folder to. This can be useful if the default folder name of the downloaded file is problematic. The Arduino IDE gives include file preference when the filename matches the library folder name. Library folder names that contain `-` or `.` are not compatible with Arduino IDE 1.5.6 and older, arduino will hang if it's started with a library using an invalid folder name installed. If the `newFolderName` argument is specified the `branchName` argument must also be specified. If you don't want to specify a branch then use `""` for the `branchName` argument.
 
 ##### `set_verbose_output_during_compilation verboseOutputDuringCompilation`
-Turn on/off arduino verbose output during compilation. This will show all the commands arduino runs during the process rather than just the compiler output. This is usually not very useful output and only clutters up the log.
+Turn on/off arduino verbose output during compilation. This will show all the commands arduino runs during the process rather than just the compiler output. This is usually not very useful output and only clutters up the log. This feature is off by default.
 - Parameter: **verboseOutputDuringCompilation** - `true`/`false`
 
 ##### `build_sketch sketchPath boardID allowFail IDEversion`
