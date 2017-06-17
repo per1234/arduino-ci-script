@@ -453,7 +453,7 @@ function install_package()
     local -r unsupportedInstallBoardsOptionVersionsRange2regex="1.6.[0-3]"
     if [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallBoardsOptionVersionsRange1regex || "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallBoardsOptionVersionsRange2regex ]]; then
       echo "ERROR: --install-boards option is not supported by the newest version of the Arduino IDE you have installed. You must have Arduino IDE 1.6.4 or newer installed to use this function."
-      return 1
+      return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
     else
       # Temporarily install the latest IDE version to use for the package installation
       install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
@@ -549,7 +549,7 @@ function install_library()
     local -r unsupportedInstallLibraryOptionVersionsRange2regex="1.6.[0-3]"
     if [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallLibraryOptionVersionsRange1regex || "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallLibraryOptionVersionsRange2regex ]]; then
       echo "ERROR: --install-library option is not supported by the newest version of the Arduino IDE you have installed. You must have Arduino IDE 1.6.4 or newer installed to use this function."
-      return 1
+      return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
     else
       local -r libraryName="$1"
 
@@ -577,7 +577,7 @@ function extract
     # display usage if no parameters given
     echo "Usage: extract <path/file_name>.<zip|rar|bz2|gz|tar|tbz2|tgz|Z|7z|xz|ex|tar.bz2|tar.gz|tar.xz>"
     echo "       extract <path/file_name_1.ext> [path/file_name_2.ext] [path/file_name_3.ext]"
-    return 1
+    return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
   else
     local filename
     for filename in "$@"
@@ -616,12 +616,12 @@ function extract
           ;;
           *)
             echo "extract: '$filename' - unknown archive method"
-            return 1
+            return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
           ;;
         esac
       else
         echo "extract: '$filename' - file does not exist"
-        return 1
+        return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
       fi
     done
   fi
@@ -886,18 +886,18 @@ function publish_report_to_repository()
           fi
         else
           echo "ERROR: Failed to push to remote branch."
-          return 3
+          return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
         fi
       else
         echo "ERROR: Failed to clone branch ${reportBranch} of repository URL ${repositoryURL}. Do they exist?"
-        return 2
+        return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
       fi
     else
       echo "No report file available for this job"
     fi
   else
     echo "Publishing report failed. GitHub token, repository URL, and repository branch must be defined to use this function. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."
-    return 1
+    return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
   fi
 
   disable_verbosity
@@ -943,7 +943,7 @@ curlDataHere
     fi
   else
     echo "Publishing report failed. GitHub token and gist URL must be defined in your Travis CI settings for this repository in order to use this function. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."
-    return 1
+    return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
   fi
 
   disable_verbosity
