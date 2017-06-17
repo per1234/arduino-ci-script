@@ -146,6 +146,11 @@ function set_sketchbook_folder()
   # Create the sketchbook folder if it doesn't already exist
   create_folder "$ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER"
 
+  # Set sketchbook location preference if the IDE is already installed
+  if [[ "$INSTALLED_IDE_VERSION_LIST_ARRAY" != "" ]]; then
+    set_ide_preference "sketchbook.path=$ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER"
+  fi
+
   disable_verbosity
 }
 
@@ -222,26 +227,11 @@ function install_ide()
     mv $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "arduino-${downloadVersion}" "$ARDUINO_CI_SCRIPT_APPLICATION_FOLDER/arduino-${IDEversion}"
   done
 
-  # Temporarily install the latest IDE version
-  install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
+  set_ide_preference "compiler.warning_level=all"
 
-  # Set the preferences
-  # --pref option is only supported by Arduino IDE 1.5.6 and newer
-  local -r unsupportedPrefOptionVersionsRegex="1.5.[0-5]"
-  if ! [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedPrefOptionVersionsRegex ]]; then
-    # Create the sketchbook folder if it doesn't already exist. The location can't be set in preferences if the folder doesn't exist.
-    create_folder "$ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER"
-
-    # --save-prefs was added in Arduino IDE 1.5.8
-    local -r unsupportedSavePrefsOptionVersionsRegex="1.5.[6-7]"
-    if ! [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedSavePrefsOptionVersionsRegex ]]; then
-      # shellcheck disable=SC2086
-      eval ${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino --pref compiler.warning_level=all --pref sketchbook.path="$ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER" --save-prefs "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
-    else
-      # Arduino IDE 1.5.6 - 1.5.7 load the GUI if you only set preferences without doing a verify. So I am doing an unnecessary verification just to set the preferences in those versions. Definitely a hack but I prefer to keep the preferences setting code all here instead of cluttering build_sketch and this will pretty much never be used.
-      # shellcheck disable=SC2086
-      eval ${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino --pref compiler.warning_level=all --pref sketchbook.path="$ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER" --verify "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
-    fi
+  # If a sketchbook location has been defined then set the location in the Arduino IDE preferences
+  if [[ -d "$ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER" ]]; then
+    set_ide_preference "sketchbook.path=$ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER"
   fi
 
   # Return errexit to the default state
@@ -353,6 +343,29 @@ function determine_ide_version_extremes()
       ARDUINO_CI_SCRIPT_DETERMINED_NEWEST_IDE_VERSION="$IDEversion"
     fi
   done
+}
+
+
+function set_ide_preference()
+{
+  local -r preferenceString="$1"
+
+  # --pref option is only supported by Arduino IDE 1.5.6 and newer
+  local -r unsupportedPrefOptionVersionsRegex="1.5.[0-5]"
+  if ! [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedPrefOptionVersionsRegex ]]; then
+    install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
+
+    # --save-prefs was added in Arduino IDE 1.5.8
+    local -r unsupportedSavePrefsOptionVersionsRegex="1.5.[6-7]"
+    if ! [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedSavePrefsOptionVersionsRegex ]]; then
+      # shellcheck disable=SC2086
+      eval ${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino --pref "$preferenceString" --save-prefs "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+    else
+      # Arduino IDE 1.5.6 - 1.5.7 load the GUI if you only set preferences without doing a verify. So I am doing an unnecessary verification just to set the preferences in those versions. Definitely a hack but I prefer to keep the preferences setting code all here instead of cluttering build_sketch and this will pretty much never be used.
+      # shellcheck disable=SC2086
+      eval ${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino --pref "$preferenceString" --verify "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+    fi
+  fi
 }
 
 
