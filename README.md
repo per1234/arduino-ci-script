@@ -109,24 +109,26 @@ Pass some parameters from .travis.yml to the script. `build_sketch` will echo th
 ##### `display_report`
 Echo a tab separated report of all verification results to the log. The report is located at `$HOME/report.txt`. Note that Travis CI runs each build of the job in a separate virtual machine so if you have multiple jobs you will have multiple reports. The only way I have found to generate a single report for all tests is to run them as a single job. This means not setting multiple matrix environment variables in the `env` array. See https://docs.travis-ci.com/user/environment-variables. The report consists of:
 - Build timestamp
-- Travis CI build number
-- Travis CI job number
-- Travis CI job URL
-- Travis CI build trigger
-- Allow Travis CI job failure
-- Pull request number
-- Branch
-- Commit hash of the build
-- Commit range
-- Commit subject
+- Build - The Travis CI build number.
+- Job - Travis CI job number
+- Job URL - The URL of the Travis CI job log.
+- Build Trigger - The cause of this Travis CI build. Values are `push`, `pull_request`, `api`, `cron`.
+- Allow Job Failure - Whether the Travis CI configuration was set to allow the failure of this job without failing the build.
+- PR# - Pull request number (if build was triggered by a pull request).
+- Branch - The branch of the repository that was built.
+- Commit - Commit hash of the build.
+- Commit range - The range of commits that were included in the push or pull request.
+- Commit Message - First line of the commit message
 - Sketch filename
 - Board ID
 - IDE version
-- Program storage usage
-- Dynamic memory usage by global variables (not available for some boards)
-- Number of warnings
-- Sketch verification allowed to fail
-- Sketch verification exit code
+- Program Storage (bytes) - Program storage usage of the compiled sketch.
+- Dynamic Memory (bytes) - Dynamic memory usage by global variables in the compiled sketch (not available for some boards).
+- # Warnings - Number of warnings reported by the compiler during the sketch compilation.
+- Allow Failure - Whether the sketch verification was allowed to fail (set by the `allowFail` argument of `build_sketch`).
+- Exit Code - Exit code returned by arduino after the sketch verification.
+- # Board Issues - The number of board issues detected.
+- Board Issue - Short description of the last board issue detected.
 
 ##### `publish_report_to_repository REPORT_GITHUB_TOKEN repositoryURL reportBranch reportFolder doLinkComment`
 Add the report to a repository. See the [instructions for publishing job reports](publishing-job-reports) for details.
