@@ -34,7 +34,7 @@ Control the level of verbosity of the script's output in the Travis CI log. Verb
 - Parameter: **APPLICATION_FOLDER** - The folder to install the Arduino IDE to. This should be set to `/usr/local/share` or a subfolder of that location. The folder will be created if it doesn't already exist. The Arduino IDE will be installed in the `arduino` subfolder.
 
 ##### `set_sketchbook_folder SKETCHBOOK_FOLDER`
-- Parameter: **SKETCHBOOK_FOLDER** - The folder to be set as the Arduino IDE's sketchbook folder. Libraries installed via the Arduino IDE CLI's `--install-library` option will be installed to the `libraries` subfolder of this folder. You can also use the `libraries` subfolder of this folder for [manually installing libraries in the recommended manner](https://www.arduino.cc/en/Guide/Libraries#toc5). This setting is only supported by Arduino IDE 1.5.6 and newer.
+- Parameter: **SKETCHBOOK_FOLDER** - The folder to be set as the Arduino IDE's sketchbook folder. The folder will be created if it doesn't already exist. Libraries installed via `install_library` will be installed to the `libraries` subfolder. Non-Boards Manager hardware packages installed via `install_package` will be installed to the `hardware` subfolder. This setting is only supported by Arduino IDE 1.5.6 and newer.
 
 ##### `set_board_testing BOARD_TESTING`
 Turn on/off checking for errors with the board definition that don't affect sketch verification such as missing bootloader file. If this is turned on and an error is detected the build will be failed. This feature is off by default.
