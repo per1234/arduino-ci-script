@@ -824,7 +824,7 @@ function build_this_sketch()
   echo -e "travis_fold:end:build_sketch"
   # Add a useful message to the Travis CI build log
 
-  echo "arduino exit status: $arduinoExitStatus"
+  echo "arduino Exit Status: ${arduinoExitStatus}, Allow Failure: ${allowFail}, # Warnings: ${warningCount}, # Board Issues: ${boardIssueCount}"
 
   return $buildThisSketchExitStatus
 }
