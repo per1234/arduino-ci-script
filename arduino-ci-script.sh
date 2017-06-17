@@ -683,7 +683,7 @@ function build_sketch()
       # A sketch was specified
       if ! build_this_sketch "$sketchPath" "$boardID" "$IDEversion" "$allowFail"; then
         # build_this_sketch returned a non-zero exit status
-        buildSketchExitStatus=1
+        buildSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
       fi
     else
       # Search for all sketches in the path and put them in an array
@@ -702,7 +702,7 @@ function build_sketch()
         if [[ "$sketchFolder" == "$sketchNameWithoutPathWithoutExtension" ]]; then
           if ! build_this_sketch "$sketchName" "$boardID" "$IDEversion" "$allowFail"; then
             # build_this_sketch returned a non-zero exit status
-            buildSketchExitStatus=1;
+            buildSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
           fi
         fi
       done
