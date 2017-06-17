@@ -31,7 +31,7 @@ Control the level of verbosity of the script's output in the Travis CI log. Verb
 - Parameter: **SCRIPT_VERBOSITY_LEVEL** - `0`, `1` or `2` (least to most verbosity).
 
 ##### `set_application_folder APPLICATION_FOLDER`
-- Parameter: **APPLICATION_FOLDER** - This should be set to `/usr/local/share`. The Arduino IDE will be installed in the `arduino` subfolder.
+- Parameter: **APPLICATION_FOLDER** - The folder to install the Arduino IDE to. This should be set to `/usr/local/share` or a subfolder of that location. The folder will be created if it doesn't already exist. The Arduino IDE will be installed in the `arduino` subfolder.
 
 ##### `set_sketchbook_folder SKETCHBOOK_FOLDER`
 - Parameter: **SKETCHBOOK_FOLDER** - The folder to be set as the Arduino IDE's sketchbook folder. Libraries installed via the Arduino IDE CLI's `--install-library` option will be installed to the `libraries` subfolder of this folder. You can also use the `libraries` subfolder of this folder for [manually installing libraries in the recommended manner](https://www.arduino.cc/en/Guide/Libraries#toc5). This setting is only supported by Arduino IDE 1.5.6 and newer.
