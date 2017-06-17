@@ -784,14 +784,9 @@ function build_this_sketch()
       fi
 
       # Check for missing bootloader
-      if [[ "$ARDUINO_CI_SCRIPT_TEST_BOARD" == "true" ]]; then
-        local bootloaderMissingRegex="Bootloader file specified but missing: "
-        if [[ "$outputFileLine" =~ $bootloaderMissingRegex ]] > /dev/null; then
-          local boardIssue="missing bootloader"
-          if [[ "$allowFail" != "true" ]]; then
-            buildThisSketchExitCode=1
-          fi
-        fi
+      local bootloaderMissingRegex="Bootloader file specified but missing: "
+      if [[ "$outputFileLine" =~ $bootloaderMissingRegex ]] > /dev/null; then
+        local boardIssue="missing bootloader"
       fi
     done < "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"
 
@@ -800,6 +795,11 @@ function build_this_sketch()
     # Remove the stupid comma from the memory values if present
     local -r programStorage=${programStorageWithComma//,}
     local -r dynamicMemory=${dynamicMemoryWithComma//,}
+
+    if [[ "$boardIssue" != "" && "$ARDUINO_CI_SCRIPT_TEST_BOARD" == "true" && "$allowFail" != "true" ]]; then
+      # There was a board issue and board testing is enabled so fail the build
+      local -r buildThisSketchExitCode="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+    fi
   fi
 
   # Add the build data to the report file
