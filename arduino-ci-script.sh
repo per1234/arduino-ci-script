@@ -1081,6 +1081,9 @@ function comment_report_link()
   local -r reportURL="$2"
 
   eval curl $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION --header "\"Authorization: token ${token}\"" --data \"{'\"'body'\"':'\"'Once completed, the job reports for Travis CI [build ${TRAVIS_BUILD_NUMBER}]\(https://travis-ci.org/${TRAVIS_REPO_SLUG}/builds/${TRAVIS_BUILD_ID}\) will be found at:\\n${reportURL}'\"'}\" "\"https://api.github.com/repos/${TRAVIS_REPO_SLUG}/commits/${TRAVIS_COMMIT}/comments\"" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+  if [[ $? -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
+    echo "ERROR: Failed to comment link to published report location"
+  fi
 }
 
 
