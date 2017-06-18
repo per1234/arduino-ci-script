@@ -28,6 +28,9 @@ readonly ARDUINO_CI_SCRIPT_REPORT_PUSH_RETRIES=10
 readonly ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS=0
 readonly ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS=1
 
+# Default value
+ARDUINO_CI_SCRIPT_TOTAL_SKETCH_BUILD_FAILURE_COUNT=0
+
 
 # Create the folder if it doesn't exist
 function create_folder()
@@ -820,6 +823,12 @@ function build_this_sketch()
   # Add the build data to the report file
   echo "$(date -u "+%Y-%m-%d %H:%M:%S")"$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_JOB_NUMBER"$'\t'"https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}"$'\t'"$TRAVIS_EVENT_TYPE"$'\t'"$TRAVIS_ALLOW_FAILURE"$'\t'"$TRAVIS_PULL_REQUEST"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"$TRAVIS_COMMIT_RANGE"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail"$'\t'"$arduinoExitStatus"$'\t'"$boardIssueCount"$'\t'"$boardIssue"$'\r' >> "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
 
+  if [[ "$buildThisSketchExitStatus" != "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]]; then
+    ARDUINO_CI_SCRIPT_TOTAL_SKETCH_BUILD_FAILURE_COUNT=$((ARDUINO_CI_SCRIPT_TOTAL_SKETCH_BUILD_FAILURE_COUNT + 1))
+  fi
+  ARDUINO_CI_SCRIPT_TOTAL_WARNING_COUNT=$((ARDUINO_CI_SCRIPT_TOTAL_WARNING_COUNT + warningCount + 0))
+  ARDUINO_CI_SCRIPT_TOTAL_BOARD_ISSUE_COUNT=$((ARDUINO_CI_SCRIPT_TOTAL_BOARD_ISSUE_COUNT + boardIssueCount + 0))
+
   # End the folded section of the Travis CI build log
   echo -e "travis_fold:end:build_sketch"
   # Add a useful message to the Travis CI build log
@@ -838,6 +847,10 @@ function display_report()
   if [ -e "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH" ]; then
     echo -e "\n\n\n**************Begin Report**************\n\n\n"
     cat "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
+    echo -e "\n\n"
+    echo "Total failed sketch builds: $ARDUINO_CI_SCRIPT_TOTAL_SKETCH_BUILD_FAILURE_COUNT"
+    echo "Total warnings: $ARDUINO_CI_SCRIPT_TOTAL_WARNING_COUNT"
+    echo "Total board issues: $ARDUINO_CI_SCRIPT_TOTAL_BOARD_ISSUE_COUNT"
     echo -e "\n\n"
   else
     echo "No report file available for this job"
