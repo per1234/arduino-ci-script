@@ -690,6 +690,11 @@ function build_sketch()
 
   generate_ide_version_list_array "$INSTALLED_IDE_VERSION_LIST_ARRAY" "$startIDEversion" "$endIDEversion"
 
+  if [[ "$ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY" == "$ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION"'()' ]]; then
+    echo "ERROR: The IDE version(s) specified are not installed"
+    return_handler "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+  fi
+
   eval "$ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY"
   local IDEversion
   for IDEversion in "${IDEversionListArray[@]}"; do
