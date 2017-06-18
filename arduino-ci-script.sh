@@ -695,12 +695,16 @@ function build_sketch()
 
     if [[ "$sketchPath" =~ \.ino$ || "$sketchPath" =~ \.pde$ ]]; then
       # A sketch was specified
-      if ! build_this_sketch "$sketchPath" "$boardID" "$IDEversion" "$allowFail"; then
+      if ! [[ -f "$sketchPath" ]]; then
+        echo "ERROR: Specified sketch: $sketchPath doesn't exist"
+        buildSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+      elif ! build_this_sketch "$sketchPath" "$boardID" "$IDEversion" "$allowFail"; then
         # build_this_sketch returned a non-zero exit status
         buildSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
       fi
     else
       # Search for all sketches in the path and put them in an array
+      local sketchFound="false"
       # https://github.com/koalaman/shellcheck/wiki/SC2207
       declare -a sketches
       mapfile -t sketches < <(find "$sketchPath" -name "*.pde" -o -name "*.ino")
@@ -714,12 +718,18 @@ function build_sketch()
         local sketchNameWithoutPathWithoutExtension
         sketchNameWithoutPathWithoutExtension="${sketchNameWithoutPathWithExtension%.*}"
         if [[ "$sketchFolder" == "$sketchNameWithoutPathWithoutExtension" ]]; then
+          sketchFound="true"
           if ! build_this_sketch "$sketchName" "$boardID" "$IDEversion" "$allowFail"; then
             # build_this_sketch returned a non-zero exit status
             buildSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
           fi
         fi
       done
+
+      if [[ "$sketchFound" == "false" ]]; then
+        echo "ERROR: No valid sketches were found in the specified path"
+        buildSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+      fi
     fi
   done
 
