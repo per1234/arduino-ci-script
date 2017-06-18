@@ -40,6 +40,10 @@ Control the level of verbosity of the script's output in the Travis CI log. Verb
 Turn on/off checking for errors with the board definition that don't affect sketch verification such as missing bootloader file. If this is turned on and an error is detected the build will be failed. This feature is off by default.
 - Parameter: **BOARD_TESTING** - `true`/`false`
 
+##### `set_library_testing LIBRARY_TESTING`
+Turn on/off checking for errors with libraries that don't affect sketch verification such as missing or invalid items in the library.properties file. If this is turned on and an error is detected the build will be failed. This feature is off by default.
+- Parameter: **LIBRARY_TESTING** - `true`/`false`
+
 ##### Special version names:
   - `all`: Refers to all versions of the Arduino IDE (including the hourly build). In the context of `install_ide` this means all IDE versions listed in the script (those that support the command line interface, 1.5.2 and newer). In the context of all other functions this means all IDE versions that were installed via `install_ide`.
   - `oldest`: The oldest release version of the Arduino IDE. In the context of `install_ide` this is the oldest of the IDE versions listed in the script (1.5.2, the first version to have a command line interface). In the context of build_sketch this means the oldest IDE version that was installed via `install_ide`.
@@ -129,6 +133,8 @@ Echo a tab separated report of all verification results to the log. The report i
 - Exit Status - Exit status returned by arduino after the sketch verification.
 - # Board Issues - The number of board issues detected.
 - Board Issue - Short description of the last board issue detected.
+- # Library Issues - The number of library issues detected. Library issues are things that cause warnings in the sketch verification output from the IDE, rather than the compiler.
+- Library Issue - Short description of the last library issue detected.
 
 ##### `publish_report_to_repository REPORT_GITHUB_TOKEN repositoryURL reportBranch reportFolder doLinkComment`
 Add the report to a repository. See the [instructions for publishing job reports](publishing-job-reports) for details.

@@ -41,6 +41,9 @@ before_install:
   # Check for board definition errors that don't affect compilation
   - set_board_testing "true"
 
+  # Check for library issues that don't affect compilation
+  - set_library_testing "true"
+
   - install_ide "$INSTALL_IDE_START_VERSION" "$INSTALL_IDE_END_VERSION"
 
   # Install hardware packages

@@ -177,6 +177,17 @@ function set_board_testing()
 }
 
 
+# Check for errors with libraries that don't affect sketch verification
+function set_library_testing()
+{
+  enable_verbosity
+
+  ARDUINO_CI_SCRIPT_TEST_LIBRARY="$1"
+
+  disable_verbosity
+}
+
+
 # Install all specified versions of the Arduino IDE
 function install_ide()
 {
@@ -756,6 +767,7 @@ function build_this_sketch()
     # Parse through the output from the sketch verification to count warnings and determine the compile size
     local warningCount=0
     local boardIssueCount=0
+    local libraryIssueCount=0
     while read -r outputFileLine; do
       # Determine program storage memory usage
       local programStorageRegex="Sketch uses ([0-9,]+) *"
@@ -775,7 +787,7 @@ function build_this_sketch()
         warningCount=$((warningCount + 1))
       fi
 
-      # Check for missing bootloader
+      # Check for board issues
       local bootloaderMissingRegex="Bootloader file specified but missing: "
       if [[ "$outputFileLine" =~ $bootloaderMissingRegex ]] > /dev/null; then
         local boardIssue="missing bootloader"
@@ -794,6 +806,75 @@ function build_this_sketch()
         boardIssueCount=$((boardIssueCount + 1))
       fi
 
+      # Check for library issues
+      # This is the generic "invalid library" warning that doesn't specify the reason
+      local invalidLibrarRegex1="Invalid library found in"
+      local invalidLibrarRegex2="from library$"
+      if [[ "$outputFileLine" =~ $invalidLibrarRegex1 ]] && ! [[ "$outputFileLine" =~ $invalidLibrarRegex2 ]] > /dev/null; then
+        local libraryIssue="Invalid library"
+        libraryIssueCount=$((libraryIssueCount + 1))
+      fi
+
+      local missingNameRegex="Invalid library found in .* Missing 'name' from library"
+      if [[ "$outputFileLine" =~ $missingNameRegex ]] > /dev/null; then
+        local libraryIssue="Missing 'name' from library"
+        libraryIssueCount=$((libraryIssueCount + 1))
+      fi
+
+      local missingVersionRegex="Invalid library found in .* Missing 'version' from library"
+      if [[ "$outputFileLine" =~ $missingVersionRegex ]] > /dev/null; then
+        local libraryIssue="Missing 'version' from library"
+        libraryIssueCount=$((libraryIssueCount + 1))
+      fi
+
+      local missingAuthorRegex="Invalid library found in .* Missing 'author' from library"
+      if [[ "$outputFileLine" =~ $missingAuthorRegex ]] > /dev/null; then
+        local libraryIssue="Missing 'author' from library"
+        libraryIssueCount=$((libraryIssueCount + 1))
+      fi
+
+      local missingMaintainerRegex="Invalid library found in .* Missing 'maintainer' from library"
+      if [[ "$outputFileLine" =~ $missingMaintainerRegex ]] > /dev/null; then
+        local libraryIssue="Missing 'maintainer' from library"
+        libraryIssueCount=$((libraryIssueCount + 1))
+      fi
+
+      local missingSentenceRegex="Invalid library found in .* Missing 'sentence' from library"
+      if [[ "$outputFileLine" =~ $missingSentenceRegex ]] > /dev/null; then
+        local libraryIssue="Missing 'sentence' from library"
+        libraryIssueCount=$((libraryIssueCount + 1))
+      fi
+
+      local missingParagraphRegex="Invalid library found in .* Missing 'paragraph' from library"
+      if [[ "$outputFileLine" =~ $missingParagraphRegex ]] > /dev/null; then
+        local libraryIssue="Missing 'paragraph' from library"
+        libraryIssueCount=$((libraryIssueCount + 1))
+      fi
+
+      local missingURLregex="Invalid library found in .* Missing 'url' from library"
+      if [[ "$outputFileLine" =~ $missingURLregex ]] > /dev/null; then
+        local libraryIssue="Missing 'url' from library"
+        libraryIssueCount=$((libraryIssueCount + 1))
+      fi
+
+      local invalidVersionRegex="Invalid version found:"
+      if [[ "$outputFileLine" =~ $invalidVersionRegex ]] > /dev/null; then
+        local libraryIssue="Invalid version found:"
+        libraryIssueCount=$((libraryIssueCount + 1))
+      fi
+
+      local invalidCategoryRegex="is not valid. Setting to 'Uncategorized'"
+      if [[ "$outputFileLine" =~ $invalidCategoryRegex ]] > /dev/null; then
+        local libraryIssue="Invalid category"
+        libraryIssueCount=$((libraryIssueCount + 1))
+      fi
+
+      local spuriousFolderRegex="WARNING: Spurious"
+      if [[ "$outputFileLine" =~ $spuriousFolderRegex ]] > /dev/null; then
+        local libraryIssue="Spurious folder"
+        libraryIssueCount=$((libraryIssueCount + 1))
+      fi
+
     done < "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"
 
     rm $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"
@@ -806,10 +887,15 @@ function build_this_sketch()
       # There was a board issue and board testing is enabled so fail the build
       local buildThisSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
     fi
+
+    if [[ "$libraryIssue" != "" && "$ARDUINO_CI_SCRIPT_TEST_LIBRARY" == "true" ]]; then
+      # There was a library issue and library testing is enabled so fail the build
+      local buildThisSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+    fi
   fi
 
   # Add the build data to the report file
-  echo "$(date -u "+%Y-%m-%d %H:%M:%S")"$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_JOB_NUMBER"$'\t'"https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}"$'\t'"$TRAVIS_EVENT_TYPE"$'\t'"$TRAVIS_ALLOW_FAILURE"$'\t'"$TRAVIS_PULL_REQUEST"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"$TRAVIS_COMMIT_RANGE"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail"$'\t'"$arduinoExitStatus"$'\t'"$boardIssueCount"$'\t'"$boardIssue"$'\r' >> "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
+  echo "$(date -u "+%Y-%m-%d %H:%M:%S")"$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_JOB_NUMBER"$'\t'"https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}"$'\t'"$TRAVIS_EVENT_TYPE"$'\t'"$TRAVIS_ALLOW_FAILURE"$'\t'"$TRAVIS_PULL_REQUEST"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"$TRAVIS_COMMIT_RANGE"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail"$'\t'"$arduinoExitStatus"$'\t'"$boardIssueCount"$'\t'"$boardIssue"$'\t'"$libraryIssueCount"$'\t'"$libraryIssue"$'\r' >> "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
 
   # Adjust the exit status according to the allowFail setting
   if [[ "$buildThisSketchExitStatus" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" && ("$allowFail" == "true" || "$allowFail" == "require") ]]; then
@@ -823,12 +909,13 @@ function build_this_sketch()
   fi
   ARDUINO_CI_SCRIPT_TOTAL_WARNING_COUNT=$((ARDUINO_CI_SCRIPT_TOTAL_WARNING_COUNT + warningCount + 0))
   ARDUINO_CI_SCRIPT_TOTAL_BOARD_ISSUE_COUNT=$((ARDUINO_CI_SCRIPT_TOTAL_BOARD_ISSUE_COUNT + boardIssueCount + 0))
+  ARDUINO_CI_SCRIPT_TOTAL_LIBRARY_ISSUE_COUNT=$((ARDUINO_CI_SCRIPT_TOTAL_LIBRARY_ISSUE_COUNT + libraryIssueCount + 0))
 
   # End the folded section of the Travis CI build log
   echo -e "travis_fold:end:build_sketch"
   # Add a useful message to the Travis CI build log
 
-  echo "arduino Exit Status: ${arduinoExitStatus}, Allow Failure: ${allowFail}, # Warnings: ${warningCount}, # Board Issues: ${boardIssueCount}"
+  echo "arduino Exit Status: ${arduinoExitStatus}, Allow Failure: ${allowFail}, # Warnings: ${warningCount}, # Board Issues: ${boardIssueCount}, # Library Issues: ${libraryIssueCount}"
 
   return $buildThisSketchExitStatus
 }
@@ -846,6 +933,7 @@ function display_report()
     echo "Total failed sketch builds: $ARDUINO_CI_SCRIPT_TOTAL_SKETCH_BUILD_FAILURE_COUNT"
     echo "Total warnings: $ARDUINO_CI_SCRIPT_TOTAL_WARNING_COUNT"
     echo "Total board issues: $ARDUINO_CI_SCRIPT_TOTAL_BOARD_ISSUE_COUNT"
+    echo "Total library issues: $ARDUINO_CI_SCRIPT_TOTAL_LIBRARY_ISSUE_COUNT"
     echo -e "\n\n"
   else
     echo "No report file available for this job"
@@ -886,7 +974,7 @@ function publish_report_to_repository()
         fi
         # Do a pull now in case another job has finished about the same time and pushed a report after the clone happened, which would otherwise cause the push to fail. This is the last chance to pull without having to deal with a merge or rebase.
         git pull $ARDUINO_CI_SCRIPT_QUIET_OPTION
-        git commit $ARDUINO_CI_SCRIPT_QUIET_OPTION $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION --message="Add Travis CI job ${TRAVIS_JOB_NUMBER} report (${jobSuccessMessage})" --message="Total failed sketch builds: $ARDUINO_CI_SCRIPT_TOTAL_SKETCH_BUILD_FAILURE_COUNT" --message="Total warnings: $ARDUINO_CI_SCRIPT_TOTAL_WARNING_COUNT" --message="Total board issues: $ARDUINO_CI_SCRIPT_TOTAL_BOARD_ISSUE_COUNT" --message="Job log: https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --message="Commit: https://github.com/${TRAVIS_REPO_SLUG}/commit/${TRAVIS_COMMIT}" --message="$TRAVIS_COMMIT_MESSAGE" --message="[skip ci]"
+        git commit $ARDUINO_CI_SCRIPT_QUIET_OPTION $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION --message="Add Travis CI job ${TRAVIS_JOB_NUMBER} report (${jobSuccessMessage})" --message="Total failed sketch builds: $ARDUINO_CI_SCRIPT_TOTAL_SKETCH_BUILD_FAILURE_COUNT" --message="Total warnings: $ARDUINO_CI_SCRIPT_TOTAL_WARNING_COUNT" --message="Total board issues: $ARDUINO_CI_SCRIPT_TOTAL_BOARD_ISSUE_COUNT" --message="Total library issues: $ARDUINO_CI_SCRIPT_TOTAL_LIBRARY_ISSUE_COUNT" --message="Job log: https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --message="Commit: https://github.com/${TRAVIS_REPO_SLUG}/commit/${TRAVIS_COMMIT}" --message="$TRAVIS_COMMIT_MESSAGE" --message="[skip ci]"
         local gitPushExitStatus="1"
         local pushCount=0
         while [[ "$gitPushExitStatus" != "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" && $pushCount -le $ARDUINO_CI_SCRIPT_REPORT_PUSH_RETRIES ]]; do
@@ -1015,7 +1103,7 @@ create_folder "$ARDUINO_CI_SCRIPT_REPORT_FOLDER"
 
 
 # Add column names to report
-echo "Build Timestamp (UTC)"$'\t'"Build"$'\t'"Job"$'\t'"Job URL"$'\t'"Build Trigger"$'\t'"Allow Job Failure"$'\t'"PR#"$'\t'"Branch"$'\t'"Commit"$'\t'"Commit Range"$'\t'"Commit Message"$'\t'"Sketch Filename"$'\t'"Board ID"$'\t'"IDE Version"$'\t'"Program Storage (bytes)"$'\t'"Dynamic Memory (bytes)"$'\t'"# Warnings"$'\t'"Allow Failure"$'\t'"Exit Status"$'\t'"# Board Issues"$'\t'"Board Issue"$'\r' > "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
+echo "Build Timestamp (UTC)"$'\t'"Build"$'\t'"Job"$'\t'"Job URL"$'\t'"Build Trigger"$'\t'"Allow Job Failure"$'\t'"PR#"$'\t'"Branch"$'\t'"Commit"$'\t'"Commit Range"$'\t'"Commit Message"$'\t'"Sketch Filename"$'\t'"Board ID"$'\t'"IDE Version"$'\t'"Program Storage (bytes)"$'\t'"Dynamic Memory (bytes)"$'\t'"# Warnings"$'\t'"Allow Failure"$'\t'"Exit Status"$'\t'"# Board Issues"$'\t'"Board Issue"$'\t'"# Library Issues"$'\t'"Library Issue"$'\r' > "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
 
 
 # Start the virtual display required by the Arduino IDE CLI: https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#bugs
