@@ -130,6 +130,23 @@ function disable_verbosity()
 }
 
 
+# Verbosity and, in some cases, errexit must be disabled before an early return from a public function, this allows it to be done in a single line instead of two
+function return_handler()
+{
+  local -r exitStatus="$1"
+
+  # If exit status is success and errexit is enabled then it must be disabled before exiting the script because errexit must be disabled by default and only enabled in the functions that specifically require it.
+  # If exit status is not success then errexit should not be disabled, otherwise Travis CI won't fail the build even though the exit status was failure.
+  if [[ "$exitStatus" == "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]] && shopt -q -o errexit; then
+      set +o errexit
+  fi
+
+  disable_verbosity
+
+  return "$exitStatus"
+}
+
+
 function set_application_folder()
 {
   enable_verbosity
@@ -209,7 +226,7 @@ function install_ide()
 
   if [[ "$ARDUINO_CI_SCRIPT_APPLICATION_FOLDER" == "" ]]; then
     echo "ERROR: Application folder was not set. Please use the set_application_folder function to define the location of the application folder."
-    return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+    return_handler "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
   fi
   create_folder "$ARDUINO_CI_SCRIPT_APPLICATION_FOLDER"
 
@@ -459,7 +476,7 @@ function install_package()
     # Check if Arduino IDE is installed
     if [[ "$INSTALLED_IDE_VERSION_LIST_ARRAY" == "" ]]; then
       echo "ERROR: Installing a hardware package via Boards Manager requires the Arduino IDE to be installed. Please call install_ide before this command."
-      return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+      return_handler "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
     fi
 
     # Check if the newest installed IDE version supports --install-boards
@@ -467,7 +484,7 @@ function install_package()
     local -r unsupportedInstallBoardsOptionVersionsRange2regex="1.6.[0-3]"
     if [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallBoardsOptionVersionsRange1regex || "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallBoardsOptionVersionsRange2regex ]]; then
       echo "ERROR: --install-boards option is not supported by the newest version of the Arduino IDE you have installed. You must have Arduino IDE 1.6.4 or newer installed to use this function."
-      return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+      return_handler "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
     else
       # Temporarily install the latest IDE version to use for the package installation
       install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
@@ -555,7 +572,7 @@ function install_library()
     # Check if Arduino IDE is installed
     if [[ "$INSTALLED_IDE_VERSION_LIST_ARRAY" == "" ]]; then
       echo "ERROR: Installing a library via Library Manager requires the Arduino IDE to be installed. Please call install_ide before this command."
-      return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+      return_handler "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
     fi
 
     # Check if the newest installed IDE version supports --install-library
@@ -563,7 +580,7 @@ function install_library()
     local -r unsupportedInstallLibraryOptionVersionsRange2regex="1.6.[0-3]"
     if [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallLibraryOptionVersionsRange1regex || "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallLibraryOptionVersionsRange2regex ]]; then
       echo "ERROR: --install-library option is not supported by the newest version of the Arduino IDE you have installed. You must have Arduino IDE 1.6.4 or newer installed to use this function."
-      return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+      return_handler "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
     else
       local -r libraryName="$1"
 
@@ -1007,11 +1024,11 @@ function publish_report_to_repository()
           fi
         else
           echo "ERROR: Failed to push to remote branch."
-          return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+          return_handler "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
         fi
       else
         echo "ERROR: Failed to clone branch ${reportBranch} of repository URL ${repositoryURL}. Do they exist?"
-        return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+        return_handler "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
       fi
     else
       echo "No report file available for this job"
@@ -1026,7 +1043,7 @@ function publish_report_to_repository()
     if [[ "$reportBranch" == "" ]]; then
       echo "ERROR: Repository branch not specified. Failed to publish build report."
     fi
-    return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+    return_handler "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
   fi
 
   disable_verbosity
@@ -1077,7 +1094,7 @@ curlDataHere
     if [[ "$gistURL" == "" ]]; then
       echo "ERROR: Gist URL not specified. Failed to publish build report. See https://github.com/per1234/arduino-ci-script#publishing-job-reports for instructions."
     fi
-    return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+    return_handler "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
   fi
 
   disable_verbosity
