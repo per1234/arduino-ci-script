@@ -747,23 +747,11 @@ function build_this_sketch()
   done
 
   if [[ "$arduinoExitStatus" != "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]]; then
-    # Sketch build failed
-    if [[ "$allowFail" == "true" || "$allowFail" == "require" ]]; then
-      # Failure is allowed for this test
-      local -r buildThisSketchExitStatus="$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS"
-    else
-      # Failure is not allowed for this test, fail the Travis build after completing all sketch builds
-      local -r buildThisSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
-    fi
+    # Sketch verification failed
+    local buildThisSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
   else
-    # Sketch build succeeded
-    if [[ "$allowFail" == "require" ]]; then
-      # Failure is required for this test, fail the Travis build after completing all sketch builds
-      local -r buildThisSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
-    else
-      # Success is allowed
-      local -r buildThisSketchExitStatus="$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS"
-    fi
+    # Sketch verification succeeded
+    local buildThisSketchExitStatus="$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS"
 
     # Parse through the output from the sketch verification to count warnings and determine the compile size
     local warningCount=0
@@ -814,14 +802,21 @@ function build_this_sketch()
     local -r programStorage=${programStorageWithComma//,}
     local -r dynamicMemory=${dynamicMemoryWithComma//,}
 
-    if [[ "$boardIssue" != "" && "$ARDUINO_CI_SCRIPT_TEST_BOARD" == "true" && "$allowFail" != "true" ]]; then
+    if [[ "$boardIssue" != "" && "$ARDUINO_CI_SCRIPT_TEST_BOARD" == "true" ]]; then
       # There was a board issue and board testing is enabled so fail the build
-      local -r buildThisSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+      local buildThisSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
     fi
   fi
 
   # Add the build data to the report file
   echo "$(date -u "+%Y-%m-%d %H:%M:%S")"$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_JOB_NUMBER"$'\t'"https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}"$'\t'"$TRAVIS_EVENT_TYPE"$'\t'"$TRAVIS_ALLOW_FAILURE"$'\t'"$TRAVIS_PULL_REQUEST"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"$TRAVIS_COMMIT_RANGE"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail"$'\t'"$arduinoExitStatus"$'\t'"$boardIssueCount"$'\t'"$boardIssue"$'\r' >> "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
+
+  # Adjust the exit status according to the allowFail setting
+  if [[ "$buildThisSketchExitStatus" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" && ("$allowFail" == "true" || "$allowFail" == "require") ]]; then
+    buildThisSketchExitStatus="$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS"
+  elif [[ "$buildThisSketchExitStatus" == "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" && "$allowFail" == "require" ]]; then
+    buildThisSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+  fi
 
   if [[ "$buildThisSketchExitStatus" != "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]]; then
     ARDUINO_CI_SCRIPT_TOTAL_SKETCH_BUILD_FAILURE_COUNT=$((ARDUINO_CI_SCRIPT_TOTAL_SKETCH_BUILD_FAILURE_COUNT + 1))
