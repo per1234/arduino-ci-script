@@ -113,7 +113,7 @@ script:
   # Test library installed from .git
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WirelessOregonV2/examples/OregonReceiver/OregonReceiver.ino" "arduino:avr:uno" "false" "newest"
   # Test library installed from .git with branch
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/NanodeUNIO/examples/NanodeUNIO_test/NanodeUNIO_test.ino" "arduino:avr:uno" "false" "newest"
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/NanodeUNIO/examples/NanodeUNIO_test/NanodeUNIO_test.pde" "arduino:avr:uno" "false" "newest"
   # Test library installed from .git with rename
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/ArduinoShell/examples/ShellBlink/ShellBlink.ino" "arduino:avr:uno" "false" "newest"
   # Test library installed from .git with branch and rename
