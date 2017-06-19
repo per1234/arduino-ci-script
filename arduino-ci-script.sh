@@ -946,7 +946,7 @@ function publish_report_to_gist()
       # Sanitize the report file content so it can be sent via a POST request without breaking the JSON
       # Remove \r (from Windows end-of-lines), replace tabs by \t, replace " by \", replace EOL by \n
       local reportContent
-      reportContent=$(sed $ARDUINO_CI_SCRIPT_QUIET_OPTION -e 's/\r//' -e's/\t/\\t/g' -e 's/"/\\"/g' "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH" | awk '{ printf($0 "\\n") }')
+      reportContent=$(sed -e 's/\r//' -e's/\t/\\t/g' -e 's/"/\\"/g' "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH" | awk '{ printf($0 "\\n") }')
 
       # Upload the report to the Gist. I have to use the here document to avoid the "Argument list too long" error from curl with long reports. Redirect output to dev/null because it dumps the whole gist to the log
       eval curl --header "\"Authorization: token ${token}\"" --data @- "\"https://api.github.com/gists/${gistID}\"" <<curlDataHere "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
