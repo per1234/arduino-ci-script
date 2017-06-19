@@ -502,7 +502,7 @@ function install_library()
       if [[ "$branchName" == "" && "$newFolderName" == "" ]]; then
         git clone --quiet "$libraryIdentifier"
       elif [[ "$branchName" == "" ]]; then
-        git clone --quiet "$libraryIdentifier"
+        git clone --quiet "$libraryIdentifier" "$newFolderName"
       elif [[ "$newFolderName" == "" ]]; then
         git clone --quiet --branch "$branchName" "$libraryIdentifier"
       else
