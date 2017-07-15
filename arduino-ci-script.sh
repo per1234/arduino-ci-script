@@ -442,8 +442,8 @@ function install_package()
     else
       cd "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER"
 
-      # Clean up the temporary folder
-      rm --force $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./*.*
+      # Delete everything from the temporary folder
+      find ./ -mindepth 1 -delete
 
       # Download the package
       wget --no-verbose $ARDUINO_CI_SCRIPT_QUIET_OPTION "$packageURL"
@@ -451,8 +451,8 @@ function install_package()
       # Uncompress the package
       extract ./*.*
 
-      # Clean up the temporary folder
-      rm --force $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./*.*
+      # Delete all files from the temporary folder
+      find ./ -type f -maxdepth 1 -delete
 
       # Install the package
       mv $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./* "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/hardware/"
@@ -546,13 +546,17 @@ function install_library()
       local -r newFolderName="$2"
       # Download the file to the temporary folder
       cd "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER"
-      # Clean up the temporary folder
-      rm --force $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./*.*
+
+      # Delete everything from the temporary folder
+      find ./ -mindepth 1 -delete
+
       wget --no-verbose $ARDUINO_CI_SCRIPT_QUIET_OPTION "$libraryIdentifier"
 
       extract ./*.*
-      # Clean up the temporary folder
-      rm --force $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./*.*
+
+      # Delete all files from the temporary folder
+      find ./ -type f -maxdepth 1 -delete
+
       # Install the library
       mv $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./* "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/libraries/${newFolderName}"
     fi
