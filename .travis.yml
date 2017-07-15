@@ -13,7 +13,7 @@ env:
     # Test install_ide with no argument (using full version list). This would cause the Travis CI build to take much longer so I have it disabled
     # - INSTALL_IDE_START_VERSION=""
     # Test install_ide using full version list
-    - INSTALL_IDE_START_VERSION="all" SCRIPT_VERBOSITY_LEVEL=0 VERBOSE_COMPILATION="false"
+    - INSTALL_IDE_START_VERSION="all" VERBOSITY_LEVEL=0 VERBOSE_COMPILATION="false"
     # Test install_ide using custom version list. Test the use of the special version names "oldest" and "newest" in a version list. Test use of "hourly" version name.
     - INSTALL_IDE_START_VERSION='("oldest" "1.8.1" "1.8.2" "newest" "hourly")' VERBOSITY_LEVEL=1 VERBOSE_COMPILATION="true"
     # Allowed to fail
