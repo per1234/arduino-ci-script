@@ -236,8 +236,10 @@ function install_ide()
   eval "$INSTALLED_IDE_VERSION_LIST_ARRAY"
   local IDEversion
   for IDEversion in "${IDEversionListArray[@]}"; do
-    # If the download/installation process is going slowly when installing a lot of IDE versions this function may cause the build to fail due to exceeding Travis CI's 10 minutes without log output timeout so it's necessary to periodically print something.
-    echo "Installing: $IDEversion"
+    if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -eq 0 ]]; then
+      # If the download/installation process is going slowly when installing a lot of IDE versions this function may cause the build to fail due to exceeding Travis CI's 10 minutes without log output timeout so it's necessary to periodically print something.
+      echo "Installing: $IDEversion"
+    fi
     # Determine download file extension
     local tgzExtensionVersionsRegex="1.5.[0-9]"
     if [[ "$IDEversion" =~ $tgzExtensionVersionsRegex ]]; then
