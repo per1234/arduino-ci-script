@@ -1,6 +1,8 @@
 # This file is used to test the script with Travis CI
 
 language: bash
+# Although sudo is no longer required by arduino-ci-script since the 1.0.0 release, for some reason setting "sudo: false" causes the Travis CI build time to significantly increase so this setting is left as "sudo: required"
+sudo: required
 
 
 env:
