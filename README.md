@@ -128,12 +128,12 @@ Echo a tab separated report of all verification results to the log. The report i
 - IDE version
 - Program Storage (bytes) - Program storage usage of the compiled sketch.
 - Dynamic Memory (bytes) - Dynamic memory usage by global variables in the compiled sketch (not available for some boards).
-- # Warnings - Number of warnings reported by the compiler during the sketch compilation.
+- \# Warnings - Number of warnings reported by the compiler during the sketch compilation.
 - Allow Failure - Whether the sketch verification was allowed to fail (set by the `allowFail` argument of `build_sketch`).
 - Exit Status - Exit status returned by arduino after the sketch verification.
-- # Board Issues - The number of board issues detected.
+- \# Board Issues - The number of board issues detected.
 - Board Issue - Short description of the last board issue detected.
-- # Library Issues - The number of library issues detected. Library issues are things that cause warnings in the sketch verification output from the IDE, rather than the compiler.
+- \# Library Issues - The number of library issues detected. Library issues are things that cause warnings in the sketch verification output from the IDE, rather than the compiler.
 - Library Issue - Short description of the last library issue detected.
 
 ##### `publish_report_to_repository REPORT_GITHUB_TOKEN repositoryURL reportBranch reportFolder doLinkComment`
