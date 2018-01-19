@@ -304,9 +304,7 @@ function generate_ide_version_list_array()
     ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY="$baseIDEversionArray"
 
   else
-    # Start the array
-    ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY="$ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION"'('
-
+    local rawIDElist
     local -r IDEversionListRegex="\("
     if [[ "$startIDEversion" =~ $IDEversionListRegex ]]; then
       # IDE versions list was supplied
@@ -322,12 +320,12 @@ function generate_ide_version_list_array()
           IDEversion="$ARDUINO_CI_SCRIPT_DETERMINED_NEWEST_IDE_VERSION"
         fi
         # Add the version to the array
-        ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY="${ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY} "'"'"$IDEversion"'"'
+        rawIDElist="${rawIDElist} "'"'"$IDEversion"'"'
       done
 
     elif [[ "$endIDEversion" == "" ]]; then
       # Only a single version was specified
-      ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY="$ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY"'"'"$startIDEversion"'"'
+      rawIDElist="$rawIDElist"'"'"$startIDEversion"'"'
 
     else
       # A version range was specified
@@ -341,7 +339,7 @@ function generate_ide_version_list_array()
 
         if [[ "$listIsStarted" == "true" ]]; then
           # Add the version to the list
-          ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY="${ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY} "'"'"$IDEversion"'"'
+          rawIDElist="${rawIDElist} "'"'"$IDEversion"'"'
         fi
 
         if [[ "$IDEversion" == "$endIDEversion" ]]; then
@@ -351,7 +349,18 @@ function generate_ide_version_list_array()
       done
     fi
 
-    # Finish the list
+    # Turn the raw IDE version list into an array
+    declare -a -r rawIDElistArray="(${rawIDElist})"
+
+    # Remove duplicates from list https://stackoverflow.com/a/13648438
+    # shellcheck disable=SC2207
+    readonly local uniqueIDElistArray=($(echo "${rawIDElistArray[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
+
+    # Generate ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY
+    ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY="$ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION"'('
+    for uniqueIDElistArrayIndex in "${!uniqueIDElistArray[@]}"; do
+      ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY="${ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY} "'"'"${uniqueIDElistArray[$uniqueIDElistArrayIndex]}"'"'
+    done
     ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY="$ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY"')'
   fi
 }
