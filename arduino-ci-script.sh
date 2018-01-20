@@ -28,6 +28,9 @@ readonly ARDUINO_CI_SCRIPT_REPORT_PUSH_RETRIES=10
 readonly ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS=0
 readonly ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS=1
 
+# Arduino IDE 1.8.2 and newer generates a ton of garbage output (appears to be something related to jmdns) that must be filtered for the log to be readable and to avoid exceeding the maximum log length
+readonly ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX='(^\[SocketListener\(travis-job-*|^  *[0-9][0-9]*: [0-9a-g][0-9a-g]*|^dns\[query,[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*:[0-9][0-9]*, length=[0-9][0-9]*, id=|^dns\[response,[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*:[0-9][0-9]*, length=[0-9][0-9]*, id=|^questions:$|\[DNSQuestion@|^\.\]$|^\.\]\]$|^.\.\]$|^.\.\]\]$)'
+
 # Default value
 ARDUINO_CI_SCRIPT_TOTAL_SKETCH_BUILD_FAILURE_COUNT=0
 
@@ -504,13 +507,28 @@ function install_package()
 
       # If defined add the boards manager URL to preferences
       if [[ "$packageURL" != "" ]]; then
+
+        # grep returns 1 when a line matches the regular expression so it's necessary to unset errexit
+        set +o errexit
         # shellcheck disable=SC2086
-        eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino\" --pref boardsmanager.additional.urls="$packageURL" --save-prefs "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+        eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino\" --pref boardsmanager.additional.urls="$packageURL" --save-prefs "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT" | tr -Cd '[:print:]\n\t' | grep -E -v "$ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX"; local -r arduinoPreferenceSettingExitStatus="${PIPESTATUS[0]}"
+        set -o errexit
+        # this is required because otherwise the exit status of arduino is ignored
+        if [[ "$arduinoPreferenceSettingExitStatus" != "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]]; then
+          return_handler "$arduinoPreferenceSettingExitStatus"
+        fi
       fi
 
       # Install the package
+      # grep returns 1 when a line matches the regular expression so it's necessary to unset errexit
+      set +o errexit
       # shellcheck disable=SC2086
-      eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino\" --install-boards "$packageID" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+      eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino\" --install-boards "$packageID" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT" | tr -Cd '[:print:]\n\t' | grep -E -v "$ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX"; local -r arduinoInstallPackageExitStatus="${PIPESTATUS[0]}"
+      set -o errexit
+      # this is required because otherwise the exit status of arduino is ignored
+      if [[ "$arduinoInstallPackageExitStatus" != "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]]; then
+        return_handler "$arduinoPreferenceSettingExitStatus"
+      fi
 
     fi
   fi
@@ -802,7 +820,7 @@ function build_this_sketch()
   while [[ $arduinoExitStatus -gt $ARDUINO_CI_SCRIPT_HIGHEST_ACCEPTABLE_ARDUINO_EXIT_STATUS && $verifyCount -le $ARDUINO_CI_SCRIPT_SKETCH_VERIFY_RETRIES ]]; do
     # Verify the sketch
     # shellcheck disable=SC2086
-    "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino" $ARDUINO_CI_SCRIPT_DETERMINED_VERBOSE_BUILD --verify "$absoluteSketchName" --board "$boardID" 2>&1 | tee "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"; local arduinoExitStatus="${PIPESTATUS[0]}"
+    "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino" $ARDUINO_CI_SCRIPT_DETERMINED_VERBOSE_BUILD --verify "$absoluteSketchName" --board "$boardID" 2>&1 | tr -Cd '[:print:]\n\t'  | grep -E -v "$ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX" | tee "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"; local arduinoExitStatus="${PIPESTATUS[0]}"
     local verifyCount=$((verifyCount + 1))
   done
 
