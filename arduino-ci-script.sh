@@ -17,7 +17,7 @@ readonly ARDUINO_CI_SCRIPT_FULL_IDE_VERSION_LIST_ARRAY="${ARDUINO_CI_SCRIPT_IDE_
 readonly ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER="${HOME}/temporary/arduino-ci-script"
 readonly ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER="arduino"
 readonly ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME="${ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER}/verification_output.txt"
-readonly ARDUINO_CI_SCRIPT_REPORT_FILENAME="travis_ci_job_report_$(printf "%05d\n" "${TRAVIS_BUILD_NUMBER}").$(printf "%03d\n" "$(echo "$TRAVIS_JOB_NUMBER" | cut -d'.' -f 2)").tsv"
+readonly ARDUINO_CI_SCRIPT_REPORT_FILENAME="travis_ci_job_report_$(printf '%05d\n' "${TRAVIS_BUILD_NUMBER}").$(printf '%03d\n' "$(echo "$TRAVIS_JOB_NUMBER" | cut -d'.' -f 2)").tsv"
 readonly ARDUINO_CI_SCRIPT_REPORT_FOLDER="${HOME}/arduino-ci-script_report"
 readonly ARDUINO_CI_SCRIPT_REPORT_FILE_PATH="${ARDUINO_CI_SCRIPT_REPORT_FOLDER}/${ARDUINO_CI_SCRIPT_REPORT_FILENAME}"
 # The arduino manpage(https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#exit-status) documents a range of exit statuses. These exit statuses indicate success, invalid arduino command, or compilation failed due to legitimate code errors. arduino sometimes returns other exit statuses that may indicate problems that may go away after a retry.
@@ -308,7 +308,7 @@ function generate_ide_version_list_array()
 
   else
     local rawIDElist
-    local -r IDEversionListRegex="\("
+    local -r IDEversionListRegex='\('
     if [[ "$startIDEversion" =~ $IDEversionListRegex ]]; then
       # IDE versions list was supplied
       # Convert it to a temporary array
@@ -994,14 +994,14 @@ function display_report()
   enable_verbosity
 
   if [ -e "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH" ]; then
-    echo -e "\n\n\n**************Begin Report**************\n\n\n"
+    echo -e '\n\n\n**************Begin Report**************\n\n\n'
     cat "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
-    echo -e "\n\n"
+    echo -e '\n\n'
     echo "Total failed sketch builds: $ARDUINO_CI_SCRIPT_TOTAL_SKETCH_BUILD_FAILURE_COUNT"
     echo "Total warnings: $ARDUINO_CI_SCRIPT_TOTAL_WARNING_COUNT"
     echo "Total board issues: $ARDUINO_CI_SCRIPT_TOTAL_BOARD_ISSUE_COUNT"
     echo "Total library issues: $ARDUINO_CI_SCRIPT_TOTAL_LIBRARY_ISSUE_COUNT"
-    echo -e "\n\n"
+    echo -e '\n\n'
   else
     echo "No report file available for this job"
   fi
@@ -1055,7 +1055,7 @@ function publish_report_to_repository()
         if [[ "$gitPushExitStatus" == "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]]; then
           if [[ "$doLinkComment" == "true" ]]; then
             # Only comment if it's job 1
-            local -r firstJobRegex="\.1$"
+            local -r firstJobRegex='\.1$'
             if [[ "$TRAVIS_JOB_NUMBER" =~ $firstJobRegex ]]; then
               local reportURL
               reportURL="${repositoryURL%.*}/tree/${reportBranch}/${reportFolder}"
@@ -1118,7 +1118,7 @@ curlDataHere
 
       if [[ "$doLinkComment" == "true" ]]; then
         # Only comment if it's job 1
-        local -r firstJobRegex="\.1$"
+        local -r firstJobRegex='\.1$'
         if [[ "$TRAVIS_JOB_NUMBER" =~ $firstJobRegex ]]; then
           local reportURL="${gistURL}#file-${ARDUINO_CI_SCRIPT_REPORT_FILENAME//./-}"
           comment_report_link "$token" "$reportURL"
