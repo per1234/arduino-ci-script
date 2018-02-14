@@ -34,6 +34,13 @@ readonly ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX='(^\[SocketListener\(trav
 # Default value
 ARDUINO_CI_SCRIPT_TOTAL_SKETCH_BUILD_FAILURE_COUNT=0
 
+# Set the arduino command name according to OS (on Windows arduino_debug should be used)
+if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+  ARDUINO_CI_SCRIPT_ARDUINO_COMMAND="arduino_debug"
+else
+  ARDUINO_CI_SCRIPT_ARDUINO_COMMAND="arduino"
+fi
+
 
 # Create the folder if it doesn't exist
 function create_folder()
@@ -406,11 +413,11 @@ function set_ide_preference()
     local -r unsupportedSavePrefsOptionVersionsRegex="1.5.[6-7]"
     if ! [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedSavePrefsOptionVersionsRegex ]]; then
       # shellcheck disable=SC2086
-      eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino\" --pref "$preferenceString" --save-prefs "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+      eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}\" --pref "$preferenceString" --save-prefs "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
     else
       # Arduino IDE 1.5.6 - 1.5.7 load the GUI if you only set preferences without doing a verify. So I am doing an unnecessary verification just to set the preferences in those versions. Definitely a hack but I prefer to keep the preferences setting code all here instead of cluttering build_sketch and this will pretty much never be used.
       # shellcheck disable=SC2086
-      eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino\" --pref "$preferenceString" --verify "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+      eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}\" --pref "$preferenceString" --verify "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
     fi
   fi
 }
@@ -511,7 +518,7 @@ function install_package()
         # grep returns 1 when a line matches the regular expression so it's necessary to unset errexit
         set +o errexit
         # shellcheck disable=SC2086
-        eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino\" --pref boardsmanager.additional.urls="$packageURL" --save-prefs "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT" | tr -Cd '[:print:]\n\t' | grep --extended-regexp --invert-match "$ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX"; local -r arduinoPreferenceSettingExitStatus="${PIPESTATUS[0]}"
+        eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}\" --pref boardsmanager.additional.urls="$packageURL" --save-prefs "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT" | tr -Cd '[:print:]\n\t' | grep --extended-regexp --invert-match "$ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX"; local -r arduinoPreferenceSettingExitStatus="${PIPESTATUS[0]}"
         set -o errexit
         # this is required because otherwise the exit status of arduino is ignored
         if [[ "$arduinoPreferenceSettingExitStatus" != "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]]; then
@@ -523,7 +530,7 @@ function install_package()
       # grep returns 1 when a line matches the regular expression so it's necessary to unset errexit
       set +o errexit
       # shellcheck disable=SC2086
-      eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino\" --install-boards "$packageID" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT" | tr -Cd '[:print:]\n\t' | grep --extended-regexp --invert-match "$ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX"; local -r arduinoInstallPackageExitStatus="${PIPESTATUS[0]}"
+      eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}\" --install-boards "$packageID" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT" | tr -Cd '[:print:]\n\t' | grep --extended-regexp --invert-match "$ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX"; local -r arduinoInstallPackageExitStatus="${PIPESTATUS[0]}"
       set -o errexit
       # this is required because otherwise the exit status of arduino is ignored
       if [[ "$arduinoInstallPackageExitStatus" != "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]]; then
@@ -624,7 +631,7 @@ function install_library()
 
        # Install the library
       # shellcheck disable=SC2086
-      eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino\" --install-library "$libraryName" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+      eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}\" --install-library "$libraryName" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
 
     fi
   fi
@@ -743,7 +750,7 @@ function build_sketch()
     local unsupportedInstallBoardsOptionVersionsRange2regex="1.6.[0-3]"
     if ! [[ "$IDEversion" =~ $unsupportedInstallBoardsOptionVersionsRange1regex || "$IDEversion" =~ $unsupportedInstallBoardsOptionVersionsRange2regex ]]; then
       # shellcheck disable=SC2086
-      eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino\" --install-boards arduino:dummy "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+      eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}\" --install-boards arduino:dummy "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
       if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -gt 1 ]]; then
         # The warning is printed to stdout
         echo "NOTE: The warning above \"Selected board is not available\" is caused intentionally and does not indicate a problem."
@@ -820,7 +827,7 @@ function build_this_sketch()
   while [[ $arduinoExitStatus -gt $ARDUINO_CI_SCRIPT_HIGHEST_ACCEPTABLE_ARDUINO_EXIT_STATUS && $verifyCount -le $ARDUINO_CI_SCRIPT_SKETCH_VERIFY_RETRIES ]]; do
     # Verify the sketch
     # shellcheck disable=SC2086
-    "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/arduino" $ARDUINO_CI_SCRIPT_DETERMINED_VERBOSE_BUILD --verify "$absoluteSketchName" --board "$boardID" 2>&1 | tr -Cd '[:print:]\n\t'  | grep --extended-regexp --invert-match "$ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX" | tee "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"; local arduinoExitStatus="${PIPESTATUS[0]}"
+    "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}" $ARDUINO_CI_SCRIPT_DETERMINED_VERBOSE_BUILD --verify "$absoluteSketchName" --board "$boardID" 2>&1 | tr -Cd '[:print:]\n\t'  | grep --extended-regexp --invert-match "$ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX" | tee "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"; local arduinoExitStatus="${PIPESTATUS[0]}"
     local verifyCount=$((verifyCount + 1))
   done
 
