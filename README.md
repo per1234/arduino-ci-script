@@ -52,7 +52,7 @@ Turn on/off checking for errors with libraries that don't affect sketch verifica
 
 ##### `install_ide [IDEversionList]`
 Install a list of version(s) of the Arduino IDE.
-- Parameter(optional): **IDEversionList** - A list of the versions of the Arduino IDE you want installed, in order from oldest to newest. e.g. `'("1.6.5-r5" "1.6.9" "1.8.2")'`. If no arguments are supplied all IDE versions will be installed. I have defined all versions of the Arduino IDE that have a command line interface in the script for the sake of being complete but I really don't see much reason for testing with the 1.5.x versions of the Arduino IDE. Please only install the IDE versions you actually need for your test to avoid wasting Arduino's bandwidth. This will also result in the builds running faster.
+- Parameter(optional): **IDEversionList** - A list of the versions of the Arduino IDE you want installed, in order from oldest to newest. e.g. `'("1.6.5-r5" "1.6.9" "1.8.2")'`. If no arguments are supplied all IDE versions will be installed. I have defined all versions of the Arduino IDE that have a command line interface in the script for the sake of being complete but I really don't see much reason for testing with the 1.5.x versions of the Arduino IDE. Please only install the IDE versions you actually need for your test to avoid wasting Arduino's bandwidth. This will also result in the builds running faster. Installation of the IDE will be skipped if it's found to already be installed in the folder specified via the `set_application_folder` function so `install_ide` can also be used simply to inform the script which IDE versions are available.
 
 ##### `install_ide startIDEversion [endIDEversion]`
 Install a range of version(s) of the Arduino IDE.

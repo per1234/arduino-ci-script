@@ -246,30 +246,36 @@ function install_ide()
   eval "$INSTALLED_IDE_VERSION_LIST_ARRAY"
   local IDEversion
   for IDEversion in "${IDEversionListArray[@]}"; do
-    if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -eq 0 ]]; then
-      # If the download/installation process is going slowly when installing a lot of IDE versions this function may cause the build to fail due to exceeding Travis CI's 10 minutes without log output timeout so it's necessary to periodically print something.
-      echo "Installing: $IDEversion"
-    fi
-    # Determine download file extension
-    local tgzExtensionVersionsRegex="1.5.[0-9]"
-    if [[ "$IDEversion" =~ $tgzExtensionVersionsRegex ]]; then
-      # The download file extension prior to 1.6.0 is .tgz
-      local downloadFileExtension="tgz"
-    else
-      local downloadFileExtension="tar.xz"
-    fi
+    local IDEinstallFolder="$ARDUINO_CI_SCRIPT_APPLICATION_FOLDER/arduino-${IDEversion}"
 
-    if [[ "$IDEversion" == "hourly" ]]; then
-      # Deal with the inaccurate name given to the hourly build download
-      local downloadVersion="nightly"
-    else
-      local downloadVersion="$IDEversion"
-    fi
+    # Don't unnecessarily install the IDE
+    if ! [[ -d "$IDEinstallFolder" ]]; then
+      if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -eq 0 ]]; then
+        # If the download/installation process is going slowly when installing a lot of IDE versions this function may cause the build to fail due to exceeding Travis CI's 10 minutes without log output timeout so it's necessary to periodically print something.
+        echo "Installing: $IDEversion"
+      fi
 
-    wget --no-verbose $ARDUINO_CI_SCRIPT_QUIET_OPTION "http://downloads.arduino.cc/arduino-${downloadVersion}-linux64.${downloadFileExtension}"
-    tar --extract --file="arduino-${downloadVersion}-linux64.${downloadFileExtension}"
-    rm $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "arduino-${downloadVersion}-linux64.${downloadFileExtension}"
-    mv $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "arduino-${downloadVersion}" "$ARDUINO_CI_SCRIPT_APPLICATION_FOLDER/arduino-${IDEversion}"
+      # Determine download file extension
+      local tgzExtensionVersionsRegex="1.5.[0-9]"
+      if [[ "$IDEversion" =~ $tgzExtensionVersionsRegex ]]; then
+        # The download file extension prior to 1.6.0 is .tgz
+        local downloadFileExtension="tgz"
+      else
+        local downloadFileExtension="tar.xz"
+      fi
+
+      if [[ "$IDEversion" == "hourly" ]]; then
+        # Deal with the inaccurate name given to the hourly build download
+        local downloadVersion="nightly"
+      else
+        local downloadVersion="$IDEversion"
+      fi
+
+      wget --no-verbose $ARDUINO_CI_SCRIPT_QUIET_OPTION "http://downloads.arduino.cc/arduino-${downloadVersion}-linux64.${downloadFileExtension}"
+      tar --extract --file="arduino-${downloadVersion}-linux64.${downloadFileExtension}"
+      rm $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "arduino-${downloadVersion}-linux64.${downloadFileExtension}"
+      mv $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "arduino-${downloadVersion}" "$IDEinstallFolder"
+    fi
   done
 
   set_ide_preference "compiler.warning_level=all"
