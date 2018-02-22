@@ -141,8 +141,7 @@ script:
   # Test library installed from .zip with dot in the folder name
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/CapacitiveSensor-0.5.1/examples/CapacitiveSensorSketch/CapacitiveSensorSketch.pde" "arduino:avr:uno" "false" "newest"
   # Test library installed from .zip
-  # Test build_sketch with "all" IDE version name
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/NewPing/examples/NewPingExample/NewPingExample.pde" "arduino:avr:uno" "false" "all"
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/NewPing/examples/NewPingExample/NewPingExample.pde" "arduino:avr:uno" "false" "newest"
   # Test library installed from .git
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WirelessOregonV2/examples/OregonReceiver/OregonReceiver.ino" "arduino:avr:uno" "false" "newest"
   # Test library installed from .git with branch
@@ -157,6 +156,8 @@ script:
   # build_sketch with version argument tests
   # Test build_sketch with no IDE version argument (should use all installed IDE versions)
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "arduino:avr:uno" "false"
+  # Test build_sketch with "all" IDE version name
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "arduino:avr:uno" "false" "all"
   # Test build_sketch with "oldest" IDE version name
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "arduino:avr:uno" "false" "oldest"
   # Test build_sketch allowed to fail (this will fail because WirelessOregonV2 is AVR specific)
