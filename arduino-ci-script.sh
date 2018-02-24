@@ -7,13 +7,6 @@
 # It seems that arrays can't been seen in other functions. So instead I'm setting $IDE_VERSIONS to a string that is the command to create the array
 readonly ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION="declare -a -r IDEversionListArray="
 
-# https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#history shows CLI was added in IDE 1.5.2, Boards and Library Manager support added in 1.6.4
-# This is a list of every version of the Arduino IDE that supports CLI. As new versions are released they will be added to the list.
-# The newest IDE version must always be placed at the end of the array because the code for setting $NEWEST_INSTALLED_IDE_VERSION assumes that
-# Arduino IDE 1.6.2 has the nasty behavior of moving the included hardware cores to the .arduino15 folder, causing those versions to be used for all builds after Arduino IDE 1.6.2 is used. For this reason 1.6.2 has been left off the list.
-readonly ARDUINO_CI_SCRIPT_FULL_IDE_VERSION_LIST_ARRAY="${ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION}"'("1.5.2" "1.5.3" "1.5.4" "1.5.5" "1.5.6" "1.5.6-r2" "1.5.7" "1.5.8" "1.6.0" "1.6.1" "1.6.3" "1.6.4" "1.6.5" "1.6.5-r4" "1.6.5-r5" "1.6.6" "1.6.7" "1.6.8" "1.6.9" "1.6.10" "1.6.11" "1.6.12" "1.6.13" "1.8.0" "1.8.1" "1.8.2" "1.8.3" "1.8.4" "1.8.5" "hourly")'
-
-
 readonly ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER="${HOME}/temporary/arduino-ci-script"
 readonly ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER="arduino"
 readonly ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME="${ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER}/verification_output.txt"
@@ -227,6 +220,25 @@ function install_ide()
   # set -o errexit will cause the script to exit as soon as any command returns a non-zero exit status. Without this the success of the function call is determined by the exit status of the last command in the function
   set -o errexit
 
+  # Generate an array declaration string containing a list all Arduino IDE versions which support CLI (1.5.2+ according to https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#history)
+  cd "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER"
+  # Create empty local repo for the purpose of getting a list of tags in the arduino/Arduino repository
+  git init --quiet Arduino
+  cd Arduino
+  git remote add origin https://github.com/arduino/Arduino.git
+  if [[ "$startIDEversion" != "1.6.2" ]] && [[ "$startIDEversion" != "1.6.2" ]]; then
+    # Arduino IDE 1.6.2 has the nasty behavior of moving the included hardware cores to the .arduino15 folder, causing those versions to be used for all builds after Arduino IDE 1.6.2 is used. For that reason, 1.6.2 will only be installed if explicitely specified in the install_ide version arguments
+    local -r IDEversion162regex=--regex='refs/tags/1\.6\.2'
+    if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -gt 0 ]]; then
+      echo "NOTE: Due to not playing nicely with other versions, Arduino IDE 1.6.2 will not be installed unless explicitly specified in the version arguments."
+    fi
+  fi
+  local -r ARDUINO_CI_SCRIPT_FULL_IDE_VERSION_LIST_ARRAY="${ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION}'(\"$(git ls-remote --quiet --tags --refs  | grep --invert-match --regexp='refs/tags/1\.0' --regexp='refs/tags/1\.5$' --regexp='refs/tags/1\.5\.1$' --regexp='refs/tags/1\.5\.4-r2$' --regexp='refs/tags/1\.5\.5-r2$' --regexp='refs/tags/1\.5\.7-macosx-java7$' --regexp='refs/tags/1\.5\.8-macosx-java7$' ${IDEversion162regex} --regexp='refs/tags/1\.6\.5-r2$' --regexp='refs/tags/1\.6\.5-r3$' | grep --regexp='refs/tags/[0-9]\+\.[0-9]\+\.[0-9]\+\(\(-.*$\)\|$\)' | cut --delimiter='/' --fields=3 | sort --version-sort | sed ':a;N;$!ba;s/\n/\" \"/g')\")'"
+  cd ..
+  # Remove the temporary repo
+  rm Arduino --recursive --force
+
+  # Determine list of IDE versions to install
   generate_ide_version_list_array "$ARDUINO_CI_SCRIPT_FULL_IDE_VERSION_LIST_ARRAY" "$startIDEversion" "$endIDEversion"
   INSTALLED_IDE_VERSION_LIST_ARRAY="$ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY"
 
