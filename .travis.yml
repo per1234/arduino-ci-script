@@ -86,9 +86,8 @@ before_install:
   # - install_library
   # Test library install from .zip file. A non-GitHub library download must be used because GitHub appends -{branch name} or -{release version} to the .zip downloads and having a library folder installed whos name contains "-" causes arduino 1.5.6 or older to hang.
   - install_library "https://bitbucket.org/teckel12/arduino-new-ping/downloads/NewPing_v1.8.zip"
-  # Test library install from .zip file with rename. If the rename doesn't work then any job verifying with Arduino IDE 1.5.2 - 1.5.6-r2 will hang because GitHub changes the folder name to MPU9250-master, which is not a valid folder name on those IDE versions.
-  - install_library "https://github.com/brianc118/MPU9250/archive/master.zip" "MPU9250"
-  # Test library install from .zip file/folder that has a dot in the name. It must be renames so that it won't have a hyphen in the folder name, which causes verification to hang with Arduino IDE 1.5.2 - 1.5.6-r2.
+  # Test library install from .zip file/folder that has a dot in the name. It must be renamed so that it won't have a hyphen in the folder name, which causes verification to hang with Arduino IDE 1.5.2 - 1.5.6-r2.
+  # Test library install from .zip file with rename.
   - install_library "https://github.com/arduino-libraries/CapacitiveSensor/archive/0.5.1.zip" "CapacitiveSensor"
   # Test library install from git repo
   - install_library "https://github.com/sfrwmaker/WirelessOregonV2.git"
@@ -113,41 +112,28 @@ before_install:
 
 
 script:
-  # Verify sketches:
-  # build_sketch arguments: sketch name, fqbn, IDE version, allow failure
-  # IDE version: Use "all" for IDE version argument to verify sketch with all versions of the Arduino IDE, use "newest" for IDE version argument to verify sketch with the newest version of the Arduino IDE
-
-  # Installed package tests:
-  # Test board from hardware package installed via Boards Manager without URL
-  # Test build_sketch with "newest" special version name
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "arduino:sam:arduino_due_x_dbg" "false" "newest"
-  # Test board from hardware package installed with Boards Manager URL
-  # Test build_sketch with specific IDE version
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "MiniCore:avr:328:variant=modelP,BOD=2v7,LTO=Os,clock=16MHz_external" "false" "1.8.1"
-  # Test board from hardware package manually installed from compressed file download
-  # Test build_sketch with an IDE version list
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "ATTinyCore-master:avr:attinyx5:LTO=disable,TimerClockSource=default,chip=85,clock=8internal,bod=disable" "false" '("1.8.1" "1.8.2")'
-  # Test board from hardware package manually installed by cloning Git repository
-  # Test build_sketch with an IDE version range
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "MightyCore:avr:1284:pinout=standard,variant=modelP,BOD=2v7,LTO=Os,clock=16MHz_external" "false" "1.8.1" "1.8.2"
-  # Test board from hardware package manually installed by cloning Git repository with non-default branch
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "mighty-1284p:avr:avr_developers" "false" "newest"
-
-  # Installed library tests:
   # Test build_sketch without absolute path
   # Test library installed from .zip with rename
-  - cd "${SKETCHBOOK_FOLDER}/libraries/MPU9250/examples/MPU9250/"
-  - build_sketch "MPU9250.ino" "arduino:avr:uno" "false" "newest"
   # Test library installed from .zip with dot in the folder name
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/CapacitiveSensor/examples/CapacitiveSensorSketch/CapacitiveSensorSketch.pde" "arduino:avr:uno" "false" "newest"
+  # Test board from hardware package manually installed from compressed file download
+  # Test build_sketch with an IDE version list
+  - cd "${SKETCHBOOK_FOLDER}/libraries/CapacitiveSensor/examples/CapacitiveSensorSketch/"
+  - build_sketch "CapacitiveSensorSketch.pde" "ATTinyCore-master:avr:attinyx5:LTO=disable,TimerClockSource=default,chip=85,clock=8internal,bod=disable" "false" '("1.8.1" "1.8.2")'
   # Test library installed from .zip
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/NewPing/examples/NewPingExample/NewPingExample.pde" "arduino:avr:uno" "false" "newest"
+  # Test board from hardware package installed via Boards Manager without URL
+  # Test build_sketch with "newest" special version name
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/NewPing/examples/NewPingExample/NewPingExample.pde" "arduino:sam:arduino_due_x_dbg" "false" "newest"
   # Test library installed from .git
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WirelessOregonV2/examples/OregonReceiver/OregonReceiver.ino" "arduino:avr:uno" "false" "newest"
+  # Test board from hardware package installed with Boards Manager URL
+  # Test build_sketch with specific IDE version
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WirelessOregonV2/examples/OregonReceiver/OregonReceiver.ino" "MiniCore:avr:328:variant=modelP,BOD=2v7,LTO=Os,clock=16MHz_external" "false" "1.8.2"
   # Test library installed from .git with branch
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/NanodeUNIO/examples/NanodeUNIO_test/NanodeUNIO_test.pde" "arduino:avr:uno" "false" "newest"
+  # Test board from hardware package manually installed by cloning Git repository
+  # Test build_sketch with an IDE version range
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/NanodeUNIO/examples/NanodeUNIO_test/NanodeUNIO_test.pde" "MightyCore:avr:1284:pinout=standard,variant=modelP,BOD=2v7,LTO=Os,clock=16MHz_external" "false" "1.8.1" "1.8.2"
   # Test library installed from .git with rename
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/ArduinoShell/examples/ShellBlink/ShellBlink.ino" "arduino:avr:uno" "false" "newest"
+  # Test board from hardware package manually installed by cloning Git repository with non-default branch
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/ArduinoShell/examples/ShellBlink/ShellBlink.ino" "mighty-1284p:avr:avr_developers" "false" "newest"
   # Test library installed from .git with branch and rename
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/max_7456/examples/HelloWorld/HelloWorld.ino" "arduino:avr:uno" "false" "newest"
   # Test library installed from Library Manager
