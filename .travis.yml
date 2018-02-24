@@ -86,10 +86,10 @@ before_install:
   # - install_library
   # Test library install from .zip file. A non-GitHub library download must be used because GitHub appends -{branch name} or -{release version} to the .zip downloads and having a library folder installed whos name contains "-" causes arduino 1.5.6 or older to hang.
   - install_library "https://bitbucket.org/teckel12/arduino-new-ping/downloads/NewPing_v1.8.zip"
-  # Test library install from .zip file with rename. If the rename doesn't work then any job verifying with Arduino IDE 1.5.6 or older will hang because GitHub changes the folder name to MPU9250-master, which is not a valid folder name on those IDE versions.
+  # Test library install from .zip file with rename. If the rename doesn't work then any job verifying with Arduino IDE 1.5.2 - 1.5.6-r2 will hang because GitHub changes the folder name to MPU9250-master, which is not a valid folder name on those IDE versions.
   - install_library "https://github.com/brianc118/MPU9250/archive/master.zip" "MPU9250"
-  # Test library install from .zip file/folder that has a dot in the name
-  - install_library "https://github.com/arduino-libraries/CapacitiveSensor/archive/0.5.1.zip"
+  # Test library install from .zip file/folder that has a dot in the name. It must be renames so that it won't have a hyphen in the folder name, which causes verification to hang with Arduino IDE 1.5.2 - 1.5.6-r2.
+  - install_library "https://github.com/arduino-libraries/CapacitiveSensor/archive/0.5.1.zip" "CapacitiveSensor"
   # Test library install from git repo
   - install_library "https://github.com/sfrwmaker/WirelessOregonV2.git"
   # Test library install from git repo with branch
@@ -139,7 +139,7 @@ script:
   - cd "${SKETCHBOOK_FOLDER}/libraries/MPU9250/examples/MPU9250/"
   - build_sketch "MPU9250.ino" "arduino:avr:uno" "false" "newest"
   # Test library installed from .zip with dot in the folder name
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/CapacitiveSensor-0.5.1/examples/CapacitiveSensorSketch/CapacitiveSensorSketch.pde" "arduino:avr:uno" "false" "newest"
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/CapacitiveSensor/examples/CapacitiveSensorSketch/CapacitiveSensorSketch.pde" "arduino:avr:uno" "false" "newest"
   # Test library installed from .zip
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/NewPing/examples/NewPingExample/NewPingExample.pde" "arduino:avr:uno" "false" "newest"
   # Test library installed from .git
