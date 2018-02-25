@@ -382,7 +382,7 @@ function generate_ide_version_list_array()
 
     # Remove duplicates from list https://stackoverflow.com/a/13648438
     # shellcheck disable=SC2207
-    readonly local uniqueIDElistArray=($(echo "${rawIDElistArray[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
+    readonly local uniqueIDElistArray=($(echo "${rawIDElistArray[@]}" | tr ' ' '\n' | sort --unique --version-sort | tr '\n' ' '))
 
     # Generate ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY
     ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY="$ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION"'('
