@@ -11,18 +11,29 @@ env:
     - SKETCHBOOK_FOLDER="${HOME}/arduino-sketchbook"
 
   matrix:
-    # Test install_ide with no argument (using full version list). This would cause the Travis CI build to take much longer so I have it disabled
+    # Test install_ide with no argument (using full version list). Causes the job to exceed Travis CI's maximum duration and thus can not be run.
     # - INSTALL_IDE_START_VERSION=""
-    # Test install_ide using full version list. This usually takes longer that the maximum job duration and thus errors the build so it must be disabled.
+
+    # Test install_ide using full version list. Causes the job to exceed Travis CI's maximum duration and thus can not be run.
     #- INSTALL_IDE_START_VERSION="all" VERBOSITY_LEVEL=0 VERBOSE_COMPILATION="false"
-    # Test install_ide using custom version list. Test the use of the special version names "oldest" and "newest" in a version list. Test use of "hourly" version name.
-    - INSTALL_IDE_START_VERSION='("oldest" "1.8.1" "1.8.2" "newest" "hourly")' VERBOSITY_LEVEL=1 VERBOSE_COMPILATION="true"
+
+    # Test install_ide using custom version list
+    # Test the use of the special version names "oldest", "newest", and "hourly" in a version list.
+    # Test duplicates in version list
+    - INSTALL_IDE_START_VERSION='("oldest" "1.8.3" "1.8.4" "1.8.4" "newest" "hourly")' VERBOSITY_LEVEL=1 VERBOSE_COMPILATION="true"
+
+    # Test install_ide using version range.
+    # Test the use of the special version name "newest" in a version range.
+    # Test installing the full sane range of IDE versions
+    - INSTALL_IDE_START_VERSION="1.6.5-r5" INSTALL_IDE_END_VERSION="newest" VERBOSITY_LEVEL=0 VERBOSE_COMPILATION="false"
+
+    # Test the use of the special version name "hourly" in a version range.
+    - INSTALL_IDE_START_VERSION="1.8.3" INSTALL_IDE_END_VERSION="hourly" VERBOSITY_LEVEL=0 VERBOSE_COMPILATION="false"
+
     # Allowed to fail
     # Test install_ide using single version
-    # test the failure behavior of install_package when a Boards Manager installation is attempted using an IDE version that doesn't support it.
+    # Test the failure behavior of install_package when a Boards Manager installation is attempted using an IDE version that doesn't support it.
     - INSTALL_IDE_START_VERSION="1.6.3" VERBOSITY_LEVEL=2 VERBOSE_COMPILATION="false"
-    # Test install_ide using version range. Test the use of the special version names "oldest" and "newest" in a version range.
-    - INSTALL_IDE_START_VERSION="oldest" INSTALL_IDE_END_VERSION="newest" VERBOSITY_LEVEL=0 VERBOSE_COMPILATION="false"
 
 
 matrix:
@@ -112,58 +123,69 @@ before_install:
 
 
 script:
-  # Test build_sketch without absolute path
   # Test library installed from .zip with rename
   # Test library installed from .zip with dot in the folder name
   # Test board from hardware package manually installed from compressed file download
-  # Test build_sketch with an IDE version list
+  # Test build_sketch with specific IDE version
+  # Test build_sketch without absolute path
   - cd "${SKETCHBOOK_FOLDER}/libraries/CapacitiveSensor/examples/CapacitiveSensorSketch/"
-  - build_sketch "CapacitiveSensorSketch.pde" "ATTinyCore-master:avr:attinyx5:LTO=disable,TimerClockSource=default,chip=85,clock=8internal,bod=disable" "false" '("1.8.1" "1.8.2")'
+  - build_sketch "CapacitiveSensorSketch.pde" "ATTinyCore-master:avr:attinyx5:LTO=disable,TimerClockSource=default,chip=85,clock=8internal,bod=disable" "false" "1.8.4"
+
   # Test library installed from .zip
   # Test board from hardware package installed via Boards Manager without URL
   # Test build_sketch with "newest" special version name
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/NewPing/examples/NewPingExample/NewPingExample.pde" "arduino:sam:arduino_due_x_dbg" "false" "newest"
+
   # Test library installed from .git
   # Test board from hardware package installed with Boards Manager URL
-  # Test build_sketch with specific IDE version
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WirelessOregonV2/examples/OregonReceiver/OregonReceiver.ino" "MiniCore:avr:328:variant=modelP,BOD=2v7,LTO=Os,clock=16MHz_external" "false" "1.8.2"
+  # Test build_sketch with an IDE version list
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WirelessOregonV2/examples/OregonReceiver/OregonReceiver.ino" "MiniCore:avr:328:variant=modelP,BOD=2v7,LTO=Os,clock=16MHz_external" "false" '("1.8.3" "1.8.4")'
+
   # Test library installed from .git with branch
   # Test board from hardware package manually installed by cloning Git repository
-  # Test build_sketch with an IDE version range
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/NanodeUNIO/examples/NanodeUNIO_test/NanodeUNIO_test.pde" "MightyCore:avr:1284:pinout=standard,variant=modelP,BOD=2v7,LTO=Os,clock=16MHz_external" "false" "1.8.1" "1.8.2"
+  # Test build_sketch with an IDE version list using the "newest" special version name
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/NanodeUNIO/examples/NanodeUNIO_test/NanodeUNIO_test.pde" "MightyCore:avr:1284:pinout=standard,variant=modelP,BOD=2v7,LTO=Os,clock=16MHz_external" "false" '("1.8.4" "newest")'
+
   # Test library installed from .git with rename
   # Test board from hardware package manually installed by cloning Git repository with non-default branch
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/ArduinoShell/examples/ShellBlink/ShellBlink.ino" "mighty-1284p:avr:avr_developers" "false" "newest"
+  # Test build_sketch with an IDE version range
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/ArduinoShell/examples/ShellBlink/ShellBlink.ino" "mighty-1284p:avr:avr_developers" "false" "1.8.3" "1.8.4"
+
   # Test library installed from .git with branch and rename
-  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/max_7456/examples/HelloWorld/HelloWorld.ino" "arduino:avr:uno" "false" "newest"
+  # Test build_sketch with an IDE version range using the "newest" special version name
+  - build_sketch "${SKETCHBOOK_FOLDER}/libraries/max_7456/examples/HelloWorld/HelloWorld.ino" "arduino:avr:uno" "false" "1.8.4" "newest"
+
+  # Test build_sketch with no IDE version argument (should use all installed IDE versions)
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "arduino:avr:uno" "false"
+
+  # Test build_sketch with "all" IDE version name
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "arduino:avr:uno" "false" "all"
+
   # Test library installed from Library Manager
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/Pushetta/examples/simple_notification/simple_notification.ino" "arduino:avr:uno" "false" "newest"
 
-  # build_sketch with version argument tests
-  # Test build_sketch with no IDE version argument (should use all installed IDE versions)
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "arduino:avr:uno" "false"
-  # Test build_sketch with "all" IDE version name
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "arduino:avr:uno" "false" "all"
-  # Test build_sketch with "oldest" IDE version name
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum/BareMinimum.ino" "arduino:avr:uno" "false" "oldest"
   # Test build_sketch allowed to fail (this will fail because WirelessOregonV2 is AVR specific)
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WirelessOregonV2/examples/OregonReceiver/OregonReceiver.ino" "arduino:sam:arduino_due_x_dbg" "true" "newest"
 
   # build_sketch with folder argument tests:
+
   # Test build_sketch with folder argument with specific IDE version
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "false" "1.8.1"
-  # Test build_sketch with folder argument with "oldest" IDE version name
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "false" "oldest"
-  # Test build_sketch with folder argument with "newest" IDE version name
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "false" "newest"
-  # Test build_sketch with folder argument with "all" IDE version name
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "false" "all"
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "false" "1.8.4"
+
+  # Test build_sketch with folder argument with an IDE version list
+  # Test build_sketch with an IDE version list using the "oldest" and "newest" special version names
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "false" '("oldest" "newest")'
+
+  # Test build_sketch with folder argument with an IDE version range
+  # Test build_sketch with an IDE version range using the "oldest" and "newest" special version names
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "false" "oldest" "newest"
+
   # Test build_sketch with folder argument with no IDE version specified (should use all installed IDE versions)
   - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "false"
-  # Test build_sketch with folder argument with an IDE version list
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "false" '("1.8.1" "1.8.2")'
-  # Test build_sketch with folder argument with an IDE version range
-  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "false" "1.8.1" "1.8.2"
+
+  # Test build_sketch with folder argument with "all" IDE version name
+  - build_sketch "${APPLICATION_FOLDER}/arduino/examples/01.Basics" "arduino:avr:uno" "false" "all"
+
   # Test build_sketch with folder argument required to fail (this will fail because WirelessOregonV2 is AVR specific)
   - build_sketch "${SKETCHBOOK_FOLDER}/libraries/WirelessOregonV2/examples" "arduino:sam:arduino_due_x_dbg" "require" "newest"
 
