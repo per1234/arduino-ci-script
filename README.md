@@ -6,21 +6,36 @@ Bash script for continuous integration of [Arduino](http://www.arduino.cc/) proj
 [![Build Status](https://travis-ci.org/per1234/arduino-ci-script.svg?branch=master)](https://travis-ci.org/per1234/arduino-ci-script)
 
 #### Installation
-- You can download a .zip of all the files from https://github.com/per1234/arduino-ci-script/archive/master.zip
-- Include the script in your project by adding the following line:
-```bash
+The script can be used in a variety of ways:
+
+##### Clone the latest release
+Include the latest release of the script in your project by adding the following lines to your build configuration file:
+```yaml
+  # Clone the script repository
+  - git clone https://github.com/per1234/arduino-ci-script.git "${HOME}/scripts"
+  - cd "${HOME}/scripts"
+  # Get new tags from the remote
+  - git fetch --tags
+  # Checkout the latest tag
+  - git checkout $(git describe --tags `git rev-list --tags --max-count=1`)
+  - source "${HOME}/scripts/arduino-ci-script.sh"
+```
+
+##### Local copy
+If you're passing a token to the script's publish report functions then best security practices would be to use a static copy of the script so you can be sure of the commands the token is used with:
+- Download the latest version of the script from https://github.com/per1234/arduino-ci-script/releases by clicking one of the **Source code** links.
+- Unzip the downloaded file.
+- Copy arduino-ci-script.sh to a convenient location.
+- Include the script in your project by adding the following line to your build configuration file:
+```yaml
   - source arduino-ci-script.sh
 ```
-- It's possible to leave the script hosted at this repository.
-```bash
+
+##### Remote source
+It's possible to leave the script hosted at this repository:
+```yaml
+  # Use the tip of the master branch of arduino-ci-script
   - source <(curl -SLs https://raw.githubusercontent.com/per1234/arduino-ci-script/master/arduino-ci-script.sh)
-```
-- The above doesn't allow you control over the version and would not be a good idea for security reasons if you use the functions that take a GitHub token argument. You could use the script at a specific point in the commit history with something like this:
-```bash
-  - git clone https://github.com/per1234/arduino-ci-script.git "${HOME}/arduino-ci-script"
-  - cd "${HOME}/arduino-ci-script"
-  - git checkout 0355314d45970cd33e52ebba9967646a063ea9eb
-  - source "${HOME}/arduino-ci-script/arduino-ci-script.sh"
 ```
 
 
