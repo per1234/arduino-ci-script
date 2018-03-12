@@ -769,68 +769,68 @@ function build_sketch()
 
   if [[ "$ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY" == "$ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION"'()' ]]; then
     echo "ERROR: The IDE version(s) specified are not installed"
-    return_handler "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
-  fi
+    buildSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+  else
+    eval "$ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY"
+    local IDEversion
+    for IDEversion in "${IDEversionListArray[@]}"; do
+      # Install the IDE
+      # This must be done before searching for sketches in case the path specified is in the Arduino IDE installation folder
+      install_ide_version "$IDEversion"
 
-  eval "$ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY"
-  local IDEversion
-  for IDEversion in "${IDEversionListArray[@]}"; do
-    # Install the IDE
-    # This must be done before searching for sketches in case the path specified is in the Arduino IDE installation folder
-    install_ide_version "$IDEversion"
-
-    # The package_index files installed by some versions of the IDE (1.6.5, 1.6.5) can cause compilation to fail for other versions (1.6.5-r4, 1.6.5-r5). Attempting to install a dummy package ensures that the correct version of those files will be installed before the sketch verification.
-    # Check if the newest installed IDE version supports --install-boards
-    local unsupportedInstallBoardsOptionVersionsRange1regex="^1\.5\.[0-9]$"
-    local unsupportedInstallBoardsOptionVersionsRange2regex="^1\.6\.[0-3]$"
-    if ! [[ "$IDEversion" =~ $unsupportedInstallBoardsOptionVersionsRange1regex || "$IDEversion" =~ $unsupportedInstallBoardsOptionVersionsRange2regex ]]; then
-      # shellcheck disable=SC2086
-      eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}\" --install-boards arduino:dummy "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
-      if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -gt 1 ]]; then
-        # The warning is printed to stdout
-        echo "NOTE: The warning above \"Selected board is not available\" is caused intentionally and does not indicate a problem."
-      fi
-    fi
-
-    if [[ "$sketchPath" =~ \.ino$ || "$sketchPath" =~ \.pde$ ]]; then
-      # A sketch was specified
-      if ! [[ -f "$sketchPath" ]]; then
-        echo "ERROR: Specified sketch: $sketchPath doesn't exist"
-        buildSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
-      elif ! build_this_sketch "$sketchPath" "$boardID" "$IDEversion" "$allowFail"; then
-        # build_this_sketch returned a non-zero exit status
-        buildSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
-      fi
-    else
-      # Search for all sketches in the path and put them in an array
-      local sketchFound="false"
-      # https://github.com/koalaman/shellcheck/wiki/SC2207
-      declare -a sketches
-      mapfile -t sketches < <(find "$sketchPath" -name "*.pde" -o -name "*.ino")
-      local sketchName
-      for sketchName in "${sketches[@]}"; do
-        # Only verify the sketch that matches the name of the sketch folder, otherwise it will cause redundant verifications for sketches that have multiple .ino files
-        local sketchFolder
-        sketchFolder="$(echo "$sketchName" | rev | cut -d'/' -f 2 | rev)"
-        local sketchNameWithoutPathWithExtension
-        sketchNameWithoutPathWithExtension="$(echo "$sketchName" | rev | cut -d'/' -f 1 | rev)"
-        local sketchNameWithoutPathWithoutExtension
-        sketchNameWithoutPathWithoutExtension="${sketchNameWithoutPathWithExtension%.*}"
-        if [[ "$sketchFolder" == "$sketchNameWithoutPathWithoutExtension" ]]; then
-          sketchFound="true"
-          if ! build_this_sketch "$sketchName" "$boardID" "$IDEversion" "$allowFail"; then
-            # build_this_sketch returned a non-zero exit status
-            buildSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
-          fi
+      # The package_index files installed by some versions of the IDE (1.6.5, 1.6.5) can cause compilation to fail for other versions (1.6.5-r4, 1.6.5-r5). Attempting to install a dummy package ensures that the correct version of those files will be installed before the sketch verification.
+      # Check if the newest installed IDE version supports --install-boards
+      local unsupportedInstallBoardsOptionVersionsRange1regex="^1\.5\.[0-9]$"
+      local unsupportedInstallBoardsOptionVersionsRange2regex="^1\.6\.[0-3]$"
+      if ! [[ "$IDEversion" =~ $unsupportedInstallBoardsOptionVersionsRange1regex || "$IDEversion" =~ $unsupportedInstallBoardsOptionVersionsRange2regex ]]; then
+        # shellcheck disable=SC2086
+        eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}\" --install-boards arduino:dummy "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+        if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -gt 1 ]]; then
+          # The warning is printed to stdout
+          echo "NOTE: The warning above \"Selected board is not available\" is caused intentionally and does not indicate a problem."
         fi
-      done
-
-      if [[ "$sketchFound" == "false" ]]; then
-        echo "ERROR: No valid sketches were found in the specified path"
-        buildSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
       fi
-    fi
-  done
+
+      if [[ "$sketchPath" =~ \.ino$ || "$sketchPath" =~ \.pde$ ]]; then
+        # A sketch was specified
+        if ! [[ -f "$sketchPath" ]]; then
+          echo "ERROR: Specified sketch: $sketchPath doesn't exist"
+          buildSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+        elif ! build_this_sketch "$sketchPath" "$boardID" "$IDEversion" "$allowFail"; then
+          # build_this_sketch returned a non-zero exit status
+          buildSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+        fi
+      else
+        # Search for all sketches in the path and put them in an array
+        local sketchFound="false"
+        # https://github.com/koalaman/shellcheck/wiki/SC2207
+        declare -a sketches
+        mapfile -t sketches < <(find "$sketchPath" -name "*.pde" -o -name "*.ino")
+        local sketchName
+        for sketchName in "${sketches[@]}"; do
+          # Only verify the sketch that matches the name of the sketch folder, otherwise it will cause redundant verifications for sketches that have multiple .ino files
+          local sketchFolder
+          sketchFolder="$(echo "$sketchName" | rev | cut -d'/' -f 2 | rev)"
+          local sketchNameWithoutPathWithExtension
+          sketchNameWithoutPathWithExtension="$(echo "$sketchName" | rev | cut -d'/' -f 1 | rev)"
+          local sketchNameWithoutPathWithoutExtension
+          sketchNameWithoutPathWithoutExtension="${sketchNameWithoutPathWithExtension%.*}"
+          if [[ "$sketchFolder" == "$sketchNameWithoutPathWithoutExtension" ]]; then
+            sketchFound="true"
+            if ! build_this_sketch "$sketchName" "$boardID" "$IDEversion" "$allowFail"; then
+              # build_this_sketch returned a non-zero exit status
+              buildSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+            fi
+          fi
+        done
+
+        if [[ "$sketchFound" == "false" ]]; then
+          echo "ERROR: No valid sketches were found in the specified path"
+          buildSketchExitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+        fi
+      fi
+    done
+  fi
 
   disable_verbosity
 
