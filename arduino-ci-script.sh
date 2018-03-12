@@ -532,11 +532,28 @@ function install_package()
 
       # If defined add the boards manager URL to preferences
       if [[ "$packageURL" != "" ]]; then
+        # Get the current Additional Boards Manager URLs preference value so it won't be overwritten when the new URL is added
+        local priorBoardsmanagerAdditionalURLs
+        if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -eq 0 ]]; then
+          priorBoardsmanagerAdditionalURLs=$("${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}" --get-pref boardsmanager.additional.urls 2>/dev/null | tail --lines=1)
+        elif [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -eq 1 ]]; then
+          priorBoardsmanagerAdditionalURLs=$("${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}" --get-pref boardsmanager.additional.urls | tail --lines=1)
+        else
+          priorBoardsmanagerAdditionalURLs=$("${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}" --get-pref boardsmanager.additional.urls | tee /dev/tty | tail --lines=1)
+        fi
+        local -r blankregex="^[ ]*$"
+        if [[ "$priorBoardsmanagerAdditionalURLs" =~ $blankregex ]]; then
+          # There is no previous Additional Boards Manager URLs preference value
+          local boardsmanagerAdditionalURLs="$packageURL"
+        else
+          # There is a previous Additional Boards Manager URLs preference value so append the new one to the end of it
+          local boardsmanagerAdditionalURLs="${priorBoardsmanagerAdditionalURLs},${packageURL}"
+        fi
 
         # grep returns 1 when a line matches the regular expression so it's necessary to unset errexit
         set +o errexit
         # shellcheck disable=SC2086
-        eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}\" --pref boardsmanager.additional.urls="$packageURL" --save-prefs "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT" | tr -Cd '[:print:]\n\t' | grep --extended-regexp --invert-match "$ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX"; local -r arduinoPreferenceSettingExitStatus="${PIPESTATUS[0]}"
+        eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}\" --pref boardsmanager.additional.urls="$boardsmanagerAdditionalURLs" --save-prefs "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT" | tr -Cd '[:print:]\n\t' | grep --extended-regexp --invert-match "$ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX"; local -r arduinoPreferenceSettingExitStatus="${PIPESTATUS[0]}"
         set -o errexit
         # this is required because otherwise the exit status of arduino is ignored
         if [[ "$arduinoPreferenceSettingExitStatus" != "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]]; then
