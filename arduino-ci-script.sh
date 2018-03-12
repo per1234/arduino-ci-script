@@ -268,7 +268,7 @@ function install_ide()
       fi
 
       # Determine download file extension
-      local tgzExtensionVersionsRegex="1.5.[0-9]"
+      local tgzExtensionVersionsRegex="^1\.5\.[0-9]$"
       if [[ "$IDEversion" =~ $tgzExtensionVersionsRegex ]]; then
         # The download file extension prior to 1.6.0 is .tgz
         local downloadFileExtension="tgz"
@@ -423,12 +423,12 @@ function set_ide_preference()
   local -r preferenceString="$1"
 
   # --pref option is only supported by Arduino IDE 1.5.6 and newer
-  local -r unsupportedPrefOptionVersionsRegex="1.5.[0-5]"
+  local -r unsupportedPrefOptionVersionsRegex="^1\.5\.[0-5]$"
   if ! [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedPrefOptionVersionsRegex ]]; then
     install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
 
     # --save-prefs was added in Arduino IDE 1.5.8
-    local -r unsupportedSavePrefsOptionVersionsRegex="1.5.[6-7]"
+    local -r unsupportedSavePrefsOptionVersionsRegex="^1\.5\.[6-7]$"
     if ! [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedSavePrefsOptionVersionsRegex ]]; then
       # shellcheck disable=SC2086
       eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}\" --pref "$preferenceString" --save-prefs "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
@@ -521,8 +521,8 @@ function install_package()
     fi
 
     # Check if the newest installed IDE version supports --install-boards
-    local -r unsupportedInstallBoardsOptionVersionsRange1regex="1.5.[0-9]"
-    local -r unsupportedInstallBoardsOptionVersionsRange2regex="1.6.[0-3]"
+    local -r unsupportedInstallBoardsOptionVersionsRange1regex="^1\.5\.[0-9]$"
+    local -r unsupportedInstallBoardsOptionVersionsRange2regex="^1\.6\.[0-3]$"
     if [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallBoardsOptionVersionsRange1regex || "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallBoardsOptionVersionsRange2regex ]]; then
       echo "ERROR: --install-boards option is not supported by the newest version of the Arduino IDE you have installed. You must have Arduino IDE 1.6.4 or newer installed to use this function."
       return_handler "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
@@ -636,8 +636,8 @@ function install_library()
     fi
 
     # Check if the newest installed IDE version supports --install-library
-    local -r unsupportedInstallLibraryOptionVersionsRange1regex="1.5.[0-9]"
-    local -r unsupportedInstallLibraryOptionVersionsRange2regex="1.6.[0-3]"
+    local -r unsupportedInstallLibraryOptionVersionsRange1regex="^1\.5\.[0-9]$"
+    local -r unsupportedInstallLibraryOptionVersionsRange2regex="^1\.6\.[0-3]$"
     if [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallLibraryOptionVersionsRange1regex || "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallLibraryOptionVersionsRange2regex ]]; then
       echo "ERROR: --install-library option is not supported by the newest version of the Arduino IDE you have installed. You must have Arduino IDE 1.6.4 or newer installed to use this function."
       return_handler "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
@@ -764,8 +764,8 @@ function build_sketch()
 
     # The package_index files installed by some versions of the IDE (1.6.5, 1.6.5) can cause compilation to fail for other versions (1.6.5-r4, 1.6.5-r5). Attempting to install a dummy package ensures that the correct version of those files will be installed before the sketch verification.
     # Check if the newest installed IDE version supports --install-boards
-    local unsupportedInstallBoardsOptionVersionsRange1regex="1.5.[0-9]"
-    local unsupportedInstallBoardsOptionVersionsRange2regex="1.6.[0-3]"
+    local unsupportedInstallBoardsOptionVersionsRange1regex="^1\.5\.[0-9]$"
+    local unsupportedInstallBoardsOptionVersionsRange2regex="^1\.6\.[0-3]$"
     if ! [[ "$IDEversion" =~ $unsupportedInstallBoardsOptionVersionsRange1regex || "$IDEversion" =~ $unsupportedInstallBoardsOptionVersionsRange2regex ]]; then
       # shellcheck disable=SC2086
       eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}\" --install-boards arduino:dummy "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
