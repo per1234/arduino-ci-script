@@ -849,7 +849,7 @@ function build_this_sketch()
   local -r allowFail="$4"
 
   # Produce a useful label for the fold in the Travis log for this function call
-  echo "build_sketch $sketchName $boardID $IDEversion $allowFail"
+  echo "build_sketch $sketchName $boardID $allowFail $IDEversion"
 
   # Arduino IDE 1.8.0 and 1.8.1 fail to verify a sketch if the absolute path to it is not specified
   # http://stackoverflow.com/a/3915420/7059512
