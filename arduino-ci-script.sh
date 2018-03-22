@@ -22,7 +22,7 @@ readonly ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS=0
 readonly ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS=1
 
 # Arduino IDE 1.8.2 and newer generates a ton of garbage output (appears to be something related to jmdns) that must be filtered for the log to be readable and to avoid exceeding the maximum log length
-readonly ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX='(^\[SocketListener\(travis-job-*|^  *[0-9][0-9]*: [0-9a-g][0-9a-g]*|^dns\[query,[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*:[0-9][0-9]*, length=[0-9][0-9]*, id=|^dns\[response,[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*:[0-9][0-9]*, length=[0-9][0-9]*, id=|^questions:$|\[DNSQuestion@|^\.\]$|^\.\]\]$|^.\.\]$|^.\.\]\]$)'
+readonly ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX='(^\[SocketListener\(travis-job-*|^  *[0-9][0-9]*: [0-9a-g][0-9a-g]*|^dns\[query,[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*:[0-9][0-9]*, length=[0-9][0-9]*, id=|^dns\[response,[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*:[0-9][0-9]*, length=[0-9][0-9]*, id=|^questions:$|\[DNSQuestion@|type: TYPE_IGNORE|^\.\]$|^\.\]\]$|^.\.\]$|^.\.\]\]$)'
 
 # Default value
 ARDUINO_CI_SCRIPT_TOTAL_SKETCH_BUILD_FAILURE_COUNT=0
