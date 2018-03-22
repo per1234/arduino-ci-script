@@ -6,7 +6,7 @@ Bash script for continuous integration of [Arduino](http://www.arduino.cc/) proj
 [![Build Status](https://travis-ci.org/per1234/arduino-ci-script.svg?branch=master)](https://travis-ci.org/per1234/arduino-ci-script)
 
 #### Installation
-The script can be used in a variety of ways:
+The script can be used in multiple ways:
 
 ##### Clone the latest release
 Include the latest release of the script in your project by adding the following lines to your build configuration file:
@@ -30,10 +30,13 @@ If you're passing a token to the script's publish report functions then best sec
 ```yaml
   - source arduino-ci-script.sh
 ```
+Be sure to check for new releases of the script so that you can benefit from the ongoing development work. You can receive notifications of releases by [watching the repository](https://github.com/per1234/arduino-ci-script/subscription).
 
 
 #### Usage
-See https://github.com/per1234/WatchdogLog/blob/master/.travis.yml for an example of the script in use. Please configure your continuous integration system to make the minimum number of downloads and sketch verifications necessary to effectively test your code. This will prevent wasting Arduino and Travis CI's bandwidth while making the builds run fast.
+See https://github.com/per1234/WatchdogLog/blob/master/.travis.yml for an example of the script in use.
+
+Please configure your continuous integration system to make the minimum number of downloads and sketch verifications necessary to effectively test your code. This will prevent wasting Arduino and Travis CI's bandwidth while making the builds run fast.
 ##### `set_script_verbosity SCRIPT_VERBOSITY_LEVEL`
 Control the level of verbosity of the script's output in the Travis CI log. Verbose output can be helpful for debugging but in normal usage it makes the log hard to read and may cause the log to exceed Travis CI's maximum log size of 4 MB, which causes the job to be terminated. The default verbosity level is `0`.
 - Parameter: **SCRIPT_VERBOSITY_LEVEL** - `0`, `1` or `2` (least to most verbosity).
