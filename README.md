@@ -31,13 +31,6 @@ If you're passing a token to the script's publish report functions then best sec
   - source arduino-ci-script.sh
 ```
 
-##### Remote source
-It's possible to leave the script hosted at this repository:
-```yaml
-  # Use the tip of the master branch of arduino-ci-script
-  - source <(curl -SLs https://raw.githubusercontent.com/per1234/arduino-ci-script/master/arduino-ci-script.sh)
-```
-
 
 #### Usage
 See https://github.com/per1234/WatchdogLog/blob/master/.travis.yml for an example of the script in use. Please configure your continuous integration system to make the minimum number of downloads and sketch verifications necessary to effectively test your code. This will prevent wasting Arduino and Travis CI's bandwidth while making the builds run fast.
