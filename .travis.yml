@@ -42,17 +42,9 @@ matrix:
     - env: INSTALL_IDE_START_VERSION="1.6.3" VERBOSITY_LEVEL=2 VERBOSE_COMPILATION="false"
 
 
-addons:
-  apt:
-    sources:
-    - debian-sid
-    packages:
-    - shellcheck
-
-
 before_install:
   # Check for issues in the script
-  - bash -c 'shopt -s globstar; shellcheck arduino-ci-script.sh'
+  - shellcheck arduino-ci-script.sh
 
   # Formatting checks:
   # Check for files starting with a blank line
