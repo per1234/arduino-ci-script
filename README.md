@@ -109,6 +109,14 @@ Install a library by cloning a Git repository). The library is installed to the 
 Turn on/off arduino verbose output during compilation (same as the IDE's **File > Preferences > Show verbose output during: > compilation**). This will show all the commands arduino runs during the process rather than just the compiler output. This is usually not very useful output and only clutters up the log. This feature is off by default.
 - Parameter: **verboseOutputDuringCompilation** - `true`/`false`
 
+##### `check_sketch_structure searchPath'
+Check sketches to ensure they have the correct structure.
+- Parameter: **searchPath** - Path containing sketches. The path will be searched recursively and all sketches found under it will be checked.
+
+##### `check_library_structure libraryPath'
+Check a library to ensure they have the correct structure. This will also run `check_sketch_structure` on all sketches bundled with the library.
+- Parameter: **libraryPath** - Path containing a library.
+
 ##### `build_sketch sketchPath boardID allowFail IDEversion`
 ##### `build_sketch sketchPath boardID allowFail [IDEversionList]`
 ##### `build_sketch sketchPath boardID allowFail startIDEversion endIDEversion`

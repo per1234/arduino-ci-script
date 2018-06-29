@@ -1206,6 +1206,190 @@ function check_success()
 }
 
 
+# https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification
+function check_library_structure()
+{
+  local -r libraryPath="$1"
+  # Replace backslashes with slashes
+  local -r libraryPathWithSlashes="${libraryPath//\\//}"
+  # Remove trailing slash
+  local -r normalizedLibraryPath="${libraryPathWithSlashes%/}"
+
+  # Check whether folder exists
+  if [[ ! -d "$normalizedLibraryPath" ]]; then
+    echo "ERROR: Specified folder: $libraryPath doesn't exist."
+    return 1
+  fi
+
+  # Check for valid 1.0 or 1.5 format
+  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type f \( -name '*.h' -or -name '*.hh' -or -name '*.hpp' \)) ]]; then
+    # 1.0 format library, do nothing (this if just makes the logic more simple)
+    :
+  elif [[ $(find "$normalizedLibraryPath" -maxdepth 1 \( -type f -and -name 'library.properties' \)) && $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -regex '^.*[sS][rR][cC]$') ]]; then
+    # 1.5 format library
+    if [[ ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'src') ]]; then
+      echo 'ERROR: 1.5 format library with incorrect case in src subfolder name, which causes library to not be recognized on a filename case-sensitive OS such as Linux.'
+      return 2
+    elif [[ $(find "${normalizedLibraryPath}/src" -maxdepth 1 -type f \( -name '*.h' -or -name '*.hh' -or -name '*.hpp' \)) ]]; then
+      local -r onePointFiveFormat=true
+    fi
+  else
+    echo "ERROR: No valid library found in $libraryPath"
+    return 3
+  fi
+
+  # Check if folder name is valid
+  check_valid_folder_name "$normalizedLibraryPath"
+  local -r checkValidFolderNameExitStatus=$?
+  if [[ $checkValidFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
+    return $((3 + checkValidFolderNameExitStatus))
+  fi
+
+  # Check for incorrect spelling of examples folder
+  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -regex '^.*/[eE][xX][aA][mM][pP][lL][eE].?$') && ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'examples') ]]; then
+    echo 'ERROR: Incorrect examples folder name.'
+    return 7
+  fi
+
+  # Check for 1.5 format with  src and utility folders in library root
+  if [[ "$onePointFiveFormat" == true && $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'utility') ]]; then
+    echo 'ERROR: 1.5 format library with src and utility folders in library root.'
+    return 8
+  fi
+
+  # Check for sketch files outside of the src or extras folders
+  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -path './examples' -prune -or -path './extras' -prune -or \( -type f -and \( -regex '^.*\.[iI][nN][oO]' -or -regex '^.*\.[pP][dD][eE]' \) \)) ]]; then
+    echo 'ERROR: Sketch files found outside of examples and extras folders.'
+    return 9
+  fi
+
+  # Run check_sketch_structure() on examples and extras folders
+  if [[ -d "${normalizedLibraryPath}/examples" ]]; then
+    check_sketch_structure "${normalizedLibraryPath}/examples"
+    local -r checkExamplesSketchStructureExitStatus=$?
+    if [[ $checkExamplesSketchStructureExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
+      return $((9 + checkExamplesSketchStructureExitStatus))
+    fi
+  fi
+  if [[ -d "${normalizedLibraryPath}/extras" ]]; then
+    check_sketch_structure "${normalizedLibraryPath}/extras"
+    local -r checkExtrasSketchStructureExitStatus=$?
+    if [[ $checkExtrasSketchStructureExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
+      return $((9 + checkExtrasSketchStructureExitStatus))
+    fi
+  fi
+}
+
+
+# The same folder name restrictions apply to libraries and sketches so this function may be used for both
+function check_valid_folder_name()
+{
+  local -r path="$1"
+  # Get the folder name from the path
+  local -r folderName="${path##*/}"
+
+  # Starting folder name with a number is only supported by Arduino IDE 1.8.4 and newer
+  local -r startsWithNumberRegex="^[0-9]"
+  if [[ "$folderName" =~ $startsWithNumberRegex ]]; then
+    echo "WARNING: Folder name (${folderName}) beginning with a number is only supported by Arduino IDE 1.8.4 and newer."
+  fi
+
+  # Starting folder name with a - or . is not allowed
+  local -r startsWithInvalidCharacterRegex="^[-.]"
+  if [[ "$folderName" =~ $startsWithInvalidCharacterRegex ]]; then
+    echo "ERROR: Folder name (${folderName}) beginning with a - or . is not allowed."
+    return 1
+  fi
+
+  # Allowed characters: a-z, A-Z, 0-1, -._
+  local -r disallowedCharactersRegex="[^a-zA-Z0-9._-]"
+  if [[ "$folderName" =~ $disallowedCharactersRegex ]]; then
+    echo "ERROR: Folder name $folderName contains disallowed characters. Only letters, numbers, dots, dashes, and underscores are allowed."
+    return 2
+  fi
+
+  # <64 characters
+  if [[ ${#folderName} -gt 63 ]]; then
+    echo "ERROR: Folder name $folderName exceeds the maximum of 63 characters."
+    return 3
+  fi
+  return 0
+}
+
+
+function check_sketch_structure()
+{
+  local -r searchPath="$1"
+  # Replace backslashes with slashes
+  local -r searchPathWithSlashes="${searchPath//\\//}"
+  # Remove trailing slash
+  local -r normalizedSearchPath="${searchPathWithSlashes%/}"
+
+  # Check whether folder exists
+  if [[ ! -d "$normalizedSearchPath" ]]; then
+    echo "ERROR: Specified folder: $searchPath doesn't exist."
+    return 1
+  fi
+
+  # find all folders that contain a sketch file
+  find "$normalizedSearchPath" -type f \( -regex '^.*\.[iI][nN][oO]' -or -regex '^.*\.[pP][dD][eE]' \) -printf '%h\n' | sort --unique | while read -r sketchPath; do
+
+    # Check for sketches with incorrect extension case
+    find "$sketchPath" -maxdepth 1 -type f \( -regex '^.*\.[iI][nN][oO]' -or -regex '^.*\.[pP][dD][eE]' \) -print | while read -r sketchName; do
+      if [[ "${sketchName: -4}" != ".ino" && "${sketchName: -4}" != ".pde" ]]; then
+        echo "ERROR: Sketch file $sketchName has incorrect extension case, which causes it to not be recognized on a filename case-sensitive OS such as Linux."
+        # This only breaks out of the pipe, it does not return from the function
+        return 1
+      fi
+    done
+    if [[ $? -eq 1 ]]; then
+      return 2
+    fi
+
+    # Check if sketch name is valid
+    check_valid_folder_name "$sketchPath"
+    local checkValidFolderNameExitStatus=$?
+    if [[ $checkValidFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
+      return $((2 + checkValidFolderNameExitStatus))
+    fi
+
+    # Check for folder name mismatch
+    if
+      find "$sketchPath" -maxdepth 1 -type f \( -name '*.ino' -or -name '*.pde' \) -print | while read -r sketchFilePath; do
+        local sketchFileFolderName="${sketchPath##*/}"
+        local sketchFilenameWithExtension="${sketchFilePath##*/}"
+        local sketchFilenameWithoutExtension="${sketchFilenameWithExtension%.*}"
+        if [[ "$sketchFileFolderName" == "$sketchFilenameWithoutExtension" ]]; then
+          # Sketch file found that matches the folder name
+          # I need to return 1 because the exit status when no matches are found is 0
+          return 1
+        fi
+      done
+    then
+      echo "ERROR: Sketch folder name $sketchPath does not match the sketch filename."
+      return 6
+    fi
+
+    # Check for multiple sketches in folder
+    if
+      ! find "$sketchPath" -maxdepth 1 -type f \( -name '*.ino' -or -name '*.pde' \) -print | while read -r sketchFilePath; do
+        if grep --quiet --regexp='void  *setup *( *)' "$sketchFilePath"; then
+          if [[ "$primarySketchFound" == true ]]; then
+            # A primary sketch file was previously found in this folder
+            return 1
+          fi
+          local primarySketchFound=true
+        fi
+      done
+    then
+      echo "ERROR: Multiple sketches found in the same folder (${sketchPath})."
+      return 7
+    fi
+
+  done
+}
+
+
 # Set default verbosity (must be called after the function definitions
 set_script_verbosity 0
 

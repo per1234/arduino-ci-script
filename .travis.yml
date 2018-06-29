@@ -120,6 +120,10 @@ before_install:
 
 
 script:
+  - check_sketch_structure "${SKETCHBOOK_FOLDER}/libraries/NewPing/examples"
+
+  - check_library_structure "${SKETCHBOOK_FOLDER}/libraries/CapacitiveSensor"
+
   # Test library installed from .zip with rename
   # Test library installed from .zip with dot in the folder name
   # Test board from hardware package manually installed from compressed file download
