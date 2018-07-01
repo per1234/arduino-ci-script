@@ -1390,6 +1390,195 @@ function check_sketch_structure()
 }
 
 
+# https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format
+function check_library_properties()
+{
+  local -r searchPath="$1"
+
+  # Replace backslashes with slashes
+  local -r searchPathWithSlashes="${searchPath//\\//}"
+  # Remove trailing slash
+  local -r normalizedSearchPath="${searchPathWithSlashes%/}"
+
+  # Check whether folder exists
+  if [[ ! -d "$normalizedSearchPath" ]]; then
+    echo "ERROR: Specified folder: $normalizedSearchPath doesn't exist."
+    return 1
+  fi
+
+  # find all folders that contain a library.properties file
+  find "$normalizedSearchPath" -type f -regex '.*/[lL][iI][bB][rR][aA][rR][yY]\.[pP][rR][oO][pP][eE][rR][tT][iI][eE][sS]' | while read -r libraryPropertiesPath; do
+
+    # Check for incorrect filename case
+    if [[ "${libraryPropertiesPath: -18}" != 'library.properties' ]]; then
+        echo "ERROR: $libraryPropertiesPath has incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux. It must be library.properties"
+        return 2
+    fi
+
+    # Get rid of the CRs
+    local libraryProperties
+    libraryProperties=$(tr "\r" "\n" <"$libraryPropertiesPath")
+
+    # Check that all required fields exist
+    if ! grep --quiet --regexp='^[[:space:]]*name[[:space:]]*=' <<<"$libraryProperties"; then
+      echo "ERROR: $libraryPropertiesPath is missing required name field."
+      return 3
+    fi
+    if ! grep --quiet --regexp='^[[:space:]]*version[[:space:]]*=' <<<"$libraryProperties"; then
+      echo "ERROR: $libraryPropertiesPath is missing required version field."
+      return 4
+    fi
+    if ! grep --quiet --regexp='^[[:space:]]*author[[:space:]]*=' <<<"$libraryProperties"; then
+      echo "ERROR: $libraryPropertiesPath is missing required author field."
+      return 5
+    fi
+    if ! grep --quiet --regexp='^[[:space:]]*maintainer[[:space:]]*=' <<<"$libraryProperties"; then
+      if grep --quiet --regexp='^[[:space:]]*email[[:space:]]*=' <<<"$libraryProperties"; then
+        echo "WARNING: Use of undocumented email field in $libraryPropertiesPath. It's recommended to use the maintainer field instead, per the Arduino Library Specification."
+      else
+        echo "ERROR: $libraryPropertiesPath is missing required maintainer field."
+        return 6
+      fi
+    fi
+    if ! grep --quiet --regexp='^[[:space:]]*sentence[[:space:]]*=' <<<"$libraryProperties"; then
+      echo "ERROR: $libraryPropertiesPath is missing required sentence field."
+      return 7
+    fi
+    if ! grep --quiet --regexp='^[[:space:]]*paragraph[[:space:]]*=' <<<"$libraryProperties"; then
+      echo "ERROR: $libraryPropertiesPath is missing required paragraph field."
+      return 8
+    fi
+    if ! grep --quiet --regexp='^[[:space:]]*category[[:space:]]*=' <<<"$libraryProperties"; then
+      echo "ERROR: $libraryPropertiesPath is missing category field. This results in an invalid category warning."
+      return 9
+    fi
+    if ! grep --quiet --regexp='^[[:space:]]*url[[:space:]]*=' <<<"$libraryProperties"; then
+      echo "ERROR: $libraryPropertiesPath is missing required url field."
+      return 10
+    fi
+
+    # Check for invalid lines (anything other than property, comment, or blank line)
+    if grep --quiet --invert-match --extended-regexp --regexp='=' --regexp='^[[:space:]]*(#|$)' <<<"$libraryProperties"; then
+      echo "ERROR: $libraryPropertiesPath contains an invalid line."
+      return 11
+    fi
+
+    # Check for characters in the name value disallowed by the Library Manager indexer
+    if
+      ! grep --regexp='^[[:space:]]*name[[:space:]]*=' <<<"$libraryProperties" | while read -r nameLine; do
+        local validNameRegex='^[[:space:]]*name[[:space:]]*=[[:space:]]*[a-zA-Z0-9._ -]+[[:space:]]*$'
+        if ! [[ "$nameLine" =~ $validNameRegex ]]; then
+          echo "ERROR: ${libraryPropertiesPath}\'s name value uses characters not allowed by the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+          return 1
+        fi
+      done
+    then
+      return 12
+    fi
+
+
+    # Check for invalid version
+    if ! grep --quiet --extended-regexp --regexp='^[[:space:]]*version[[:space:]]*=[[:space:]]*(((([1-9][0-9]*)|0)\.){0,2})(([1-9][0-9]*)|0)(-(([a-zA-Z0-9-]*\.)*)([a-zA-Z0-9-]+))?(\+(([a-zA-Z0-9-]*\.)*)([a-zA-Z0-9-]+))?[[:space:]]*$' <<<"$libraryProperties"; then
+      echo "ERROR: $libraryPropertiesPath has an invalid version value. Follow the semver specification: https://semver.org/"
+      return 13
+    fi
+
+    # Check for repeat of sentence in paragraph
+    if
+      ! grep --regexp='^[[:space:]]*sentence[[:space:]]*=' <<<"$libraryProperties" | while read -r sentenceLine; do
+        local sentenceLineFrontStripped="${sentenceLine#"${sentenceLine%%[![:space:]]*}"}"
+        local sentenceValueEquals=${sentenceLineFrontStripped#sentence}
+        local sentenceValueEqualsFrontStripped="${sentenceValueEquals#"${sentenceValueEquals%%[![:space:]]*}"}"
+        local sentenceValue=${sentenceValueEqualsFrontStripped#=}
+        local sentenceValueFrontStripped="${sentenceValue#"${sentenceValue%%[![:space:]]*}"}"
+        local sentenceValueStripped="${sentenceValueFrontStripped%"${sentenceValueFrontStripped##*[![:space:]]}"}"
+        local sentenceValueStrippedNoPunctuation=${sentenceValueStripped%%\.}
+        if [[ "$sentenceValueStrippedNoPunctuation" != "" ]]; then
+          grep --regexp='^[[:space:]]*paragraph[[:space:]]*=' <<<"$libraryProperties" | while read -r paragraphLine; do
+            local paragraphLineFrontStripped="${paragraphLine#"${paragraphLine%%[![:space:]]*}"}"
+            local paragraphValueEquals=${paragraphLineFrontStripped#sentence}
+            local paragraphValueEqualsFrontStripped="${paragraphValueEquals#"${paragraphValueEquals%%[![:space:]]*}"}"
+            local paragraphValue=${paragraphValueEqualsFrontStripped#=}
+            if [[ "$paragraphValue" == *"$sentenceValueStrippedNoPunctuation"* ]]; then
+              echo "ERROR: ${libraryPropertiesPath}\'s paragraph value repeats the sentence. These strings are displayed one after the other in Library Manager so there is no point in redundancy."
+              return 1
+            fi
+          done
+        fi
+      done
+    then
+      return 14
+    fi
+
+
+    # Check for invalid category
+    if ! grep --quiet --extended-regexp --regexp='^[[:space:]]*category[[:space:]]*=[[:space:]]*((Display)|(Communication)|(Signal Input/Output)|(Sensors)|(Device Control)|(Timing)|(Data Storage)|(Data Processing)|(Other))[[:space:]]*$' <<<"$libraryProperties"; then
+      if grep --quiet --regexp='^[[:space:]]*category[[:space:]]*=[[:space:]]*Uncategorized[[:space:]]*$' <<<"$libraryProperties"; then
+        echo "WARNING: category \'Uncategorized\' used in $libraryPropertiesPath is not recommended. Please chose an appropriate category from https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+      else
+        echo "ERROR: $libraryPropertiesPath has an invalid category value. Please chose a valid category from https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+        return 15
+      fi
+    fi
+
+    # Check for missing scheme on url value
+    if ! grep --quiet --extended-regexp --regexp='^[[:space:]]*url[[:space:]]*=[[:space:]]*(http://)|(https://)' <<<"$libraryProperties"; then
+      echo "ERROR: ${libraryPropertiesPath}\'s url value is missing the scheme (e.g. https://). URL scheme must be specified for Library Manager's \"More info\" link to be clickable."
+      return 16
+    fi
+
+    # Check for dead url value
+    if
+      ! grep --regexp='^[[:space:]]*url[[:space:]]*=' <<<"$libraryProperties" | while read -r urlLine; do
+        local urlLineWithoutSpaces=${urlLine//[[:space:]]/}
+        local urlValue=${urlLineWithoutSpaces//url=/}
+        local urlStatus
+        urlStatus=$(curl --location --output /dev/null --silent --head --write-out '%{http_code}' "$urlValue")
+        local errorStatusRegex='^[045]'
+        if [[ "$urlStatus" =~ $errorStatusRegex ]]; then
+          echo "ERROR: ${libraryPropertiesPath}\'s url value returned error status $urlStatus."
+          return 1
+        fi
+      done
+    then
+      return 17
+    fi
+
+    # Check for invalid architectures
+    if
+      ! grep --regexp='^[[:space:]]*architectures[[:space:]]*=' <<<"$libraryProperties" | while read -r architecturesLine; do
+        local architecturesLineWithoutSpaces=${architecturesLine//[[:space:]]/}
+        local architecturesValue=${architecturesLineWithoutSpaces//architectures=/}
+        local validArchitecturesRegex='^((\*)|(avr)|(sam)|(samd)|(stm32f4)|(nrf52)|(i586)|(i686)|(arc32)|(win10)|(esp8266)|(esp32)|(ameba)|(arm)|(efm32)|(iot2000)|(msp430)|(navspark)|(nRF5)|(pic)|(pic32)|(RFduino)|(solox)|(stm32)|(stm)|(STM32)|(STM32F1)|(STM32F3)|(STM32F4)|(STM32F2)|(STM32L1)|(STM32L4))$'
+        # Split string on ,
+        IFS=','
+        # Disable globbing, otherwise it fails when one of the architecture values is *
+        set -o noglob
+        for architecture in $architecturesValue; do
+          if ! [[ "$architecture" =~ $validArchitecturesRegex ]]; then
+            echo "ERROR: ${libraryPropertiesPath}\'s architectures field contains an invalid architecture ${architecture}. Note: architecture values are case-sensitive."
+            return 1
+          fi
+        done
+        # Re-enable globbing
+        set +o noglob
+        # Set IFS back to default
+        unset IFS
+      done
+    then
+      return 18
+    fi
+
+    # Check for empty includes value
+    if grep --quiet --regexp='^[[:space:]]*includes[[:space:]]*=[[:space:]]*$' <<<"$libraryProperties"; then
+      echo "ERROR: ${libraryPropertiesPath}\'s includes value is empty. Either define the field or remove it."
+      return 19
+    fi
+
+  done
+}
+
+
 # Set default verbosity (must be called after the function definitions
 set_script_verbosity 0
 
