@@ -445,8 +445,21 @@ function install_ide_version()
 {
   local -r IDEversion="$1"
 
-  # Create a symbolic link so that the Arduino IDE can always be referenced from the same path no matter which version is being used.
-  ln --symbolic --force --no-dereference $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/arduino-${IDEversion}" "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}"
+  # Create a symbolic link so that the Arduino IDE can always be referenced by the user from the same path no matter which version is being used.
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+    # git-bash's ln just does a copy instead of making a symlink, which takes forever and fails when the target folder exists (despite --force), which takes forever.
+    # Therefore, use the native Windows command mklink to create a directory junction instead.
+    # Using a directory junction instead of symlink because supposedly a symlink requires admin privileges.
+
+    # Windows doesn't seem to provide any way to overwrite directory junctions
+    if [[ -d "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}" ]]; then
+      rm --recursive --force "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER:?}"
+    fi
+    # https://stackoverflow.com/a/25394801
+    cmd <<< "mklink /J \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}\\${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}\" \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER//\//\\}\\arduino-${IDEversion}\"" > /dev/null
+  else
+    ln --symbolic --force --no-dereference $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/arduino-${IDEversion}" "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}"
+  fi
 }
 
 
