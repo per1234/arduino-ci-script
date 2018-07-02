@@ -1579,6 +1579,139 @@ function check_library_properties()
 }
 
 
+# https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keywords
+function check_keywords_txt()
+{
+  local -r searchPath="$1"
+
+  # Replace backslashes with slashes
+  local -r searchPathWithSlashes="${searchPath//\\//}"
+  # Remove trailing slash
+  local -r normalizedSearchPath="${searchPathWithSlashes%/}"
+
+  # Check whether folder exists
+  if [[ ! -d "$normalizedSearchPath" ]]; then
+    echo "ERROR: Specified folder: $normalizedSearchPath doesn't exist."
+    return 1
+  fi
+
+  # find all folders that contain a keywords.txt file
+  find "$normalizedSearchPath" -type f -regex '.*/[kK][eE][yY][wW][oO][rR][dD][sS]\.[tT][xX][tT]' | while read -r keywordsTxtPath; do
+
+    # Check for incorrect filename case
+    if [[ "${keywordsTxtPath: -12}" != 'keywords.txt' ]]; then
+        echo "ERROR: $keywordsTxtPath uses incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux."
+        return 2
+    fi
+
+    # Read the keywords.txt file line by line
+    # Split into lines by CR
+    while IFS='' read -d $'\r' -r keywordsTxtCRline || [[ -n "$keywordsTxtCRline" ]]; do
+      # Split into lines by LN
+      while IFS='' read -r keywordsTxtLine || [[ -n "$keywordsTxtLine" ]]; do
+        local blankLineRegex='^[[:space:]]*$'
+        local commentRegex='^[[:space:]]*#'
+        if ! [[ ("$keywordsTxtLine" =~ $blankLineRegex) || ("$keywordsTxtLine" =~ $commentRegex) ]]; then
+
+          # Check for invalid separator
+          local validSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t''+[^[:space:]]+'
+          if ! [[ "$keywordsTxtLine" =~ $validSeparatorRegex ]]; then
+            echo "ERROR: $keywordsTxtPath uses invalid field separator. It must be a true tab."
+            return 3
+          fi
+
+          # Check for multiple tabs used as separator where this causes unintended results
+          local consequentialMultipleSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t\t''+((KEYWORD1)|(LITERAL1))'
+          if [[ "$keywordsTxtLine" =~ $consequentialMultipleSeparatorRegex ]]; then
+            echo "ERROR: $keywordsTxtPath uses multiple tabs as field separator. It must be a single tab. This causes the default keyword coloring (as used by KEYWORD2, KEYWORD3, LITERAL2) to be used rather than the intended coloration."
+            return 4
+          fi
+
+          # Get the field values
+          # Use a unique, non-whitespace field separator character
+          fieldSeparator=$'\a'
+          IFS=$fieldSeparator
+          # Change tabs to the field separator character for line splitting
+          local keywordsTxtLineSwappedTabs=(${keywordsTxtLine//$'\t'/$fieldSeparator})
+
+          # Unused, so commented
+          # # KEYWORD is the 1st field
+          # local keywordRaw=${keywordsTxtLineSwappedTabs[0]}
+          # # The Arduino IDE strips leading whitespace and trailing spaces from KEYWORD
+          # # Strip leading whitespace
+          # local keywordFrontStripped="${keywordRaw#"${keywordRaw%%[![:space:]]*}"}"
+          # # Strip trailing spaces
+          # local keyword="${keywordFrontStripped%"${keywordFrontStripped##*[! ]}"}"
+
+          # KEYWORD_TOKENTYPE is the 2nd field
+          local keywordTokentypeRaw=${keywordsTxtLineSwappedTabs[1]}
+          # The Arduino IDE strips trailing spaces from KEYWORD_TOKENTYPE
+          # Strip trailing spaces
+          local keywordTokentype="${keywordTokentypeRaw%"${keywordTokentypeRaw##*[! ]}"}"
+
+          # REFERENCE_LINK is the 3rd field
+          local referenceLinkRaw=${keywordsTxtLineSwappedTabs[2]}
+          # The Arduino IDE strips leading and trailing whitespace from REFERENCE_LINK
+          # Strip leading spaces
+          local referenceLinkFrontStripped="${referenceLinkRaw#"${referenceLinkRaw%%[! ]*}"}"
+          # Strip trailing spaces
+          local referenceLink="${referenceLinkFrontStripped%"${referenceLinkFrontStripped##*[! ]}"}"
+
+          # RSYNTAXTEXTAREA_TOKENTYPE is the 4th field
+          local rsyntaxtextareaTokentypeRaw=${keywordsTxtLineSwappedTabs[3]}
+          # The Arduino IDE strips trailing spaces from RSYNTAXTEXTAREA_TOKENTYPE
+          # Strip trailing spaces
+          local rsyntaxtextareaTokentype="${rsyntaxtextareaTokentypeRaw%"${rsyntaxtextareaTokentypeRaw##*[! ]}"}"
+
+          # Reset IFS to default
+          unset IFS
+
+          # Check for multiple tabs used as separator where this causes no unintended results
+          # A large percentage of Arduino libraries have this problem
+          local inconsequentialMultipleSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t\t''+((KEYWORD2)|(KEYWORD3)|(LITERAL2))'
+          if [[ "$keywordsTxtLine" =~ $inconsequentialMultipleSeparatorRegex ]]; then
+            echo "WARNING: $keywordsTxtPath uses multiple tabs as field separator. It must be a single tab. This causes the default keyword coloring (as used by KEYWORD2, KEYWORD3, LITERAL2). In this case that doesn't cause the keywords to be incorrectly colored as expected but it's recommended to fully comply with the Arduino library specification."
+          else
+            # The rest of the checks will be borked by the use of multiple tabs as a separator
+
+            # Check for invalid KEYWORD_TOKENTYPE
+            local validKeywordTokentypeRegex='^((KEYWORD1)|(KEYWORD2)|(KEYWORD3)|(LITERAL1)|(LITERAL2))$'
+            if ! [[ "$keywordTokentype" =~ $validKeywordTokentypeRegex ]]; then
+              echo "ERROR: $keywordsTxtPath uses invalid KEYWORD_TOKENTYPE: ${keywordTokentype}, which causes the default keyword coloration to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keyword_tokentype"
+              return 5
+            fi
+
+            # Check for invalid RSYNTAXTEXTAREA_TOKENTYPE
+            if [[ "$rsyntaxtextareaTokentype" != "" ]]; then
+              local validRsyntaxtextareaTokentypeRegex='^((RESERVED_WORD)|(RESERVED_WORD2)|(DATA_TYPE)|(PREPROCESSOR))$'
+              if ! [[ "$rsyntaxtextareaTokentype" =~ $validRsyntaxtextareaTokentypeRegex ]]; then
+                echo "ERROR: $keywordsTxtPath uses invalid RSYNTAXTEXTAREA_TOKENTYPE: ${rsyntaxtextareaTokentype}, which causes the default keyword coloration to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#rsyntaxtextarea_tokentype"
+                return 6
+              fi
+            fi
+
+            # Check for invalid REFERENCE_LINK
+            if [[ "$referenceLink" != "" ]]; then
+              # The Arduino IDE must be installed to check if the reference page exists
+              if [[ "$NEWEST_INSTALLED_IDE_VERSION" == "" ]]; then
+                echo "WARNING: Arduino IDE is not installed so unable to check for invalid reference links. Please call install_ide before running check_keywords_txt."
+              else
+                install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
+                if ! [[ -e "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/reference/www.arduino.cc/en/Reference/${referenceLink}.html" ]]; then
+                  echo "ERROR: $keywordsTxtPath uses a REFERENCE_LINK value: $referenceLink that is not a valid Arduino Language Reference page. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#reference_link"
+                  return 7
+                fi
+              fi
+            fi
+
+          fi
+        fi
+      done <<< "$keywordsTxtCRline"
+    done < "$keywordsTxtPath"
+  done
+}
+
+
 # Set default verbosity (must be called after the function definitions
 set_script_verbosity 0
 

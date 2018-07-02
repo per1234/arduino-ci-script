@@ -121,6 +121,10 @@ Check a library to ensure they have the correct structure. This will also run `c
 Check [library.properties](https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format) metadata files for errors.
 - Parameter: **searchPath** - Path containing library.properties files. The path will be searched recursively and all library.properties files found under it will be checked.
 
+##### `check_keywords_txt searchPath'
+Check [keywords.txt](https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keywords) files for errors.
+- Parameter: **searchPath** - Path containing keywords.txt files. The path will be searched recursively and all keywords.txt files found under it will be checked.
+
 ##### `build_sketch sketchPath boardID allowFail IDEversion`
 ##### `build_sketch sketchPath boardID allowFail [IDEversionList]`
 ##### `build_sketch sketchPath boardID allowFail startIDEversion endIDEversion`
