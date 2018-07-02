@@ -1725,6 +1725,41 @@ function check_keywords_txt()
 }
 
 
+# https://github.com/arduino/Arduino/wiki/Library-Manager-FAQ#how-is-the-library-list-generated
+function check_library_manager_compliance()
+{
+  local -r libraryPath="$1"
+  # Replace backslashes with slashes
+  local -r libraryPathWithSlashes="${libraryPath//\\//}"
+  # Remove trailing slash
+  local -r normalizedLibraryPath="${libraryPathWithSlashes%/}"
+
+  # Check whether folder exists
+  if [[ ! -d "$normalizedLibraryPath" ]]; then
+    echo "ERROR: Specified folder: $libraryPath doesn't exist."
+    return 1
+  fi
+
+  # Check for .exe files
+  if [[ $(find "$normalizedLibraryPath" -type f -name '*.exe') ]]; then
+    echo "ERROR: .exe file found."
+    return 2
+  fi
+
+  # Check for .development file
+  if [[ $(find "$normalizedLibraryPath" -type f -name '.development') ]]; then
+    echo "ERROR: .development file found."
+    return 3
+  fi
+
+  # Check for .development file
+  if [[ $(find "$normalizedLibraryPath" -type l) ]]; then
+    echo "ERROR: Symlink found."
+    return 4
+  fi
+}
+
+
 # Set default verbosity (must be called after the function definitions
 set_script_verbosity 0
 

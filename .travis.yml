@@ -128,6 +128,8 @@ script:
 
   - check_keywords_txt "${SKETCHBOOK_FOLDER}/libraries/NewPing"
 
+  - check_library_manager_compliance "${SKETCHBOOK_FOLDER}/libraries/NewPing"
+
   # Test library installed from .zip with rename
   # Test library installed from .zip with dot in the folder name
   # Test board from hardware package manually installed from compressed file download
