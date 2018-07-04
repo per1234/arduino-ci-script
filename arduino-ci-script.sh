@@ -221,6 +221,8 @@ function install_ide()
   set -o errexit
 
   # Generate an array declaration string containing a list all Arduino IDE versions which support CLI (1.5.2+ according to https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#history)
+  # Save the current folder
+  local -r previousFolder="$PWD"
   cd "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER"
   # Create empty local repo for the purpose of getting a list of tags in the arduino/Arduino repository
   git init --quiet Arduino
@@ -237,6 +239,8 @@ function install_ide()
   cd ..
   # Remove the temporary repo
   rm Arduino --recursive --force
+  # Go back to the previous folder location
+  cd "$previousFolder"
 
   # Determine list of IDE versions to install
   generate_ide_version_list_array "$ARDUINO_CI_SCRIPT_FULL_IDE_VERSION_LIST_ARRAY" "$startIDEversion" "$endIDEversion"
@@ -484,6 +488,7 @@ function install_package()
       # Clone the repository
       local -r branchName="$2"
 
+      local -r previousFolder="$PWD"
       cd "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/hardware"
 
       if [[ "$branchName" == "" ]]; then
@@ -491,7 +496,9 @@ function install_package()
       else
         git clone --quiet --branch "$branchName" "$packageURL"
       fi
+      cd "$previousFolder"
     else
+      local -r previousFolder="$PWD"
       cd "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER"
 
       # Delete everything from the temporary folder
@@ -508,6 +515,7 @@ function install_package()
 
       # Install the package
       mv $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./* "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/hardware/"
+      cd "$previousFolder"
     fi
 
   elif [[ "$1" == "" ]]; then
@@ -516,10 +524,12 @@ function install_package()
     local packageName
     packageName="$(echo "$TRAVIS_REPO_SLUG" | cut -d'/' -f 2)"
     mkdir --parents $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/hardware/$packageName"
+    local -r previousFolder="$PWD"
     cd "$TRAVIS_BUILD_DIR"
     cp --recursive $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./* "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/hardware/${packageName}"
     # * doesn't copy .travis.yml but that file will be present in the user's installation so it should be there for the tests too
     cp $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "${TRAVIS_BUILD_DIR}/.travis.yml" "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/hardware/${packageName}"
+    cd "$previousFolder"
 
   else
     # Install package via Boards Manager
@@ -614,6 +624,7 @@ function install_library()
       local -r branchName="$2"
       local -r newFolderName="$3"
 
+      local -r previousFolder="$PWD"
       cd "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/libraries"
 
       if [[ "$branchName" == "" && "$newFolderName" == "" ]]; then
@@ -625,10 +636,12 @@ function install_library()
       else
         git clone --quiet --branch "$branchName" "$libraryIdentifier" "$newFolderName"
       fi
+      cd "$previousFolder"
     else
       # Assume it's a compressed file
       local -r newFolderName="$2"
       # Download the file to the temporary folder
+      local -r previousFolder="$PWD"
       cd "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER"
 
       # Delete everything from the temporary folder
@@ -643,6 +656,7 @@ function install_library()
 
       # Install the library
       mv $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./* "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/libraries/${newFolderName}"
+      cd "$previousFolder"
     fi
 
   elif [[ "$libraryIdentifier" == "" ]]; then
@@ -651,10 +665,12 @@ function install_library()
     local libraryName
     libraryName="$(echo "$TRAVIS_REPO_SLUG" | cut -d'/' -f 2)"
     mkdir --parents $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/libraries/$libraryName"
+    local -r previousFolder="$PWD"
     cd "$TRAVIS_BUILD_DIR"
     cp --recursive $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./* "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/libraries/${libraryName}"
     # * doesn't copy .travis.yml but that file will be present in the user's installation so it should be there for the tests too
     cp $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "${TRAVIS_BUILD_DIR}/.travis.yml" "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/libraries/${libraryName}"
+    cd "$previousFolder"
 
   else
     # Install a library that is part of the Library Manager index
@@ -1083,6 +1099,7 @@ function publish_report_to_repository()
         # Clone was successful
         create_folder "${HOME}/report-repository/${reportFolder}"
         cp $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH" "${HOME}/report-repository/${reportFolder}"
+        local -r previousFolder="$PWD"
         cd "${HOME}/report-repository"
         git add $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "${HOME}/report-repository/${reportFolder}/${ARDUINO_CI_SCRIPT_REPORT_FILENAME}"
         git config user.email "arduino-ci-script@nospam.me"
@@ -1106,6 +1123,7 @@ function publish_report_to_repository()
           git push $ARDUINO_CI_SCRIPT_QUIET_OPTION $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "https://${token}@${repositoryURL#*//}"
           gitPushExitStatus="$?"
         done
+        cd "$previousFolder"
         rm --recursive --force "${HOME}/report-repository"
         if [[ "$gitPushExitStatus" == "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]]; then
           if [[ "$doLinkComment" == "true" ]]; then
