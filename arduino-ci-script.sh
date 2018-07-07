@@ -546,7 +546,7 @@ function install_package()
     # Check if the newest installed IDE version supports --install-boards
     local -r unsupportedInstallBoardsOptionVersionsRange1regex="^1\.5\.[0-9]$"
     local -r unsupportedInstallBoardsOptionVersionsRange2regex="^1\.6\.[0-3]$"
-    if [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallBoardsOptionVersionsRange1regex || "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallBoardsOptionVersionsRange2regex ]]; then
+    if [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallBoardsOptionVersionsRange1regex ]] || [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallBoardsOptionVersionsRange2regex ]]; then
       echo "ERROR: --install-boards option is not supported by the newest version of the Arduino IDE you have installed. You must have Arduino IDE 1.6.4 or newer installed to use this function."
       return_handler "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
     else
@@ -684,7 +684,7 @@ function install_library()
     # Check if the newest installed IDE version supports --install-library
     local -r unsupportedInstallLibraryOptionVersionsRange1regex="^1\.5\.[0-9]$"
     local -r unsupportedInstallLibraryOptionVersionsRange2regex="^1\.6\.[0-3]$"
-    if [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallLibraryOptionVersionsRange1regex || "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallLibraryOptionVersionsRange2regex ]]; then
+    if [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallLibraryOptionVersionsRange1regex ]] || [[ "$NEWEST_INSTALLED_IDE_VERSION" =~ $unsupportedInstallLibraryOptionVersionsRange2regex ]]; then
       echo "ERROR: --install-library option is not supported by the newest version of the Arduino IDE you have installed. You must have Arduino IDE 1.6.4 or newer installed to use this function."
       return_handler "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
     else
@@ -811,7 +811,7 @@ function build_sketch()
       # Check if the newest installed IDE version supports --install-boards
       local unsupportedInstallBoardsOptionVersionsRange1regex="^1\.5\.[0-9]$"
       local unsupportedInstallBoardsOptionVersionsRange2regex="^1\.6\.[0-3]$"
-      if ! [[ "$IDEversion" =~ $unsupportedInstallBoardsOptionVersionsRange1regex || "$IDEversion" =~ $unsupportedInstallBoardsOptionVersionsRange2regex ]]; then
+      if ! [[ "$IDEversion" =~ $unsupportedInstallBoardsOptionVersionsRange1regex ]] && ! [[ "$IDEversion" =~ $unsupportedInstallBoardsOptionVersionsRange2regex ]]; then
         # shellcheck disable=SC2086
         eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}\" --install-boards arduino:dummy "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
         if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -gt 1 ]]; then
@@ -820,7 +820,7 @@ function build_sketch()
         fi
       fi
 
-      if [[ "$sketchPath" =~ \.ino$ || "$sketchPath" =~ \.pde$ ]]; then
+      if [[ "$sketchPath" =~ \.ino$ ]] || [[ "$sketchPath" =~ \.pde$ ]]; then
         # A sketch was specified
         if ! [[ -f "$sketchPath" ]]; then
           echo "ERROR: Specified sketch: $sketchPath doesn't exist"
@@ -1642,7 +1642,7 @@ function check_keywords_txt()
       while IFS='' read -r keywordsTxtLine || [[ -n "$keywordsTxtLine" ]]; do
         local blankLineRegex='^[[:space:]]*$'
         local commentRegex='^[[:space:]]*#'
-        if ! [[ ("$keywordsTxtLine" =~ $blankLineRegex) || ("$keywordsTxtLine" =~ $commentRegex) ]]; then
+        if ! [[ "$keywordsTxtLine" =~ $blankLineRegex ]] && ! [[ "$keywordsTxtLine" =~ $commentRegex ]]; then
 
           # Check for invalid separator
           local validSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t''+[^[:space:]]+'
