@@ -2,7 +2,6 @@
 # This script is used to automate continuous integration tasks for Arduino projects
 # https://github.com/per1234/arduino-ci-script
 
-
 # Based on https://github.com/adafruit/travis-ci-arduino/blob/eeaeaf8fa253465d18785c2bb589e14ea9893f9f/install.sh#L11
 # It seems that arrays can't been seen in other functions. So instead I'm setting $IDE_VERSIONS to a string that is the command to create the array
 readonly ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION="declare -a -r IDEversionListArray="
@@ -34,10 +33,8 @@ else
   ARDUINO_CI_SCRIPT_ARDUINO_COMMAND="arduino"
 fi
 
-
 # Create the folder if it doesn't exist
-function create_folder()
-{
+function create_folder() {
   local -r folderName="$1"
   if ! [[ -d "$folderName" ]]; then
     # shellcheck disable=SC2086
@@ -45,9 +42,7 @@ function create_folder()
   fi
 }
 
-
-function set_script_verbosity()
-{
+function set_script_verbosity() {
   enable_verbosity
 
   ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL="$1"
@@ -78,24 +73,18 @@ function set_script_verbosity()
   disable_verbosity
 }
 
-
 # Deprecated, use set_script_verbosity
-function set_verbose_script_output()
-{
+function set_verbose_script_output() {
   set_script_verbosity 1
 }
 
-
 # Deprecated, use set_script_verbosity
-function set_more_verbose_script_output()
-{
+function set_more_verbose_script_output() {
   set_script_verbosity 2
 }
 
-
 # Turn on verbosity based on the preferences set by set_script_verbosity
-function enable_verbosity()
-{
+function enable_verbosity() {
   # Store previous verbosity settings so they can be set back to their original values at the end of the function
   shopt -q -o verbose
   ARDUINO_CI_SCRIPT_PREVIOUS_VERBOSE_SETTING="$?"
@@ -115,10 +104,8 @@ function enable_verbosity()
   fi
 }
 
-
 # Return verbosity settings to their previous values
-function disable_verbosity()
-{
+function disable_verbosity() {
   if [[ "$ARDUINO_CI_SCRIPT_PREVIOUS_VERBOSE_SETTING" == "0" ]]; then
     set -o verbose
   else
@@ -132,16 +119,14 @@ function disable_verbosity()
   fi
 }
 
-
 # Verbosity and, in some cases, errexit must be disabled before an early return from a public function, this allows it to be done in a single line instead of two
-function return_handler()
-{
+function return_handler() {
   local -r exitStatus="$1"
 
   # If exit status is success and errexit is enabled then it must be disabled before exiting the script because errexit must be disabled by default and only enabled in the functions that specifically require it.
   # If exit status is not success then errexit should not be disabled, otherwise Travis CI won't fail the build even though the exit status was failure.
   if [[ "$exitStatus" == "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]] && shopt -q -o errexit; then
-      set +o errexit
+    set +o errexit
   fi
 
   disable_verbosity
@@ -149,9 +134,7 @@ function return_handler()
   return "$exitStatus"
 }
 
-
-function set_application_folder()
-{
+function set_application_folder() {
   enable_verbosity
 
   ARDUINO_CI_SCRIPT_APPLICATION_FOLDER="$1"
@@ -159,9 +142,7 @@ function set_application_folder()
   disable_verbosity
 }
 
-
-function set_sketchbook_folder()
-{
+function set_sketchbook_folder() {
   enable_verbosity
 
   ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER="$1"
@@ -177,18 +158,14 @@ function set_sketchbook_folder()
   disable_verbosity
 }
 
-
 # Deprecated
-function set_parameters()
-{
+function set_parameters() {
   set_application_folder "$1"
   set_sketchbook_folder "$2"
 }
 
-
 # Check for errors with the board definition that don't affect sketch verification
-function set_board_testing()
-{
+function set_board_testing() {
   enable_verbosity
 
   ARDUINO_CI_SCRIPT_TEST_BOARD="$1"
@@ -196,10 +173,8 @@ function set_board_testing()
   disable_verbosity
 }
 
-
 # Check for errors with libraries that don't affect sketch verification
-function set_library_testing()
-{
+function set_library_testing() {
   enable_verbosity
 
   ARDUINO_CI_SCRIPT_TEST_LIBRARY="$1"
@@ -207,10 +182,8 @@ function set_library_testing()
   disable_verbosity
 }
 
-
 # Install all specified versions of the Arduino IDE
-function install_ide()
-{
+function install_ide() {
   enable_verbosity
 
   local -r startIDEversion="$1"
@@ -235,7 +208,7 @@ function install_ide()
       echo "NOTE: Due to not playing nicely with other versions, Arduino IDE 1.6.2 will not be installed unless explicitly specified in the version arguments."
     fi
   fi
-  local -r ARDUINO_CI_SCRIPT_FULL_IDE_VERSION_LIST_ARRAY="${ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION}'(\"$(git ls-remote --quiet --tags --refs  | grep --invert-match --regexp='refs/tags/1\.0' --regexp='refs/tags/1\.5$' --regexp='refs/tags/1\.5\.1$' --regexp='refs/tags/1\.5\.4-r2$' --regexp='refs/tags/1\.5\.5-r2$' --regexp='refs/tags/1\.5\.7-macosx-java7$' --regexp='refs/tags/1\.5\.8-macosx-java7$' ${IDEversion162regex} --regexp='refs/tags/1\.6\.5-r2$' --regexp='refs/tags/1\.6\.5-r3$' | grep --regexp='refs/tags/[0-9]\+\.[0-9]\+\.[0-9]\+\(\(-.*$\)\|$\)' | cut --delimiter='/' --fields=3 | sort --version-sort | sed ':a;N;$!ba;s/\n/\" \"/g')\")'"
+  local -r ARDUINO_CI_SCRIPT_FULL_IDE_VERSION_LIST_ARRAY="${ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION}'(\"$(git ls-remote --quiet --tags --refs | grep --invert-match --regexp='refs/tags/1\.0' --regexp='refs/tags/1\.5$' --regexp='refs/tags/1\.5\.1$' --regexp='refs/tags/1\.5\.4-r2$' --regexp='refs/tags/1\.5\.5-r2$' --regexp='refs/tags/1\.5\.7-macosx-java7$' --regexp='refs/tags/1\.5\.8-macosx-java7$' ${IDEversion162regex} --regexp='refs/tags/1\.6\.5-r2$' --regexp='refs/tags/1\.6\.5-r3$' | grep --regexp='refs/tags/[0-9]\+\.[0-9]\+\.[0-9]\+\(\(-.*$\)\|$\)' | cut --delimiter='/' --fields=3 | sort --version-sort | sed ':a;N;$!ba;s/\n/\" \"/g')\")'"
   cd ..
   # Remove the temporary repo
   rm Arduino --recursive --force
@@ -307,11 +280,9 @@ function install_ide()
   disable_verbosity
 }
 
-
 # Generate an array of Arduino IDE versions as a subset of the list provided in the base array defined by the start and end versions
 # This function allows the same code to be shared by install_ide and build_sketch. The generated array is "returned" as a global named "$ARDUINO_CI_SCRIPT_GENERATED_IDE_VERSION_LIST_ARRAY"
-function generate_ide_version_list_array()
-{
+function generate_ide_version_list_array() {
   local -r baseIDEversionArray="$1"
   local startIDEversion="$2"
   local endIDEversion="$3"
@@ -329,7 +300,6 @@ function generate_ide_version_list_array()
   elif [[ "$endIDEversion" == "newest" ]]; then
     endIDEversion="$ARDUINO_CI_SCRIPT_DETERMINED_NEWEST_IDE_VERSION"
   fi
-
 
   if [[ "$startIDEversion" == "" || "$startIDEversion" == "all" ]]; then
     # Use the full base array
@@ -397,11 +367,9 @@ function generate_ide_version_list_array()
   fi
 }
 
-
 # Determine the oldest and newest (non-hourly unless hourly is the only version on the list) IDE version in the provided array
 # The determined versions are "returned" by setting the global variables "$ARDUINO_CI_SCRIPT_DETERMINED_OLDEST_IDE_VERSION" and "$ARDUINO_CI_SCRIPT_DETERMINED_NEWEST_IDE_VERSION"
-function determine_ide_version_extremes()
-{
+function determine_ide_version_extremes() {
   local -r baseIDEversionArray="$1"
 
   # Reset the variables from any value they were assigned the last time the function was ran
@@ -421,9 +389,7 @@ function determine_ide_version_extremes()
   done
 }
 
-
-function set_ide_preference()
-{
+function set_ide_preference() {
   local -r preferenceString="$1"
 
   # --pref option is only supported by Arduino IDE 1.5.6 and newer
@@ -444,9 +410,7 @@ function set_ide_preference()
   fi
 }
 
-
-function install_ide_version()
-{
+function install_ide_version() {
   local -r IDEversion="$1"
 
   # Create a symbolic link so that the Arduino IDE can always be referenced by the user from the same path no matter which version is being used.
@@ -460,16 +424,14 @@ function install_ide_version()
       rm --recursive --force "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER:?}"
     fi
     # https://stackoverflow.com/a/25394801
-    cmd <<< "mklink /J \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}\\${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}\" \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER//\//\\}\\arduino-${IDEversion}\"" > /dev/null
+    cmd <<<"mklink /J \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}\\${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}\" \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER//\//\\}\\arduino-${IDEversion}\"" >/dev/null
   else
     ln --symbolic --force --no-dereference $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/arduino-${IDEversion}" "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}"
   fi
 }
 
-
 # Install hardware packages
-function install_package()
-{
+function install_package() {
   enable_verbosity
 
   set -o errexit
@@ -576,7 +538,8 @@ function install_package()
         # grep returns 1 when a line matches the regular expression so it's necessary to unset errexit
         set +o errexit
         # shellcheck disable=SC2086
-        eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}\" --pref boardsmanager.additional.urls="$boardsmanagerAdditionalURLs" --save-prefs "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT" | tr -Cd '[:print:]\n\t' | tr --squeeze-repeats '\n'| grep --extended-regexp --invert-match "$ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX"; local -r arduinoPreferenceSettingExitStatus="${PIPESTATUS[0]}"
+        eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}\" --pref boardsmanager.additional.urls="$boardsmanagerAdditionalURLs" --save-prefs "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT" | tr -Cd '[:print:]\n\t' | tr --squeeze-repeats '\n' | grep --extended-regexp --invert-match "$ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX"
+        local -r arduinoPreferenceSettingExitStatus="${PIPESTATUS[0]}"
         set -o errexit
         # this is required because otherwise the exit status of arduino is ignored
         if [[ "$arduinoPreferenceSettingExitStatus" != "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]]; then
@@ -588,7 +551,8 @@ function install_package()
       # grep returns 1 when a line matches the regular expression so it's necessary to unset errexit
       set +o errexit
       # shellcheck disable=SC2086
-      eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}\" --install-boards "$packageID" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT" | tr -Cd '[:print:]\n\t' | tr --squeeze-repeats '\n'| grep --extended-regexp --invert-match "$ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX"; local -r arduinoInstallPackageExitStatus="${PIPESTATUS[0]}"
+      eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}\" --install-boards "$packageID" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT" | tr -Cd '[:print:]\n\t' | tr --squeeze-repeats '\n' | grep --extended-regexp --invert-match "$ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX"
+      local -r arduinoInstallPackageExitStatus="${PIPESTATUS[0]}"
       set -o errexit
       # this is required because otherwise the exit status of arduino is ignored
       if [[ "$arduinoInstallPackageExitStatus" != "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS" ]]; then
@@ -603,9 +567,7 @@ function install_package()
   disable_verbosity
 }
 
-
-function install_library()
-{
+function install_library() {
   enable_verbosity
 
   set -o errexit
@@ -693,7 +655,7 @@ function install_library()
       # Temporarily install the latest IDE version to use for the library installation
       install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
 
-       # Install the library
+      # Install the library
       # shellcheck disable=SC2086
       eval \"${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}\" --install-library "$libraryName" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
 
@@ -705,11 +667,9 @@ function install_library()
   disable_verbosity
 }
 
-
 # Extract common file formats
 # https://github.com/xvoland/Extract
-function extract
-{
+function extract() {
   if [ -z "$1" ]; then
     # display usage if no parameters given
     echo "Usage: extract <path/file_name>.<zip|rar|bz2|gz|tar|tbz2|tgz|Z|7z|xz|ex|tar.bz2|tar.gz|tar.xz>"
@@ -717,43 +677,42 @@ function extract
     return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
   else
     local filename
-    for filename in "$@"
-    do
+    for filename in "$@"; do
       if [ -f "$filename" ]; then
         case "${filename%,}" in
-          *.tar.bz2|*.tar.gz|*.tar.xz|*.tbz2|*.tgz|*.txz|*.tar)
-            tar --extract --file="$filename"
+        *.tar.bz2 | *.tar.gz | *.tar.xz | *.tbz2 | *.tgz | *.txz | *.tar)
+          tar --extract --file="$filename"
           ;;
-          *.lzma)
-            unlzma $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$filename"
+        *.lzma)
+          unlzma $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$filename"
           ;;
-          *.bz2)
-            bunzip2 $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$filename"
+        *.bz2)
+          bunzip2 $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$filename"
           ;;
-          *.rar)
-            eval unrar x -ad ./"$filename" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+        *.rar)
+          eval unrar x -ad ./"$filename" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
           ;;
-          *.gz)
-            gunzip ./"$filename"
+        *.gz)
+          gunzip ./"$filename"
           ;;
-          *.zip)
-            unzip -qq ./"$filename"
+        *.zip)
+          unzip -qq ./"$filename"
           ;;
-          *.z)
-            eval uncompress ./"$filename" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+        *.z)
+          eval uncompress ./"$filename" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
           ;;
-          *.7z|*.arj|*.cab|*.chm|*.deb|*.dmg|*.iso|*.lzh|*.msi|*.rpm|*.udf|*.wim|*.xar)
-            7z x ./"$filename"
+        *.7z | *.arj | *.cab | *.chm | *.deb | *.dmg | *.iso | *.lzh | *.msi | *.rpm | *.udf | *.wim | *.xar)
+          7z x ./"$filename"
           ;;
-          *.xz)
-            unxz $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$filename"
+        *.xz)
+          unxz $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$filename"
           ;;
-          *.exe)
-            cabextract $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$filename"
+        *.exe)
+          cabextract $ARDUINO_CI_SCRIPT_QUIET_OPTION ./"$filename"
           ;;
-          *)
-            echo "extract: '$filename' - unknown archive method"
-            return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+        *)
+          echo "extract: '$filename' - unknown archive method"
+          return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
           ;;
         esac
       else
@@ -764,9 +723,7 @@ function extract
   fi
 }
 
-
-function set_verbose_output_during_compilation()
-{
+function set_verbose_output_during_compilation() {
   enable_verbosity
 
   local -r verboseOutputDuringCompilation="$1"
@@ -779,10 +736,8 @@ function set_verbose_output_during_compilation()
   disable_verbosity
 }
 
-
 # Verify the sketch
-function build_sketch()
-{
+function build_sketch() {
   enable_verbosity
 
   local -r sketchPath="$1"
@@ -866,9 +821,7 @@ function build_sketch()
   return $buildSketchExitStatus
 }
 
-
-function build_this_sketch()
-{
+function build_this_sketch() {
   # Fold this section of output in the Travis CI build log to make it easier to read
   echo -e "travis_fold:start:build_sketch"
 
@@ -883,7 +836,10 @@ function build_this_sketch()
   # Arduino IDE 1.8.0 and 1.8.1 fail to verify a sketch if the absolute path to it is not specified
   # http://stackoverflow.com/a/3915420/7059512
   local absoluteSketchName
-  absoluteSketchName="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
+  absoluteSketchName="$(
+    cd "$(dirname "$1")"
+    pwd
+  )/$(basename "$1")"
 
   # Define a dummy value for arduinoExitStatus so that the while loop will run at least once
   local arduinoExitStatus=255
@@ -891,7 +847,8 @@ function build_this_sketch()
   while [[ $arduinoExitStatus -gt $ARDUINO_CI_SCRIPT_HIGHEST_ACCEPTABLE_ARDUINO_EXIT_STATUS && $verifyCount -le $ARDUINO_CI_SCRIPT_SKETCH_VERIFY_RETRIES ]]; do
     # Verify the sketch
     # shellcheck disable=SC2086
-    "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}" $ARDUINO_CI_SCRIPT_DETERMINED_VERBOSE_BUILD --verify "$absoluteSketchName" --board "$boardID" 2>&1 | tr -Cd '[:print:]\n\t'  | tr --squeeze-repeats '\n'| grep --extended-regexp --invert-match "$ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX" | tee "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"; local arduinoExitStatus="${PIPESTATUS[0]}"
+    "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}" $ARDUINO_CI_SCRIPT_DETERMINED_VERBOSE_BUILD --verify "$absoluteSketchName" --board "$boardID" 2>&1 | tr -Cd '[:print:]\n\t' | tr --squeeze-repeats '\n' | grep --extended-regexp --invert-match "$ARDUINO_CI_SCRIPT_ARDUINO_OUTPUT_FILTER_REGEX" | tee "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"
+    local arduinoExitStatus="${PIPESTATUS[0]}"
     local verifyCount=$((verifyCount + 1))
   done
 
@@ -909,37 +866,37 @@ function build_this_sketch()
     while read -r outputFileLine; do
       # Determine program storage memory usage
       local programStorageRegex="Sketch uses ([0-9,]+) *"
-      if [[ "$outputFileLine" =~ $programStorageRegex ]] > /dev/null; then
+      if [[ "$outputFileLine" =~ $programStorageRegex ]] >/dev/null; then
         local -r programStorageWithComma=${BASH_REMATCH[1]}
       fi
 
       # Determine dynamic memory usage
       local dynamicMemoryRegex="Global variables use ([0-9,]+) *"
-      if [[ "$outputFileLine" =~ $dynamicMemoryRegex ]] > /dev/null; then
+      if [[ "$outputFileLine" =~ $dynamicMemoryRegex ]] >/dev/null; then
         local -r dynamicMemoryWithComma=${BASH_REMATCH[1]}
       fi
 
       # Increment warning count
       local warningRegex="warning: "
-      if [[ "$outputFileLine" =~ $warningRegex ]] > /dev/null; then
+      if [[ "$outputFileLine" =~ $warningRegex ]] >/dev/null; then
         warningCount=$((warningCount + 1))
       fi
 
       # Check for board issues
       local bootloaderMissingRegex="Bootloader file specified but missing: "
-      if [[ "$outputFileLine" =~ $bootloaderMissingRegex ]] > /dev/null; then
+      if [[ "$outputFileLine" =~ $bootloaderMissingRegex ]] >/dev/null; then
         local boardIssue="missing bootloader"
         boardIssueCount=$((boardIssueCount + 1))
       fi
 
       local boardsDotTxtMissingRegex="Could not find boards.txt"
-      if [[ "$outputFileLine" =~ $boardsDotTxtMissingRegex ]] > /dev/null; then
+      if [[ "$outputFileLine" =~ $boardsDotTxtMissingRegex ]] >/dev/null; then
         local boardIssue="Could not find boards.txt"
         boardIssueCount=$((boardIssueCount + 1))
       fi
 
       local buildDotBoardNotDefinedRegex="doesn't define a 'build.board' preference"
-      if [[ "$outputFileLine" =~ $buildDotBoardNotDefinedRegex ]] > /dev/null; then
+      if [[ "$outputFileLine" =~ $buildDotBoardNotDefinedRegex ]] >/dev/null; then
         local boardIssue="doesn't define a 'build.board' preference"
         boardIssueCount=$((boardIssueCount + 1))
       fi
@@ -948,78 +905,78 @@ function build_this_sketch()
       # This is the generic "invalid library" warning that doesn't specify the reason
       local invalidLibrarRegex1="Invalid library found in"
       local invalidLibrarRegex2="from library$"
-      if [[ "$outputFileLine" =~ $invalidLibrarRegex1 ]] && ! [[ "$outputFileLine" =~ $invalidLibrarRegex2 ]] > /dev/null; then
+      if [[ "$outputFileLine" =~ $invalidLibrarRegex1 ]] && ! [[ "$outputFileLine" =~ $invalidLibrarRegex2 ]] >/dev/null; then
         local libraryIssue="Invalid library"
         libraryIssueCount=$((libraryIssueCount + 1))
       fi
 
       local missingNameRegex="Invalid library found in .* Missing 'name' from library"
-      if [[ "$outputFileLine" =~ $missingNameRegex ]] > /dev/null; then
+      if [[ "$outputFileLine" =~ $missingNameRegex ]] >/dev/null; then
         local libraryIssue="Missing 'name' from library"
         libraryIssueCount=$((libraryIssueCount + 1))
       fi
 
       local missingVersionRegex="Invalid library found in .* Missing 'version' from library"
-      if [[ "$outputFileLine" =~ $missingVersionRegex ]] > /dev/null; then
+      if [[ "$outputFileLine" =~ $missingVersionRegex ]] >/dev/null; then
         local libraryIssue="Missing 'version' from library"
         libraryIssueCount=$((libraryIssueCount + 1))
       fi
 
       local missingAuthorRegex="Invalid library found in .* Missing 'author' from library"
-      if [[ "$outputFileLine" =~ $missingAuthorRegex ]] > /dev/null; then
+      if [[ "$outputFileLine" =~ $missingAuthorRegex ]] >/dev/null; then
         local libraryIssue="Missing 'author' from library"
         libraryIssueCount=$((libraryIssueCount + 1))
       fi
 
       local missingMaintainerRegex="Invalid library found in .* Missing 'maintainer' from library"
-      if [[ "$outputFileLine" =~ $missingMaintainerRegex ]] > /dev/null; then
+      if [[ "$outputFileLine" =~ $missingMaintainerRegex ]] >/dev/null; then
         local libraryIssue="Missing 'maintainer' from library"
         libraryIssueCount=$((libraryIssueCount + 1))
       fi
 
       local missingSentenceRegex="Invalid library found in .* Missing 'sentence' from library"
-      if [[ "$outputFileLine" =~ $missingSentenceRegex ]] > /dev/null; then
+      if [[ "$outputFileLine" =~ $missingSentenceRegex ]] >/dev/null; then
         local libraryIssue="Missing 'sentence' from library"
         libraryIssueCount=$((libraryIssueCount + 1))
       fi
 
       local missingParagraphRegex="Invalid library found in .* Missing 'paragraph' from library"
-      if [[ "$outputFileLine" =~ $missingParagraphRegex ]] > /dev/null; then
+      if [[ "$outputFileLine" =~ $missingParagraphRegex ]] >/dev/null; then
         local libraryIssue="Missing 'paragraph' from library"
         libraryIssueCount=$((libraryIssueCount + 1))
       fi
 
       local missingURLregex="Invalid library found in .* Missing 'url' from library"
-      if [[ "$outputFileLine" =~ $missingURLregex ]] > /dev/null; then
+      if [[ "$outputFileLine" =~ $missingURLregex ]] >/dev/null; then
         local libraryIssue="Missing 'url' from library"
         libraryIssueCount=$((libraryIssueCount + 1))
       fi
 
       local invalidVersionRegex="Invalid version found:"
-      if [[ "$outputFileLine" =~ $invalidVersionRegex ]] > /dev/null; then
+      if [[ "$outputFileLine" =~ $invalidVersionRegex ]] >/dev/null; then
         local libraryIssue="Invalid version found:"
         libraryIssueCount=$((libraryIssueCount + 1))
       fi
 
       local invalidCategoryRegex="is not valid. Setting to 'Uncategorized'"
-      if [[ "$outputFileLine" =~ $invalidCategoryRegex ]] > /dev/null; then
+      if [[ "$outputFileLine" =~ $invalidCategoryRegex ]] >/dev/null; then
         local libraryIssue="Invalid category"
         libraryIssueCount=$((libraryIssueCount + 1))
       fi
 
       local spuriousFolderRegex="WARNING: Spurious"
-      if [[ "$outputFileLine" =~ $spuriousFolderRegex ]] > /dev/null; then
+      if [[ "$outputFileLine" =~ $spuriousFolderRegex ]] >/dev/null; then
         local libraryIssue="Spurious folder"
         libraryIssueCount=$((libraryIssueCount + 1))
       fi
 
-    done < "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"
+    done <"$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"
 
     rm $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "$ARDUINO_CI_SCRIPT_VERIFICATION_OUTPUT_FILENAME"
 
     # Remove the stupid comma from the memory values if present
-    local -r programStorage=${programStorageWithComma//,}
-    local -r dynamicMemory=${dynamicMemoryWithComma//,}
+    local -r programStorage=${programStorageWithComma//,/}
+    local -r dynamicMemory=${dynamicMemoryWithComma//,/}
 
     if [[ "$boardIssue" != "" && "$ARDUINO_CI_SCRIPT_TEST_BOARD" == "true" ]]; then
       # There was a board issue and board testing is enabled so fail the build
@@ -1033,7 +990,7 @@ function build_this_sketch()
   fi
 
   # Add the build data to the report file
-  echo "$(date -u "+%Y-%m-%d %H:%M:%S")"$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_JOB_NUMBER"$'\t'"https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}"$'\t'"$TRAVIS_EVENT_TYPE"$'\t'"$TRAVIS_ALLOW_FAILURE"$'\t'"$TRAVIS_PULL_REQUEST"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"$TRAVIS_COMMIT_RANGE"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail"$'\t'"$arduinoExitStatus"$'\t'"$boardIssueCount"$'\t'"$boardIssue"$'\t'"$libraryIssueCount"$'\t'"$libraryIssue"$'\r' >> "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
+  echo "$(date -u "+%Y-%m-%d %H:%M:%S")"$'\t'"$TRAVIS_BUILD_NUMBER"$'\t'"$TRAVIS_JOB_NUMBER"$'\t'"https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}"$'\t'"$TRAVIS_EVENT_TYPE"$'\t'"$TRAVIS_ALLOW_FAILURE"$'\t'"$TRAVIS_PULL_REQUEST"$'\t'"$TRAVIS_BRANCH"$'\t'"$TRAVIS_COMMIT"$'\t'"$TRAVIS_COMMIT_RANGE"$'\t'"${TRAVIS_COMMIT_MESSAGE%%$'\n'*}"$'\t'"$sketchName"$'\t'"$boardID"$'\t'"$IDEversion"$'\t'"$programStorage"$'\t'"$dynamicMemory"$'\t'"$warningCount"$'\t'"$allowFail"$'\t'"$arduinoExitStatus"$'\t'"$boardIssueCount"$'\t'"$boardIssue"$'\t'"$libraryIssueCount"$'\t'"$libraryIssue"$'\r' >>"$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
 
   # Adjust the exit status according to the allowFail setting
   if [[ "$buildThisSketchExitStatus" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" && ("$allowFail" == "true" || "$allowFail" == "require") ]]; then
@@ -1058,10 +1015,8 @@ function build_this_sketch()
   return $buildThisSketchExitStatus
 }
 
-
 # Print the contents of the report file
-function display_report()
-{
+function display_report() {
   enable_verbosity
 
   if [ -e "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH" ]; then
@@ -1080,10 +1035,8 @@ function display_report()
   disable_verbosity
 }
 
-
 # Add the report file to a Git repository
-function publish_report_to_repository()
-{
+function publish_report_to_repository() {
   enable_verbosity
 
   local -r token="$1"
@@ -1162,10 +1115,8 @@ function publish_report_to_repository()
   disable_verbosity
 }
 
-
 # Add the report file to a gist
-function publish_report_to_gist()
-{
+function publish_report_to_gist() {
   enable_verbosity
 
   local -r token="$1"
@@ -1185,7 +1136,7 @@ function publish_report_to_gist()
       reportContent=$(sed -e 's/\r//' -e's/\t/\\t/g' -e 's/"/\\"/g' "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH" | awk '{ printf($0 "\\n") }')
 
       # Upload the report to the Gist. I have to use the here document to avoid the "Argument list too long" error from curl with long reports. Redirect output to dev/null because it dumps the whole gist to the log
-      eval curl --header "\"Authorization: token ${token}\"" --data @- "\"https://api.github.com/gists/${gistID}\"" <<curlDataHere "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+      eval curl --header "\"Authorization: token ${token}\"" --data @- "\"https://api.github.com/gists/${gistID}\"" "$ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT" <<curlDataHere
 {"files":{"${ARDUINO_CI_SCRIPT_REPORT_FILENAME}":{"content": "${reportContent}"}}}
 curlDataHere
 
@@ -1213,10 +1164,8 @@ curlDataHere
   disable_verbosity
 }
 
-
 # Leave a comment on the commit with a link to the report
-function comment_report_link()
-{
+function comment_report_link() {
   local -r token="$1"
   local -r reportURL="$2"
 
@@ -1229,17 +1178,13 @@ function comment_report_link()
   fi
 }
 
-
 # Deprecated because no longer necessary. Left only to maintain backwards compatibility
-function check_success()
-{
+function check_success() {
   echo "The check_success function is no longer necessary and has been deprecated"
 }
 
-
 # https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification
-function check_library_structure()
-{
+function check_library_structure() {
   local -r libraryPath="$1"
   # Replace backslashes with slashes
   local -r libraryPathWithSlashes="${libraryPath//\\//}"
@@ -1311,10 +1256,8 @@ function check_library_structure()
   fi
 }
 
-
 # The same folder name restrictions apply to libraries and sketches so this function may be used for both
-function check_valid_folder_name()
-{
+function check_valid_folder_name() {
   local -r path="$1"
   # Get the folder name from the path
   local -r folderName="${path##*/}"
@@ -1347,9 +1290,7 @@ function check_valid_folder_name()
   return 0
 }
 
-
-function check_sketch_structure()
-{
+function check_sketch_structure() {
   local -r searchPath="$1"
   # Replace backslashes with slashes
   local -r searchPathWithSlashes="${searchPath//\\//}"
@@ -1420,10 +1361,8 @@ function check_sketch_structure()
   done
 }
 
-
 # https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format
-function check_library_properties()
-{
+function check_library_properties() {
   local -r searchPath="$1"
 
   # Replace backslashes with slashes
@@ -1442,8 +1381,8 @@ function check_library_properties()
 
     # Check for incorrect filename case
     if [[ "${libraryPropertiesPath: -18}" != 'library.properties' ]]; then
-        echo "ERROR: $libraryPropertiesPath has incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux. It must be library.properties"
-        return 2
+      echo "ERROR: $libraryPropertiesPath has incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux. It must be library.properties"
+      return 2
     fi
 
     # Get rid of the CRs
@@ -1507,7 +1446,6 @@ function check_library_properties()
       return 12
     fi
 
-
     # Check for invalid version
     if ! grep --quiet --extended-regexp --regexp='^[[:space:]]*version[[:space:]]*=[[:space:]]*(((([1-9][0-9]*)|0)\.){0,2})(([1-9][0-9]*)|0)(-(([a-zA-Z0-9-]*\.)*)([a-zA-Z0-9-]+))?(\+(([a-zA-Z0-9-]*\.)*)([a-zA-Z0-9-]+))?[[:space:]]*$' <<<"$libraryProperties"; then
       echo "ERROR: $libraryPropertiesPath has an invalid version value. Follow the semver specification: https://semver.org/"
@@ -1540,7 +1478,6 @@ function check_library_properties()
     then
       return 14
     fi
-
 
     # Check for invalid category
     if ! grep --quiet --extended-regexp --regexp='^[[:space:]]*category[[:space:]]*=[[:space:]]*((Display)|(Communication)|(Signal Input/Output)|(Sensors)|(Device Control)|(Timing)|(Data Storage)|(Data Processing)|(Other))[[:space:]]*$' <<<"$libraryProperties"; then
@@ -1609,10 +1546,8 @@ function check_library_properties()
   done
 }
 
-
 # https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keywords
-function check_keywords_txt()
-{
+function check_keywords_txt() {
   local -r searchPath="$1"
 
   # Replace backslashes with slashes
@@ -1631,8 +1566,8 @@ function check_keywords_txt()
 
     # Check for incorrect filename case
     if [[ "${keywordsTxtPath: -12}" != 'keywords.txt' ]]; then
-        echo "ERROR: $keywordsTxtPath uses incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux."
-        return 2
+      echo "ERROR: $keywordsTxtPath uses incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux."
+      return 2
     fi
 
     # Read the keywords.txt file line by line
@@ -1737,15 +1672,13 @@ function check_keywords_txt()
 
           fi
         fi
-      done <<< "$keywordsTxtCRline"
-    done < "$keywordsTxtPath"
+      done <<<"$keywordsTxtCRline"
+    done <"$keywordsTxtPath"
   done
 }
 
-
 # https://github.com/arduino/Arduino/wiki/Library-Manager-FAQ#how-is-the-library-list-generated
-function check_library_manager_compliance()
-{
+function check_library_manager_compliance() {
   local -r libraryPath="$1"
   # Replace backslashes with slashes
   local -r libraryPathWithSlashes="${libraryPath//\\//}"
@@ -1777,10 +1710,8 @@ function check_library_manager_compliance()
   fi
 }
 
-
 # Set default verbosity (must be called after the function definitions
 set_script_verbosity 0
-
 
 # Create the temporary folder
 create_folder "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER"
@@ -1788,10 +1719,8 @@ create_folder "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER"
 # Create the report folder
 create_folder "$ARDUINO_CI_SCRIPT_REPORT_FOLDER"
 
-
 # Add column names to report
-echo "Build Timestamp (UTC)"$'\t'"Build"$'\t'"Job"$'\t'"Job URL"$'\t'"Build Trigger"$'\t'"Allow Job Failure"$'\t'"PR#"$'\t'"Branch"$'\t'"Commit"$'\t'"Commit Range"$'\t'"Commit Message"$'\t'"Sketch Filename"$'\t'"Board ID"$'\t'"IDE Version"$'\t'"Program Storage (bytes)"$'\t'"Dynamic Memory (bytes)"$'\t'"# Warnings"$'\t'"Allow Failure"$'\t'"Exit Status"$'\t'"# Board Issues"$'\t'"Board Issue"$'\t'"# Library Issues"$'\t'"Library Issue"$'\r' > "$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
-
+echo "Build Timestamp (UTC)"$'\t'"Build"$'\t'"Job"$'\t'"Job URL"$'\t'"Build Trigger"$'\t'"Allow Job Failure"$'\t'"PR#"$'\t'"Branch"$'\t'"Commit"$'\t'"Commit Range"$'\t'"Commit Message"$'\t'"Sketch Filename"$'\t'"Board ID"$'\t'"IDE Version"$'\t'"Program Storage (bytes)"$'\t'"Dynamic Memory (bytes)"$'\t'"# Warnings"$'\t'"Allow Failure"$'\t'"Exit Status"$'\t'"# Board Issues"$'\t'"Board Issue"$'\t'"# Library Issues"$'\t'"Library Issue"$'\r' >"$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
 
 # Start the virtual display required by the Arduino IDE CLI: https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#bugs
 # based on https://learn.adafruit.com/continuous-integration-arduino-and-you/testing-your-project
