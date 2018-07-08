@@ -43,8 +43,6 @@ function create_folder() {
 }
 
 function set_script_verbosity() {
-  enable_verbosity
-
   ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL="$1"
 
   if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" == "true" ]]; then
@@ -70,7 +68,6 @@ function set_script_verbosity() {
     ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT="&>/dev/null"
   fi
 
-  disable_verbosity
 }
 
 # Deprecated, use set_script_verbosity
