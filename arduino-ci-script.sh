@@ -190,6 +190,11 @@ function install_ide() {
   # set -o errexit will cause the script to exit as soon as any command returns a non-zero exit status. Without this the success of the function call is determined by the exit status of the last command in the function
   set -o errexit
 
+  if [[ "$ARDUINO_CI_SCRIPT_APPLICATION_FOLDER" == "" ]]; then
+    echo "ERROR: Application folder was not set. Please use the set_application_folder function to define the location of the application folder."
+    return_handler "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+  fi
+
   # Generate an array declaration string containing a list all Arduino IDE versions which support CLI (1.5.2+ according to https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#history)
   # Save the current folder
   local -r previousFolder="$PWD"
@@ -220,10 +225,6 @@ function install_ide() {
   determine_ide_version_extremes "$INSTALLED_IDE_VERSION_LIST_ARRAY"
   NEWEST_INSTALLED_IDE_VERSION="$ARDUINO_CI_SCRIPT_DETERMINED_NEWEST_IDE_VERSION"
 
-  if [[ "$ARDUINO_CI_SCRIPT_APPLICATION_FOLDER" == "" ]]; then
-    echo "ERROR: Application folder was not set. Please use the set_application_folder function to define the location of the application folder."
-    return_handler "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
-  fi
   create_folder "$ARDUINO_CI_SCRIPT_APPLICATION_FOLDER"
 
   # This runs the command contained in the $INSTALLED_IDE_VERSION_LIST_ARRAY string, thus declaring the array locally as $IDEversionListArray. This must be done in any function that uses the array
