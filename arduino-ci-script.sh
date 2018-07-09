@@ -231,6 +231,23 @@ function install_ide() {
   # Dummy declaration to fix the "referenced but not assigned" warning.
   local IDEversionListArray
   eval "$INSTALLED_IDE_VERSION_LIST_ARRAY"
+
+  # Determine whether any of the IDE versions to be installed require the creation of a virtual framebuffer (https://github.com/arduino/Arduino/blob/54264124b72eec40aaa22e327c16760f5e806c2a/build/shared/manpage.adoc#bugs)
+  # This is necessary in Arduino IDE 1.6.13 and older (https://github.com/arduino/Arduino/pull/5578) when running on a headless system
+  if [ -e /usr/bin/Xvfb ]; then
+    local -r virtualFramebufferRequiredRegex='^1\.[56]\.'
+    local IDEversion
+    for IDEversion in "${IDEversionListArray[@]}"; do
+      if [[ "$IDEversion" =~ $virtualFramebufferRequiredRegex ]]; then
+        # based on https://learn.adafruit.com/continuous-integration-arduino-and-you/testing-your-project
+        /sbin/start-stop-daemon --start $ARDUINO_CI_SCRIPT_QUIET_OPTION $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16
+        sleep 3
+        export DISPLAY=:1.0
+        break
+      fi
+    done
+  fi
+
   local IDEversion
   for IDEversion in "${IDEversionListArray[@]}"; do
     local IDEinstallFolder="$ARDUINO_CI_SCRIPT_APPLICATION_FOLDER/arduino-${IDEversion}"
@@ -1719,11 +1736,3 @@ create_folder "$ARDUINO_CI_SCRIPT_REPORT_FOLDER"
 
 # Add column names to report
 echo "Build Timestamp (UTC)"$'\t'"Build"$'\t'"Job"$'\t'"Job URL"$'\t'"Build Trigger"$'\t'"Allow Job Failure"$'\t'"PR#"$'\t'"Branch"$'\t'"Commit"$'\t'"Commit Range"$'\t'"Commit Message"$'\t'"Sketch Filename"$'\t'"Board ID"$'\t'"IDE Version"$'\t'"Program Storage (bytes)"$'\t'"Dynamic Memory (bytes)"$'\t'"# Warnings"$'\t'"Allow Failure"$'\t'"Exit Status"$'\t'"# Board Issues"$'\t'"Board Issue"$'\t'"# Library Issues"$'\t'"Library Issue"$'\r' >"$ARDUINO_CI_SCRIPT_REPORT_FILE_PATH"
-
-# Start the virtual display required by the Arduino IDE CLI: https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#bugs
-# based on https://learn.adafruit.com/continuous-integration-arduino-and-you/testing-your-project
-if [ -e /usr/bin/Xvfb ]; then
-  /sbin/start-stop-daemon --start $ARDUINO_CI_SCRIPT_QUIET_OPTION $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16
-  sleep 3
-  export DISPLAY=:1.0
-fi
