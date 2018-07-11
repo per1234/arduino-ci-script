@@ -1528,7 +1528,7 @@ function check_library_properties() {
       ! grep --regexp='^[[:space:]]*name[[:space:]]*=' <<<"$libraryProperties" | while read -r nameLine; do
         local validNameRegex='^[[:space:]]*name[[:space:]]*=[[:space:]]*[a-zA-Z0-9._ -]+[[:space:]]*$'
         if ! [[ "$nameLine" =~ $validNameRegex ]]; then
-          echo "ERROR: ${libraryPropertiesPath}\'s name value uses characters not allowed by the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+          echo "ERROR: ${libraryPropertiesPath}'s name value uses characters not allowed by the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
           return 1
         fi
       done
@@ -1559,7 +1559,7 @@ function check_library_properties() {
             local paragraphValueEqualsFrontStripped="${paragraphValueEquals#"${paragraphValueEquals%%[![:space:]]*}"}"
             local paragraphValue=${paragraphValueEqualsFrontStripped#=}
             if [[ "$paragraphValue" == *"$sentenceValueStrippedNoPunctuation"* ]]; then
-              echo "ERROR: ${libraryPropertiesPath}\'s paragraph value repeats the sentence. These strings are displayed one after the other in Library Manager so there is no point in redundancy."
+              echo "ERROR: ${libraryPropertiesPath}'s paragraph value repeats the sentence. These strings are displayed one after the other in Library Manager so there is no point in redundancy."
               return 1
             fi
           done
@@ -1572,7 +1572,7 @@ function check_library_properties() {
     # Check for invalid category
     if ! grep --quiet --extended-regexp --regexp='^[[:space:]]*category[[:space:]]*=[[:space:]]*((Display)|(Communication)|(Signal Input/Output)|(Sensors)|(Device Control)|(Timing)|(Data Storage)|(Data Processing)|(Other))[[:space:]]*$' <<<"$libraryProperties"; then
       if grep --quiet --regexp='^[[:space:]]*category[[:space:]]*=[[:space:]]*Uncategorized[[:space:]]*$' <<<"$libraryProperties"; then
-        echo "WARNING: category \'Uncategorized\' used in $libraryPropertiesPath is not recommended. Please chose an appropriate category from https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+        echo "WARNING: category 'Uncategorized' used in $libraryPropertiesPath is not recommended. Please chose an appropriate category from https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
       else
         echo "ERROR: $libraryPropertiesPath has an invalid category value. Please chose a valid category from https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
         return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_CATEGORY_EXIT_STATUS
@@ -1581,7 +1581,7 @@ function check_library_properties() {
 
     # Check for missing scheme on url value
     if ! grep --quiet --extended-regexp --regexp='^[[:space:]]*url[[:space:]]*=[[:space:]]*(http://)|(https://)' <<<"$libraryProperties"; then
-      echo "ERROR: ${libraryPropertiesPath}\'s url value is missing the scheme (e.g. https://). URL scheme must be specified for Library Manager's \"More info\" link to be clickable."
+      echo "ERROR: ${libraryPropertiesPath}'s url value is missing the scheme (e.g. https://). URL scheme must be specified for Library Manager's \"More info\" link to be clickable."
       return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_MISSING_SCHEME_EXIT_STATUS
     fi
 
@@ -1594,7 +1594,7 @@ function check_library_properties() {
         urlStatus=$(curl --location --output /dev/null --silent --head --write-out '%{http_code}' "$urlValue")
         local errorStatusRegex='^[045]'
         if [[ "$urlStatus" =~ $errorStatusRegex ]]; then
-          echo "ERROR: ${libraryPropertiesPath}\'s url value returned error status $urlStatus."
+          echo "ERROR: ${libraryPropertiesPath}'s url value returned error status $urlStatus."
           return 1
         fi
       done
@@ -1614,7 +1614,7 @@ function check_library_properties() {
         set -o noglob
         for architecture in $architecturesValue; do
           if ! [[ "$architecture" =~ $validArchitecturesRegex ]]; then
-            echo "ERROR: ${libraryPropertiesPath}\'s architectures field contains an invalid architecture ${architecture}. Note: architecture values are case-sensitive."
+            echo "ERROR: ${libraryPropertiesPath}'s architectures field contains an invalid architecture ${architecture}. Note: architecture values are case-sensitive."
             return 1
           fi
         done
@@ -1629,7 +1629,7 @@ function check_library_properties() {
 
     # Check for empty includes value
     if grep --quiet --regexp='^[[:space:]]*includes[[:space:]]*=[[:space:]]*$' <<<"$libraryProperties"; then
-      echo "ERROR: ${libraryPropertiesPath}\'s includes value is empty. Either define the field or remove it."
+      echo "ERROR: ${libraryPropertiesPath}'s includes value is empty. Either define the field or remove it."
       return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_EMPTY_INCLUDES_EXIT_STATUS
     fi
 
