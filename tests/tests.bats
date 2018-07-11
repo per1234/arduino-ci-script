@@ -384,6 +384,14 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [ "${#lines[@]}" -eq 1 ]
 }
 
+@test "check_library_properties \"./check_library_properties/MissingArchitectures\"" {
+  run check_library_properties "./check_library_properties/MissingArchitectures"
+  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  [ "${#lines[@]}" -eq 1 ]
+  warningRegex='^WARNING: .* is missing architectures field'
+  [[ "${lines[0]}" =~ $warningRegex ]]
+}
+
 @test "check_library_properties \"./check_library_properties/InvalidLine\"" {
   run check_library_properties "./check_library_properties/InvalidLine"
   [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_LINE_EXIT_STATUS ]
