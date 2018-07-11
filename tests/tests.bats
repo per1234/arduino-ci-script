@@ -179,6 +179,14 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [ "${#lines[@]}" -eq 1 ]
 }
 
+@test "check_sketch_structure \"./check_library_structure/PdeSketchExtension\"" {
+  run check_sketch_structure "./check_library_structure/PdeSketchExtension"
+  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  [ "${#lines[@]}" -eq 1 ]
+  pdeWarningRegex='^WARNING: File .* uses the \.pde extension'
+  [[ "${lines[0]}" =~ $pdeWarningRegex ]]
+}
+
 @test "check_sketch_structure \"./check_library_structure/IncorrectSketchExtensionCase\"" {
   run check_sketch_structure "./check_library_structure/IncorrectSketchExtensionCase"
   [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_INCORRECT_EXTENSION_CASE_EXIT_STATUS ]

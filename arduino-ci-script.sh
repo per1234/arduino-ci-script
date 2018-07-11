@@ -1269,6 +1269,11 @@ function check_sketch_structure() {
     local primarySketchFound=false
     # find all sketch files in $sketchPath
     while read -r sketchFilePath; do
+      # Check for sketches that use the obsolete .pde extension
+      if [[ "${sketchFilePath: -4}" == ".pde" ]]; then
+        echo "WARNING: File $sketchFilePath uses the .pde extension. For Arduino sketches, it's recommended to use the .ino extension instead. If this is a Processing sketch then .pde is the correct extension."
+      fi
+
       # Check for sketches with incorrect extension case
       if [[ "${sketchFilePath: -4}" != ".ino" && "${sketchFilePath: -4}" != ".pde" ]]; then
         echo "ERROR: Sketch file $sketchFilePath has incorrect extension case, which causes it to not be recognized on a filename case-sensitive OS such as Linux."
