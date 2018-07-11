@@ -1321,16 +1321,39 @@ function check_sketch_structure() {
   # find all folders that contain a sketch file
   find "$normalizedSearchPath" -type f \( -regex '^.*\.[iI][nN][oO]' -or -regex '^.*\.[pP][dD][eE]' \) -printf '%h\n' | sort --unique | while read -r sketchPath; do
 
-    # Check for sketches with incorrect extension case
-    find "$sketchPath" -maxdepth 1 -type f \( -regex '^.*\.[iI][nN][oO]' -or -regex '^.*\.[pP][dD][eE]' \) -print | while read -r sketchName; do
-      if [[ "${sketchName: -4}" != ".ino" && "${sketchName: -4}" != ".pde" ]]; then
-        echo "ERROR: Sketch file $sketchName has incorrect extension case, which causes it to not be recognized on a filename case-sensitive OS such as Linux."
-        # This only breaks out of the pipe, it does not return from the function
-        return 1
+    local folderNameMismatch=true
+    local primarySketchFound=false
+    # find all sketch files in $sketchPath
+    while read -r sketchFilePath; do
+      # Check for sketches with incorrect extension case
+      if [[ "${sketchFilePath: -4}" != ".ino" && "${sketchFilePath: -4}" != ".pde" ]]; then
+        echo "ERROR: Sketch file $sketchFilePath has incorrect extension case, which causes it to not be recognized on a filename case-sensitive OS such as Linux."
+        return 2
       fi
-    done
-    if [[ $? -eq 1 ]]; then
-      return 2
+
+      # Check for folder name mismatch
+      local sketchFileFolderName="${sketchPath##*/}"
+      local sketchFilenameWithExtension="${sketchFilePath##*/}"
+      local sketchFilenameWithoutExtension="${sketchFilenameWithExtension%.*}"
+      if [[ "$sketchFileFolderName" == "$sketchFilenameWithoutExtension" ]]; then
+        # Sketch file found that matches the folder name
+        folderNameMismatch=false
+        # don't return because this represents a non-error and so the folder should continue to be checked for different errors
+      fi
+
+      # Check for multiple sketches in folder
+      if grep --quiet --regexp='void  *setup *( *)' "$sketchFilePath"; then
+        if [[ "$primarySketchFound" == true ]]; then
+          # A primary sketch file was previously found in this folder
+          echo "ERROR: Multiple sketches found in the same folder (${sketchPath})."
+          return 7
+        fi
+        local primarySketchFound=true
+      fi
+    done < <(find "$sketchPath" -maxdepth 1 -type f \( -regex '^.*\.[iI][nN][oO]' -or -regex '^.*\.[pP][dD][eE]' \) -print)
+    if [[ "$folderNameMismatch" == true ]]; then
+      echo "ERROR: Sketch folder name $sketchPath does not match the sketch filename."
+      return 6
     fi
 
     # Check if sketch name is valid
@@ -1338,39 +1361,6 @@ function check_sketch_structure() {
     local checkValidFolderNameExitStatus=$?
     if [[ $checkValidFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
       return $((2 + checkValidFolderNameExitStatus))
-    fi
-
-    # Check for folder name mismatch
-    if
-      find "$sketchPath" -maxdepth 1 -type f \( -name '*.ino' -or -name '*.pde' \) -print | while read -r sketchFilePath; do
-        local sketchFileFolderName="${sketchPath##*/}"
-        local sketchFilenameWithExtension="${sketchFilePath##*/}"
-        local sketchFilenameWithoutExtension="${sketchFilenameWithExtension%.*}"
-        if [[ "$sketchFileFolderName" == "$sketchFilenameWithoutExtension" ]]; then
-          # Sketch file found that matches the folder name
-          # I need to return 1 because the exit status when no matches are found is 0
-          return 1
-        fi
-      done
-    then
-      echo "ERROR: Sketch folder name $sketchPath does not match the sketch filename."
-      return 6
-    fi
-
-    # Check for multiple sketches in folder
-    if
-      ! find "$sketchPath" -maxdepth 1 -type f \( -name '*.ino' -or -name '*.pde' \) -print | while read -r sketchFilePath; do
-        if grep --quiet --regexp='void  *setup *( *)' "$sketchFilePath"; then
-          if [[ "$primarySketchFound" == true ]]; then
-            # A primary sketch file was previously found in this folder
-            return 1
-          fi
-          local primarySketchFound=true
-        fi
-      done
-    then
-      echo "ERROR: Multiple sketches found in the same folder (${sketchPath})."
-      return 7
     fi
 
   done
