@@ -1514,7 +1514,7 @@ function check_library_properties() {
       return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_URL_EXIT_STATUS
     fi
     if ! grep --quiet --regexp='^[[:space:]]*architectures[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "WARNING: $libraryPropertiesPath is missing required architectures field. This causes the Arduino IDE to assume the library is compatible with all architectures (*)."
+      echo "WARNING: $libraryPropertiesPath is missing architectures field. This causes the Arduino IDE to assume the library is compatible with all architectures (*)."
     fi
 
     # Check for invalid lines (anything other than property, comment, or blank line)
