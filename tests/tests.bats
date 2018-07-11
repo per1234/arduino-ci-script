@@ -438,6 +438,14 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [ "${#lines[@]}" -eq 1 ]
 }
 
+@test "check_library_properties \"./check_library_properties/UncategorizedCategory\"" {
+  run check_library_properties "./check_library_properties/UncategorizedCategory"
+  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  [ "${#lines[@]}" -eq 1 ]
+  warningRegex="^WARNING: category 'Uncategorized' used in"
+  [[ "${lines[0]}" =~ $warningRegex ]]
+}
+
 @test "check_library_properties \"./check_library_properties/MissingScheme\"" {
   run check_library_properties "./check_library_properties/MissingScheme"
   [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_MISSING_SCHEME_EXIT_STATUS ]
