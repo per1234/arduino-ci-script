@@ -135,6 +135,14 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [ "${#lines[@]}" -eq 1 ]
 }
 
+@test "check_library_structure \"./check_library_structure/1FolderStartsWithNumber\"" {
+  run check_library_structure "./check_library_structure/1FolderStartsWithNumber"
+  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  [ "${#lines[@]}" -eq 1 ]
+  warningRegex='^WARNING: Folder name \(.*\) beginning with a number'
+  [[ "${lines[0]}" =~ $warningRegex ]]
+}
+
 @test "check_library_structure \"./check_library_structure/-FolderStartsWithInvalidCharacter\"" {
   run check_library_structure "./check_library_structure/-FolderStartsWithInvalidCharacter"
   [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_FOLDER_NAME_HAS_INVALID_FIRST_CHARACTER_EXIT_STATUS ]
@@ -197,6 +205,14 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_library_structure "./check_library_structure/IncorrectSketchExtensionCase"
   [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_SKETCH_EXTENSION_CASE_EXIT_STATUS ]
   [ "${#lines[@]}" -eq 1 ]
+}
+
+@test "check_sketch_structure \"./check_library_structure/SketchFolderStartsWithNumber\"" {
+  run check_sketch_structure "./check_library_structure/SketchFolderStartsWithNumber"
+  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  [ "${#lines[@]}" -eq 1 ]
+  warningRegex='^WARNING: Folder name \(.*\) beginning with a number'
+  [[ "${lines[0]}" =~ $warningRegex ]]
 }
 
 @test "check_sketch_structure \"./check_library_structure/InvalidCharactersAtStartOfSketchFolder\"" {
