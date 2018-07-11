@@ -1198,79 +1198,12 @@ function check_success() {
   echo "The check_success function is no longer necessary and has been deprecated"
 }
 
-# https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification
-function check_library_structure() {
-  local -r libraryPath="$1"
-  # Replace backslashes with slashes
-  local -r libraryPathWithSlashes="${libraryPath//\\//}"
-  # Remove trailing slash
-  local -r normalizedLibraryPath="${libraryPathWithSlashes%/}"
-
-  # Check whether folder exists
-  if [[ ! -d "$normalizedLibraryPath" ]]; then
-    echo "ERROR: Specified folder: $libraryPath doesn't exist."
-    return 1
-  fi
-
-  # Check for valid 1.0 or 1.5 format
-  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type f \( -name '*.h' -or -name '*.hh' -or -name '*.hpp' \)) ]]; then
-    # 1.0 format library, do nothing (this if just makes the logic more simple)
-    :
-  elif [[ $(find "$normalizedLibraryPath" -maxdepth 1 \( -type f -and -name 'library.properties' \)) && $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -regex '^.*[sS][rR][cC]$') ]]; then
-    # 1.5 format library
-    if [[ ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'src') ]]; then
-      echo 'ERROR: 1.5 format library with incorrect case in src subfolder name, which causes library to not be recognized on a filename case-sensitive OS such as Linux.'
-      return 2
-    elif [[ $(find "${normalizedLibraryPath}/src" -maxdepth 1 -type f \( -name '*.h' -or -name '*.hh' -or -name '*.hpp' \)) ]]; then
-      local -r onePointFiveFormat=true
-    fi
-  else
-    echo "ERROR: No valid library found in $libraryPath"
-    return 3
-  fi
-
-  # Check if folder name is valid
-  check_valid_folder_name "$normalizedLibraryPath"
-  local -r checkValidFolderNameExitStatus=$?
-  if [[ $checkValidFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
-    return $((3 + checkValidFolderNameExitStatus))
-  fi
-
-  # Check for incorrect spelling of examples folder
-  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -regex '^.*/[eE][xX][aA][mM][pP][lL][eE].?$') && ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'examples') ]]; then
-    echo 'ERROR: Incorrect examples folder name.'
-    return 7
-  fi
-
-  # Check for 1.5 format with  src and utility folders in library root
-  if [[ "$onePointFiveFormat" == true && $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'utility') ]]; then
-    echo 'ERROR: 1.5 format library with src and utility folders in library root.'
-    return 8
-  fi
-
-  # Check for sketch files outside of the src or extras folders
-  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -path './examples' -prune -or -path './extras' -prune -or \( -type f -and \( -regex '^.*\.[iI][nN][oO]' -or -regex '^.*\.[pP][dD][eE]' \) \)) ]]; then
-    echo 'ERROR: Sketch files found outside of examples and extras folders.'
-    return 9
-  fi
-
-  # Run check_sketch_structure() on examples and extras folders
-  if [[ -d "${normalizedLibraryPath}/examples" ]]; then
-    check_sketch_structure "${normalizedLibraryPath}/examples"
-    local -r checkExamplesSketchStructureExitStatus=$?
-    if [[ $checkExamplesSketchStructureExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
-      return $((9 + checkExamplesSketchStructureExitStatus))
-    fi
-  fi
-  if [[ -d "${normalizedLibraryPath}/extras" ]]; then
-    check_sketch_structure "${normalizedLibraryPath}/extras"
-    local -r checkExtrasSketchStructureExitStatus=$?
-    if [[ $checkExtrasSketchStructureExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
-      return $((9 + checkExtrasSketchStructureExitStatus))
-    fi
-  fi
-}
-
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=1
+readonly ARDUINO_CI_SCRIPT_CHECK_VALID_FOLDER_NAME_INVALID_FIRST_CHARACTER_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_VALID_FOLDER_NAME_INVALID_CHARACTER_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_VALID_FOLDER_NAME_TOO_LONG_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 # The same folder name restrictions apply to libraries and sketches so this function may be used for both
 function check_valid_folder_name() {
   local -r path="$1"
@@ -1287,24 +1220,35 @@ function check_valid_folder_name() {
   local -r startsWithInvalidCharacterRegex="^[-.]"
   if [[ "$folderName" =~ $startsWithInvalidCharacterRegex ]]; then
     echo "ERROR: Folder name (${folderName}) beginning with a - or . is not allowed."
-    return 1
+    return $ARDUINO_CI_SCRIPT_CHECK_VALID_FOLDER_NAME_INVALID_FIRST_CHARACTER_EXIT_STATUS
   fi
 
   # Allowed characters: a-z, A-Z, 0-1, -._
   local -r disallowedCharactersRegex="[^a-zA-Z0-9._-]"
   if [[ "$folderName" =~ $disallowedCharactersRegex ]]; then
     echo "ERROR: Folder name $folderName contains disallowed characters. Only letters, numbers, dots, dashes, and underscores are allowed."
-    return 2
+    return $ARDUINO_CI_SCRIPT_CHECK_VALID_FOLDER_NAME_INVALID_CHARACTER_EXIT_STATUS
   fi
 
   # <64 characters
   if [[ ${#folderName} -gt 63 ]]; then
     echo "ERROR: Folder name $folderName exceeds the maximum of 63 characters."
-    return 3
+    return $ARDUINO_CI_SCRIPT_CHECK_VALID_FOLDER_NAME_TOO_LONG_EXIT_STATUS
   fi
   return 0
 }
 
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=1
+readonly ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_DOESNT_EXIST_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_INCORRECT_EXTENSION_CASE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_MULTIPLE_SKETCHES_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_SKETCH_NAME_MISMATCH_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+readonly ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_NAME_HAS_INVALID_FIRST_CHARACTER_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + ARDUINO_CI_SCRIPT_CHECK_VALID_FOLDER_NAME_INVALID_FIRST_CHARACTER_EXIT_STATUS))
+readonly ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_NAME_HAS_INVALID_CHARACTER_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + ARDUINO_CI_SCRIPT_CHECK_VALID_FOLDER_NAME_INVALID_CHARACTER_EXIT_STATUS))
+readonly ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_NAME_TOO_LONG_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + ARDUINO_CI_SCRIPT_CHECK_VALID_FOLDER_NAME_TOO_LONG_EXIT_STATUS))
 function check_sketch_structure() {
   local -r searchPath="$1"
   # Replace backslashes with slashes
@@ -1315,7 +1259,7 @@ function check_sketch_structure() {
   # Check whether folder exists
   if [[ ! -d "$normalizedSearchPath" ]]; then
     echo "ERROR: Specified folder: $searchPath doesn't exist."
-    return 1
+    return $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_DOESNT_EXIST_EXIT_STATUS
   fi
 
   # find all folders that contain a sketch file
@@ -1328,7 +1272,7 @@ function check_sketch_structure() {
       # Check for sketches with incorrect extension case
       if [[ "${sketchFilePath: -4}" != ".ino" && "${sketchFilePath: -4}" != ".pde" ]]; then
         echo "ERROR: Sketch file $sketchFilePath has incorrect extension case, which causes it to not be recognized on a filename case-sensitive OS such as Linux."
-        return 2
+        return $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_INCORRECT_EXTENSION_CASE_EXIT_STATUS
       fi
 
       # Check for folder name mismatch
@@ -1346,27 +1290,160 @@ function check_sketch_structure() {
         if [[ "$primarySketchFound" == true ]]; then
           # A primary sketch file was previously found in this folder
           echo "ERROR: Multiple sketches found in the same folder (${sketchPath})."
-          return 7
+          return $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_MULTIPLE_SKETCHES_EXIT_STATUS
         fi
         local primarySketchFound=true
       fi
     done < <(find "$sketchPath" -maxdepth 1 -type f \( -regex '^.*\.[iI][nN][oO]' -or -regex '^.*\.[pP][dD][eE]' \) -print)
     if [[ "$folderNameMismatch" == true ]]; then
       echo "ERROR: Sketch folder name $sketchPath does not match the sketch filename."
-      return 6
+      return $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_SKETCH_NAME_MISMATCH_EXIT_STATUS
     fi
 
     # Check if sketch name is valid
     check_valid_folder_name "$sketchPath"
     local checkValidFolderNameExitStatus=$?
     if [[ $checkValidFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
-      return $((2 + checkValidFolderNameExitStatus))
+      return $((ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_SKETCH_NAME_MISMATCH_EXIT_STATUS + checkValidFolderNameExitStatus))
     fi
 
   done
 }
 
+# https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=1
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_FOLDER_DOESNT_EXIST_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_SRC_FOLDER_CASE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_LIBRARY_NOT_FOUND_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_FOLDER_NAME_HAS_INVALID_FIRST_CHARACTER_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + ARDUINO_CI_SCRIPT_CHECK_VALID_FOLDER_NAME_INVALID_FIRST_CHARACTER_EXIT_STATUS))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_FOLDER_NAME_HAS_INVALID_CHARACTER_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + ARDUINO_CI_SCRIPT_CHECK_VALID_FOLDER_NAME_INVALID_CHARACTER_EXIT_STATUS))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_FOLDER_NAME_TOO_LONG_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + ARDUINO_CI_SCRIPT_CHECK_VALID_FOLDER_NAME_TOO_LONG_EXIT_STATUS))
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_FOLDER_NAME_TOO_LONG_EXIT_STATUS + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_EXAMPLES_FOLDER_NAME_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SRC_AND_UTILITY_FOLDERS_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_SKETCH_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SKETCH_FOLDER_DOESNT_EXIST_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_DOESNT_EXIST_EXIT_STATUS))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_SKETCH_EXTENSION_CASE_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_INCORRECT_EXTENSION_CASE_EXIT_STATUS))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_MULTIPLE_SKETCHES_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_MULTIPLE_SKETCHES_EXIT_STATUS))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SKETCH_NAME_MISMATCH_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_SKETCH_NAME_MISMATCH_EXIT_STATUS))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SKETCH_FOLDER_NAME_HAS_INVALID_FIRST_CHARACTER_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_NAME_HAS_INVALID_FIRST_CHARACTER_EXIT_STATUS))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SKETCH_FOLDER_NAME_HAS_INVALID_CHARACTER_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_NAME_HAS_INVALID_CHARACTER_EXIT_STATUS))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SKETCH_FOLDER_NAME_TOO_LONG_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_NAME_TOO_LONG_EXIT_STATUS))
+function check_library_structure() {
+  local -r libraryPath="$1"
+  # Replace backslashes with slashes
+  local -r libraryPathWithSlashes="${libraryPath//\\//}"
+  # Remove trailing slash
+  local -r normalizedLibraryPath="${libraryPathWithSlashes%/}"
+
+  # Check whether folder exists
+  if [[ ! -d "$normalizedLibraryPath" ]]; then
+    echo "ERROR: Specified folder: $libraryPath doesn't exist."
+    return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_FOLDER_DOESNT_EXIST_EXIT_STATUS
+  fi
+
+  # Check for valid 1.0 or 1.5 format
+  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type f \( -name '*.h' -or -name '*.hh' -or -name '*.hpp' \)) ]]; then
+    # 1.0 format library, do nothing (this if just makes the logic more simple)
+    :
+  elif [[ $(find "$normalizedLibraryPath" -maxdepth 1 \( -type f -and -name 'library.properties' \)) && $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -regex '^.*[sS][rR][cC]$') ]]; then
+    # 1.5 format library
+    if [[ ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'src') ]]; then
+      echo 'ERROR: 1.5 format library with incorrect case in src subfolder name, which causes library to not be recognized on a filename case-sensitive OS such as Linux.'
+      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_SRC_FOLDER_CASE_EXIT_STATUS
+    elif [[ $(find "${normalizedLibraryPath}/src" -maxdepth 1 -type f \( -name '*.h' -or -name '*.hh' -or -name '*.hpp' \)) ]]; then
+      local -r onePointFiveFormat=true
+    fi
+  else
+    echo "ERROR: No valid library found in $libraryPath"
+    return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_LIBRARY_NOT_FOUND_EXIT_STATUS
+  fi
+
+  # Check if folder name is valid
+  check_valid_folder_name "$normalizedLibraryPath"
+  local -r checkValidFolderNameExitStatus=$?
+  if [[ $checkValidFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
+    return $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_LIBRARY_NOT_FOUND_EXIT_STATUS + checkValidFolderNameExitStatus))
+  fi
+
+  # Check for incorrect spelling of examples folder
+  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -regex '^.*/[eE][xX][aA][mM][pP][lL][eE].?$') && ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'examples') ]]; then
+    echo 'ERROR: Incorrect examples folder name.'
+    return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_EXAMPLES_FOLDER_NAME_EXIT_STATUS
+  fi
+
+  # Check for 1.5 format with  src and utility folders in library root
+  if [[ "$onePointFiveFormat" == true && $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'utility') ]]; then
+    echo 'ERROR: 1.5 format library with src and utility folders in library root.'
+    return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SRC_AND_UTILITY_FOLDERS_EXIT_STATUS
+  fi
+
+  # Check for sketch files outside of the src or extras folders
+  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -path './examples' -prune -or -path './extras' -prune -or \( -type f -and \( -regex '^.*\.[iI][nN][oO]' -or -regex '^.*\.[pP][dD][eE]' \) \)) ]]; then
+    echo 'ERROR: Sketch files found outside of examples and extras folders.'
+    return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_SKETCH_EXIT_STATUS
+  fi
+
+  # Run check_sketch_structure() on examples and extras folders
+  if [[ -d "${normalizedLibraryPath}/examples" ]]; then
+    check_sketch_structure "${normalizedLibraryPath}/examples"
+    local -r checkExamplesSketchStructureExitStatus=$?
+    if [[ $checkExamplesSketchStructureExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
+      return $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_SKETCH_EXIT_STATUS + checkExamplesSketchStructureExitStatus))
+    fi
+  fi
+  if [[ -d "${normalizedLibraryPath}/extras" ]]; then
+    check_sketch_structure "${normalizedLibraryPath}/extras"
+    local -r checkExtrasSketchStructureExitStatus=$?
+    if [[ $checkExtrasSketchStructureExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
+      return $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_SKETCH_EXIT_STATUS + checkExtrasSketchStructureExitStatus))
+    fi
+  fi
+}
+
 # https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=1
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_FOLDER_DOESNT_EXIST_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCORRECT_FILENAME_CASE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_NAME_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_VERSION_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_AUTHOR_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_MAINTAINER_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_SENTENCE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_PARAGRAPH_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_CATEGORY_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_URL_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_LINE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_CHARACTERS_IN_NAME_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_VERSION_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_REDUNDANT_PARAGRAPH_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_CATEGORY_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_MISSING_SCHEME_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_DEAD_URL_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_EMPTY_INCLUDES_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 function check_library_properties() {
   local -r searchPath="$1"
 
@@ -1378,7 +1455,7 @@ function check_library_properties() {
   # Check whether folder exists
   if [[ ! -d "$normalizedSearchPath" ]]; then
     echo "ERROR: Specified folder: $normalizedSearchPath doesn't exist."
-    return 1
+    return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_FOLDER_DOESNT_EXIST_EXIT_STATUS
   fi
 
   # find all folders that contain a library.properties file
@@ -1387,7 +1464,7 @@ function check_library_properties() {
     # Check for incorrect filename case
     if [[ "${libraryPropertiesPath: -18}" != 'library.properties' ]]; then
       echo "ERROR: $libraryPropertiesPath has incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux. It must be library.properties"
-      return 2
+      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCORRECT_FILENAME_CASE_EXIT_STATUS
     fi
 
     # Get rid of the CRs
@@ -1397,39 +1474,39 @@ function check_library_properties() {
     # Check that all required fields exist
     if ! grep --quiet --regexp='^[[:space:]]*name[[:space:]]*=' <<<"$libraryProperties"; then
       echo "ERROR: $libraryPropertiesPath is missing required name field."
-      return 3
+      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_NAME_EXIT_STATUS
     fi
     if ! grep --quiet --regexp='^[[:space:]]*version[[:space:]]*=' <<<"$libraryProperties"; then
       echo "ERROR: $libraryPropertiesPath is missing required version field."
-      return 4
+      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_VERSION_EXIT_STATUS
     fi
     if ! grep --quiet --regexp='^[[:space:]]*author[[:space:]]*=' <<<"$libraryProperties"; then
       echo "ERROR: $libraryPropertiesPath is missing required author field."
-      return 5
+      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_AUTHOR_EXIT_STATUS
     fi
     if ! grep --quiet --regexp='^[[:space:]]*maintainer[[:space:]]*=' <<<"$libraryProperties"; then
       if grep --quiet --regexp='^[[:space:]]*email[[:space:]]*=' <<<"$libraryProperties"; then
         echo "WARNING: Use of undocumented email field in $libraryPropertiesPath. It's recommended to use the maintainer field instead, per the Arduino Library Specification."
       else
         echo "ERROR: $libraryPropertiesPath is missing required maintainer field."
-        return 6
+        return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_MAINTAINER_EXIT_STATUS
       fi
     fi
     if ! grep --quiet --regexp='^[[:space:]]*sentence[[:space:]]*=' <<<"$libraryProperties"; then
       echo "ERROR: $libraryPropertiesPath is missing required sentence field."
-      return 7
+      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_SENTENCE_EXIT_STATUS
     fi
     if ! grep --quiet --regexp='^[[:space:]]*paragraph[[:space:]]*=' <<<"$libraryProperties"; then
       echo "ERROR: $libraryPropertiesPath is missing required paragraph field."
-      return 8
+      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_PARAGRAPH_EXIT_STATUS
     fi
     if ! grep --quiet --regexp='^[[:space:]]*category[[:space:]]*=' <<<"$libraryProperties"; then
       echo "ERROR: $libraryPropertiesPath is missing category field. This results in an invalid category warning."
-      return 9
+      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_CATEGORY_EXIT_STATUS
     fi
     if ! grep --quiet --regexp='^[[:space:]]*url[[:space:]]*=' <<<"$libraryProperties"; then
       echo "ERROR: $libraryPropertiesPath is missing required url field."
-      return 10
+      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_URL_EXIT_STATUS
     fi
     if ! grep --quiet --regexp='^[[:space:]]*architectures[[:space:]]*=' <<<"$libraryProperties"; then
       echo "WARNING: $libraryPropertiesPath is missing required architectures field. This causes the Arduino IDE to assume the library is compatible with all architectures (*)."
@@ -1438,7 +1515,7 @@ function check_library_properties() {
     # Check for invalid lines (anything other than property, comment, or blank line)
     if grep --quiet --invert-match --extended-regexp --regexp='=' --regexp='^[[:space:]]*(#|$)' <<<"$libraryProperties"; then
       echo "ERROR: $libraryPropertiesPath contains an invalid line."
-      return 11
+      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_LINE_EXIT_STATUS
     fi
 
     # Check for characters in the name value disallowed by the Library Manager indexer
@@ -1451,13 +1528,13 @@ function check_library_properties() {
         fi
       done
     then
-      return 12
+      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_CHARACTERS_IN_NAME_EXIT_STATUS
     fi
 
     # Check for invalid version
     if ! grep --quiet --extended-regexp --regexp='^[[:space:]]*version[[:space:]]*=[[:space:]]*(((([1-9][0-9]*)|0)\.){0,2})(([1-9][0-9]*)|0)(-(([a-zA-Z0-9-]*\.)*)([a-zA-Z0-9-]+))?(\+(([a-zA-Z0-9-]*\.)*)([a-zA-Z0-9-]+))?[[:space:]]*$' <<<"$libraryProperties"; then
       echo "ERROR: $libraryPropertiesPath has an invalid version value. Follow the semver specification: https://semver.org/"
-      return 13
+      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_VERSION_EXIT_STATUS
     fi
 
     # Check for repeat of sentence in paragraph
@@ -1484,7 +1561,7 @@ function check_library_properties() {
         fi
       done
     then
-      return 14
+      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_REDUNDANT_PARAGRAPH_EXIT_STATUS
     fi
 
     # Check for invalid category
@@ -1493,14 +1570,14 @@ function check_library_properties() {
         echo "WARNING: category \'Uncategorized\' used in $libraryPropertiesPath is not recommended. Please chose an appropriate category from https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
       else
         echo "ERROR: $libraryPropertiesPath has an invalid category value. Please chose a valid category from https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-        return 15
+        return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_CATEGORY_EXIT_STATUS
       fi
     fi
 
     # Check for missing scheme on url value
     if ! grep --quiet --extended-regexp --regexp='^[[:space:]]*url[[:space:]]*=[[:space:]]*(http://)|(https://)' <<<"$libraryProperties"; then
       echo "ERROR: ${libraryPropertiesPath}\'s url value is missing the scheme (e.g. https://). URL scheme must be specified for Library Manager's \"More info\" link to be clickable."
-      return 16
+      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_MISSING_SCHEME_EXIT_STATUS
     fi
 
     # Check for dead url value
@@ -1517,7 +1594,7 @@ function check_library_properties() {
         fi
       done
     then
-      return 17
+      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_DEAD_URL_EXIT_STATUS
     fi
 
     # Check for invalid architectures
@@ -1542,19 +1619,33 @@ function check_library_properties() {
         unset IFS
       done
     then
-      return 18
+      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS
     fi
 
     # Check for empty includes value
     if grep --quiet --regexp='^[[:space:]]*includes[[:space:]]*=[[:space:]]*$' <<<"$libraryProperties"; then
       echo "ERROR: ${libraryPropertiesPath}\'s includes value is empty. Either define the field or remove it."
-      return 19
+      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_EMPTY_INCLUDES_EXIT_STATUS
     fi
 
   done
 }
 
 # https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keywords
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=1
+readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_FOLDER_DOESNT_EXIST_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCORRECT_FILENAME_CASE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_FIELD_SEPARATOR_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_MULTIPLE_TABS_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_TOKENTYPE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_REFERENCE_LINK_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 function check_keywords_txt() {
   local -r searchPath="$1"
 
@@ -1566,7 +1657,7 @@ function check_keywords_txt() {
   # Check whether folder exists
   if [[ ! -d "$normalizedSearchPath" ]]; then
     echo "ERROR: Specified folder: $normalizedSearchPath doesn't exist."
-    return 1
+    return $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_FOLDER_DOESNT_EXIST_EXIT_STATUS
   fi
 
   # find all folders that contain a keywords.txt file
@@ -1575,7 +1666,7 @@ function check_keywords_txt() {
     # Check for incorrect filename case
     if [[ "${keywordsTxtPath: -12}" != 'keywords.txt' ]]; then
       echo "ERROR: $keywordsTxtPath uses incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux."
-      return 2
+      return $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCORRECT_FILENAME_CASE_EXIT_STATUS
     fi
 
     # Read the keywords.txt file line by line
@@ -1591,14 +1682,14 @@ function check_keywords_txt() {
           local validSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t''+[^[:space:]]+'
           if ! [[ "$keywordsTxtLine" =~ $validSeparatorRegex ]]; then
             echo "ERROR: $keywordsTxtPath uses invalid field separator. It must be a true tab."
-            return 3
+            return $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_FIELD_SEPARATOR_EXIT_STATUS
           fi
 
           # Check for multiple tabs used as separator where this causes unintended results
           local consequentialMultipleSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t\t''+((KEYWORD1)|(LITERAL1))'
           if [[ "$keywordsTxtLine" =~ $consequentialMultipleSeparatorRegex ]]; then
             echo "ERROR: $keywordsTxtPath uses multiple tabs as field separator. It must be a single tab. This causes the default keyword coloring (as used by KEYWORD2, KEYWORD3, LITERAL2) to be used rather than the intended coloration."
-            return 4
+            return $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_MULTIPLE_TABS_EXIT_STATUS
           fi
 
           # Get the field values
@@ -1652,7 +1743,7 @@ function check_keywords_txt() {
             local validKeywordTokentypeRegex='^((KEYWORD1)|(KEYWORD2)|(KEYWORD3)|(LITERAL1)|(LITERAL2))$'
             if ! [[ "$keywordTokentype" =~ $validKeywordTokentypeRegex ]]; then
               echo "ERROR: $keywordsTxtPath uses invalid KEYWORD_TOKENTYPE: ${keywordTokentype}, which causes the default keyword coloration to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keyword_tokentype"
-              return 5
+              return $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_TOKENTYPE_EXIT_STATUS
             fi
 
             # Check for invalid RSYNTAXTEXTAREA_TOKENTYPE
@@ -1660,7 +1751,7 @@ function check_keywords_txt() {
               local validRsyntaxtextareaTokentypeRegex='^((RESERVED_WORD)|(RESERVED_WORD2)|(DATA_TYPE)|(PREPROCESSOR))$'
               if ! [[ "$rsyntaxtextareaTokentype" =~ $validRsyntaxtextareaTokentypeRegex ]]; then
                 echo "ERROR: $keywordsTxtPath uses invalid RSYNTAXTEXTAREA_TOKENTYPE: ${rsyntaxtextareaTokentype}, which causes the default keyword coloration to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#rsyntaxtextarea_tokentype"
-                return 6
+                return $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS
               fi
             fi
 
@@ -1673,7 +1764,7 @@ function check_keywords_txt() {
                 install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
                 if ! [[ -e "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/reference/www.arduino.cc/en/Reference/${referenceLink}.html" ]]; then
                   echo "ERROR: $keywordsTxtPath uses a REFERENCE_LINK value: $referenceLink that is not a valid Arduino Language Reference page. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#reference_link"
-                  return 7
+                  return $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_REFERENCE_LINK_EXIT_STATUS
                 fi
               fi
             fi
@@ -1686,6 +1777,14 @@ function check_keywords_txt() {
 }
 
 # https://github.com/arduino/Arduino/wiki/Library-Manager-FAQ#how-is-the-library-list-generated
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=1
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_FOLDER_DOESNT_EXIST_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_EXE_FOUND_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_DOT_DEVELOPMENT_FOUND_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_SYMLINK_FOUND_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 function check_library_manager_compliance() {
   local -r libraryPath="$1"
   # Replace backslashes with slashes
@@ -1696,25 +1795,25 @@ function check_library_manager_compliance() {
   # Check whether folder exists
   if [[ ! -d "$normalizedLibraryPath" ]]; then
     echo "ERROR: Specified folder: $libraryPath doesn't exist."
-    return 1
+    return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_FOLDER_DOESNT_EXIST_EXIT_STATUS
   fi
 
   # Check for .exe files
   if [[ $(find "$normalizedLibraryPath" -type f -name '*.exe') ]]; then
     echo "ERROR: .exe file found."
-    return 2
+    return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_EXE_FOUND_EXIT_STATUS
   fi
 
   # Check for .development file
   if [[ $(find "$normalizedLibraryPath" -type f -name '.development') ]]; then
     echo "ERROR: .development file found."
-    return 3
+    return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_DOT_DEVELOPMENT_FOUND_EXIT_STATUS
   fi
 
   # Check for .development file
   if [[ $(find "$normalizedLibraryPath" -type l) ]]; then
     echo "ERROR: Symlink found."
-    return 4
+    return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_SYMLINK_FOUND_EXIT_STATUS
   fi
 }
 
