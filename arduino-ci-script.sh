@@ -1441,6 +1441,9 @@ function check_library_properties() {
       echo "ERROR: $libraryPropertiesPath is missing required url field."
       return 10
     fi
+    if ! grep --quiet --regexp='^[[:space:]]*architectures[[:space:]]*=' <<<"$libraryProperties"; then
+      echo "WARNING: $libraryPropertiesPath is missing required architectures field. This causes the Arduino IDE to assume the library is compatible with all architectures (*)."
+    fi
 
     # Check for invalid lines (anything other than property, comment, or blank line)
     if grep --quiet --invert-match --extended-regexp --regexp='=' --regexp='^[[:space:]]*(#|$)' <<<"$libraryProperties"; then
