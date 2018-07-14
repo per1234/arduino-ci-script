@@ -1753,7 +1753,7 @@ function check_keywords_txt() {
 
             # Check for invalid RSYNTAXTEXTAREA_TOKENTYPE
             if [[ "$rsyntaxtextareaTokentype" != "" ]]; then
-              local validRsyntaxtextareaTokentypeRegex='^((RESERVED_WORD)|(RESERVED_WORD2)|(DATA_TYPE)|(PREPROCESSOR))$'
+              local validRsyntaxtextareaTokentypeRegex='^((RESERVED_WORD)|(RESERVED_WORD_2)|(DATA_TYPE)|(PREPROCESSOR))$'
               if ! [[ "$rsyntaxtextareaTokentype" =~ $validRsyntaxtextareaTokentypeRegex ]]; then
                 echo "ERROR: $keywordsTxtPath uses invalid RSYNTAXTEXTAREA_TOKENTYPE: ${rsyntaxtextareaTokentype}, which causes the default keyword coloration to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#rsyntaxtextarea_tokentype"
                 return $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS
