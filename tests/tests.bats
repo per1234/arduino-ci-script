@@ -689,20 +689,18 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [ "$status" -eq $expectedExitStatus ]
 }
 
-@test "check_keywords_txt \"./check_keywords_txt/MultipleTabsError\"" {
+@test "check_keywords_txt \"./check_keywords_txt/ConsequentialMultipleTabs\"" {
   expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_MULTIPLE_TABS_EXIT_STATUS
-  run check_keywords_txt "./check_keywords_txt/MultipleTabsError"
+  run check_keywords_txt "./check_keywords_txt/ConsequentialMultipleTabs"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
 }
 
-@test "check_keywords_txt \"./check_keywords_txt/MultipleTabsWarning\"" {
-  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
-  run check_keywords_txt "./check_keywords_txt/MultipleTabsWarning"
+@test "check_keywords_txt \"./check_keywords_txt/InconsequentialMultipleTabs\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCONSEQUENTIAL_MULTIPLE_TABS_EXIT_STATUS
+  run check_keywords_txt "./check_keywords_txt/InconsequentialMultipleTabs"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-  warningRegex='^WARNING: ./check_keywords_txt/MultipleTabsWarning/keywords.txt uses multiple tabs as field separator.'
-  [[ "${lines[0]}" =~ $warningRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidKeywordTokentypeUnix\"" {
