@@ -20,82 +20,108 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
 }
 
 @test "set_script_verbosity 0" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run set_script_verbosity 0
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "set_script_verbosity 1" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run set_script_verbosity 1
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "set_script_verbosity 2" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run set_script_verbosity 2
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "set_application_folder \"$TESTS_BATS_APPLICATION_FOLDER\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run set_application_folder "$TESTS_BATS_APPLICATION_FOLDER"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "set_sketchbook_folder" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run set_sketchbook_folder .
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "set_board_testing \"true\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run set_board_testing "true"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "set_board_testing \"false\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run set_board_testing "false"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "set_library_testing \"true\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run set_library_testing "true"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "set_library_testing \"false\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run set_library_testing "false"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "install_ide \"$TESTS_BATS_IDE_VERSION\" (w/o setting application folder first)" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS
   run install_ide "$TESTS_BATS_IDE_VERSION"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
   errorRegex='^ERROR: Application folder was not set.'
   [[ "${lines[0]}" =~ $errorRegex ]]
 }
 
 @test "set_verbose_output_during_compilation \"true\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run set_verbose_output_during_compilation "true"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "set_verbose_output_during_compilation \"false\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run set_verbose_output_during_compilation "false"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "display_report" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run display_report
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   reportRegex='Begin Report'
   [[ "$lines" =~ $reportRegex ]]
 }
@@ -103,381 +129,501 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
 # check_library_structure
 
 @test "check_library_structure \"./check_library_structure/ValidLibraryOnePointZero\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_library_structure "./check_library_structure/ValidLibraryOnePointZero"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "check_library_structure \"./check_library_structure/ValidLibraryOnePointFive\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_library_structure "./check_library_structure/ValidLibraryOnePointFive"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "check_library_structure \"./check_library_structure/DoesntExist\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_FOLDER_DOESNT_EXIST_EXIT_STATUS
   run check_library_structure "./check_library_structure/DoesntExist"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_FOLDER_DOESNT_EXIST_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_structure \"./check_library_structure/IncorrectSrcFolderCase\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_SRC_FOLDER_CASE_EXIT_STATUS
   run check_library_structure "./check_library_structure/IncorrectSrcFolderCase"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_SRC_FOLDER_CASE_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_structure \"./check_library_structure/NotLibrary\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_LIBRARY_NOT_FOUND_EXIT_STATUS
   run check_library_structure "./check_library_structure/NotLibrary"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_LIBRARY_NOT_FOUND_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_structure \"./check_library_structure/1FolderStartsWithNumber\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_library_structure "./check_library_structure/1FolderStartsWithNumber"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
   warningRegex='^WARNING: Folder name \(.*\) beginning with a number'
   [[ "${lines[0]}" =~ $warningRegex ]]
 }
 
 @test "check_library_structure \"./check_library_structure/-FolderStartsWithInvalidCharacter\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_FOLDER_NAME_HAS_INVALID_FIRST_CHARACTER_EXIT_STATUS
   run check_library_structure "./check_library_structure/-FolderStartsWithInvalidCharacter"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_FOLDER_NAME_HAS_INVALID_FIRST_CHARACTER_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_structure \"./check_library_structure/Invalid CharactersInFolder\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_FOLDER_NAME_HAS_INVALID_CHARACTER_EXIT_STATUS
   run check_library_structure "./check_library_structure/Invalid CharactersInFolder"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_FOLDER_NAME_HAS_INVALID_CHARACTER_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_structure \"./check_library_structure/FolderNameTooLongasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasd\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_FOLDER_NAME_TOO_LONG_EXIT_STATUS
   run check_library_structure "./check_library_structure/FolderNameTooLongasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasd"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_FOLDER_NAME_TOO_LONG_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_structure \"./check_library_structure/IncorrectExamplesFolder\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_EXAMPLES_FOLDER_NAME_EXIT_STATUS
   run check_library_structure "./check_library_structure/IncorrectExamplesFolder"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_EXAMPLES_FOLDER_NAME_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_structure \"./check_library_structure/SrcAndUtiltyFolders\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SRC_AND_UTILITY_FOLDERS_EXIT_STATUS
   run check_library_structure "./check_library_structure/SrcAndUtiltyFolders"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SRC_AND_UTILITY_FOLDERS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_structure \"./check_library_structure/SketchOutsideExamples\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_SKETCH_EXIT_STATUS
   run check_library_structure "./check_library_structure/SketchOutsideExamples"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_SKETCH_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 # check_sketch_structure
 
 @test "check_sketch_structure \"./check_library_structure/DoesntExist\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_DOESNT_EXIST_EXIT_STATUS
   run check_sketch_structure "./check_library_structure/DoesntExist"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_DOESNT_EXIST_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_sketch_structure \"./check_library_structure/PdeSketchExtension\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_sketch_structure "./check_library_structure/PdeSketchExtension"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
   pdeWarningRegex='^WARNING: File .* uses the \.pde extension'
   [[ "${lines[0]}" =~ $pdeWarningRegex ]]
 }
 
 @test "check_sketch_structure \"./check_library_structure/IncorrectSketchExtensionCase\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_INCORRECT_EXTENSION_CASE_EXIT_STATUS
   run check_sketch_structure "./check_library_structure/IncorrectSketchExtensionCase"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_INCORRECT_EXTENSION_CASE_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_structure \"./check_library_structure/IncorrectSketchExtensionCase\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_SKETCH_EXTENSION_CASE_EXIT_STATUS
   run check_library_structure "./check_library_structure/IncorrectSketchExtensionCase"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_SKETCH_EXTENSION_CASE_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_sketch_structure \"./check_library_structure/SketchFolderStartsWithNumber\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_sketch_structure "./check_library_structure/SketchFolderStartsWithNumber"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
   warningRegex='^WARNING: Folder name \(.*\) beginning with a number'
   [[ "${lines[0]}" =~ $warningRegex ]]
 }
 
 @test "check_sketch_structure \"./check_library_structure/InvalidCharactersAtStartOfSketchFolder\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_NAME_HAS_INVALID_FIRST_CHARACTER_EXIT_STATUS
   run check_sketch_structure "./check_library_structure/InvalidCharactersAtStartOfSketchFolder"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_NAME_HAS_INVALID_FIRST_CHARACTER_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_structure \"./check_library_structure/InvalidCharactersAtStartOfSketchFolder\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SKETCH_FOLDER_NAME_HAS_INVALID_FIRST_CHARACTER_EXIT_STATUS
   run check_library_structure "./check_library_structure/InvalidCharactersAtStartOfSketchFolder"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SKETCH_FOLDER_NAME_HAS_INVALID_FIRST_CHARACTER_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_sketch_structure \"./check_library_structure/InvalidCharactersInSketchFolder\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_NAME_HAS_INVALID_CHARACTER_EXIT_STATUS
   run check_sketch_structure "./check_library_structure/InvalidCharactersInSketchFolder"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_NAME_HAS_INVALID_CHARACTER_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_structure \"./check_library_structure/InvalidCharactersInSketchFolder\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SKETCH_FOLDER_NAME_HAS_INVALID_CHARACTER_EXIT_STATUS
   run check_library_structure "./check_library_structure/InvalidCharactersInSketchFolder"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SKETCH_FOLDER_NAME_HAS_INVALID_CHARACTER_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_sketch_structure \"./check_library_structure/SketchFolderNameTooLong\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_NAME_TOO_LONG_EXIT_STATUS
   run check_sketch_structure "./check_library_structure/SketchFolderNameTooLong"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_NAME_TOO_LONG_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_structure \"./check_library_structure/SketchFolderNameTooLong\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SKETCH_FOLDER_NAME_TOO_LONG_EXIT_STATUS
   run check_library_structure "./check_library_structure/SketchFolderNameTooLong"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SKETCH_FOLDER_NAME_TOO_LONG_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_sketch_structure \"./check_library_structure/SketchFolderNameTooLongExtras\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_NAME_TOO_LONG_EXIT_STATUS
   run check_sketch_structure "./check_library_structure/SketchFolderNameTooLongExtras"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_NAME_TOO_LONG_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_structure \"./check_library_structure/SketchFolderNameTooLongExtras\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SKETCH_FOLDER_NAME_TOO_LONG_EXIT_STATUS
   run check_library_structure "./check_library_structure/SketchFolderNameTooLongExtras"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SKETCH_FOLDER_NAME_TOO_LONG_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_sketch_structure \"./check_library_structure/SketchFolderNameMismatch\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_SKETCH_NAME_MISMATCH_EXIT_STATUS
   run check_sketch_structure "./check_library_structure/SketchFolderNameMismatch"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_SKETCH_NAME_MISMATCH_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_structure \"./check_library_structure/SketchFolderNameMismatch\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SKETCH_NAME_MISMATCH_EXIT_STATUS
   run check_library_structure "./check_library_structure/SketchFolderNameMismatch"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SKETCH_NAME_MISMATCH_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_sketch_structure \"./check_library_structure/MultipleSketchesInSameFolderUnix\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_MULTIPLE_SKETCHES_EXIT_STATUS
   run check_sketch_structure "./check_library_structure/MultipleSketchesInSameFolderUnix"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_MULTIPLE_SKETCHES_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_structure \"./check_library_structure/MultipleSketchesInSameFolderUnix\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_MULTIPLE_SKETCHES_EXIT_STATUS
   run check_library_structure "./check_library_structure/MultipleSketchesInSameFolderUnix"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_MULTIPLE_SKETCHES_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_sketch_structure \"./check_library_structure/MultipleSketchesInSameFolderMac\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_MULTIPLE_SKETCHES_EXIT_STATUS
   run check_sketch_structure "./check_library_structure/MultipleSketchesInSameFolderMac"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_MULTIPLE_SKETCHES_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_structure \"./check_library_structure/MultipleSketchesInSameFolderMac\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_MULTIPLE_SKETCHES_EXIT_STATUS
   run check_library_structure "./check_library_structure/MultipleSketchesInSameFolderMac"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_MULTIPLE_SKETCHES_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 # check_library_properties
 
 @test "check_library_properties \"./check_library_properties/ValidLibraryPropertiesUnix\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_library_properties "./check_library_properties/ValidLibraryPropertiesUnix"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "check_library_properties \"./check_library_properties/ValidLibraryPropertiesWindows\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_library_properties "./check_library_properties/ValidLibraryPropertiesWindows"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "check_library_properties \"./check_library_properties/ValidLibraryPropertiesMac\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_library_properties "./check_library_properties/ValidLibraryPropertiesMac"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "check_library_properties \"./check_library_properties/NoLibraryProperties\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_library_properties "./check_library_properties/NoLibraryProperties"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "check_library_properties \"./check_library_properties/DoesntExist\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_FOLDER_DOESNT_EXIST_EXIT_STATUS
   run check_library_properties "./check_library_properties/DoesntExist"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_FOLDER_DOESNT_EXIST_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/InvalidFilenameCase\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCORRECT_FILENAME_CASE_EXIT_STATUS
   run check_library_properties "./check_library_properties/InvalidFilenameCase"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCORRECT_FILENAME_CASE_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingName\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_NAME_EXIT_STATUS
   run check_library_properties "./check_library_properties/MissingName"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_NAME_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/BOM\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_NAME_EXIT_STATUS
   run check_library_properties "./check_library_properties/BOM"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
   # The BOM corrupts the first line, which in this case is the name field
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_NAME_EXIT_STATUS ]
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingVersion\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_VERSION_EXIT_STATUS
   run check_library_properties "./check_library_properties/MissingVersion"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_VERSION_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingAuthor\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_AUTHOR_EXIT_STATUS
   run check_library_properties "./check_library_properties/MissingAuthor"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_AUTHOR_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/EmailInsteadOfMaintainer\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_library_properties "./check_library_properties/EmailInsteadOfMaintainer"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
   warningRegex='^WARNING: Use of undocumented email field'
   [[ "${lines[0]}" =~ $warningRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingMaintainer\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_MAINTAINER_EXIT_STATUS
   run check_library_properties "./check_library_properties/MissingMaintainer"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_MAINTAINER_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingSentence\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_SENTENCE_EXIT_STATUS
   run check_library_properties "./check_library_properties/MissingSentence"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_SENTENCE_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingParagraph\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_PARAGRAPH_EXIT_STATUS
   run check_library_properties "./check_library_properties/MissingParagraph"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_PARAGRAPH_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingCategory\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_CATEGORY_EXIT_STATUS
   run check_library_properties "./check_library_properties/MissingCategory"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_CATEGORY_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingUrl\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_URL_EXIT_STATUS
   run check_library_properties "./check_library_properties/MissingUrl"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_URL_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingArchitectures\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_library_properties "./check_library_properties/MissingArchitectures"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
   warningRegex='^WARNING: .* is missing architectures field'
   [[ "${lines[0]}" =~ $warningRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/InvalidLine\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_LINE_EXIT_STATUS
   run check_library_properties "./check_library_properties/InvalidLine"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_LINE_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/InvalidName\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_CHARACTERS_IN_NAME_EXIT_STATUS
   run check_library_properties "./check_library_properties/InvalidName"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_CHARACTERS_IN_NAME_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/InvalidVersion\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_VERSION_EXIT_STATUS
   run check_library_properties "./check_library_properties/InvalidVersion"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_VERSION_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/RedundantParagraph\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_REDUNDANT_PARAGRAPH_EXIT_STATUS
   run check_library_properties "./check_library_properties/RedundantParagraph"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_REDUNDANT_PARAGRAPH_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/InvalidCategory\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_CATEGORY_EXIT_STATUS
   run check_library_properties "./check_library_properties/InvalidCategory"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_CATEGORY_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/UncategorizedCategory\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_library_properties "./check_library_properties/UncategorizedCategory"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
   warningRegex="^WARNING: category 'Uncategorized' used in"
   [[ "${lines[0]}" =~ $warningRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/BlankUrl\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_BLANK_EXIT_STATUS
   run check_library_properties "./check_library_properties/BlankUrl"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_BLANK_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingScheme\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_MISSING_SCHEME_EXIT_STATUS
   run check_library_properties "./check_library_properties/MissingScheme"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_MISSING_SCHEME_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/DeadUrl\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_DEAD_URL_EXIT_STATUS
   run check_library_properties "./check_library_properties/DeadUrl"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_DEAD_URL_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/InvalidArchitecture\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS
   run check_library_properties "./check_library_properties/InvalidArchitecture"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/EmptyIncludes\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_EMPTY_INCLUDES_EXIT_STATUS
   run check_library_properties "./check_library_properties/EmptyIncludes"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_EMPTY_INCLUDES_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 # check_keywords_txt
 
 @test "check_keywords_txt \"./check_keywords_txt/ValidKeywordsTxtUnix\" (w/o IDE installed)" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/ValidKeywordsTxtUnix"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   # One warning is printed for each reference link (currently there are two)
   [ "${#lines[@]}" -eq 2 ]
   IDEnotInstalledRegex='^WARNING: Arduino IDE is not installed'
@@ -486,6 +632,7 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/ValidKeywordsTxtUnix\" (w/ IDE installed)" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run set_application_folder "$TESTS_BATS_APPLICATION_FOLDER"
   # The environment variable set by set_application_folder is not preserved so it must be set here
   ARDUINO_CI_SCRIPT_APPLICATION_FOLDER="$TESTS_BATS_APPLICATION_FOLDER"
@@ -493,91 +640,121 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   # The environment variable set by install_ide is not preserved so it must be set here
   NEWEST_INSTALLED_IDE_VERSION="$TESTS_BATS_IDE_VERSION"
   run check_keywords_txt "./check_keywords_txt/ValidKeywordsTxtUnix"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/ValidKeywordsTxtWindows\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/ValidKeywordsTxtWindows"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/ValidKeywordsTxtMac\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/ValidKeywordsTxtMac"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/NoKeywordsTxt\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/NoKeywordsTxt"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/DoesntExist\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_FOLDER_DOESNT_EXIST_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/DoesntExist"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_FOLDER_DOESNT_EXIST_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/IncorrectFilenameCase\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCORRECT_FILENAME_CASE_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/IncorrectFilenameCase"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCORRECT_FILENAME_CASE_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidSeparator\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_FIELD_SEPARATOR_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/InvalidSeparator"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_FIELD_SEPARATOR_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/MultipleTabsError\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_MULTIPLE_TABS_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/MultipleTabsError"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_MULTIPLE_TABS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/MultipleTabsWarning\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/MultipleTabsWarning"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   warningRegex='^WARNING: ./check_keywords_txt/MultipleTabsWarning/keywords.txt uses multiple tabs as field separator.'
   [[ "${lines[0]}" =~ $warningRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidKeywordTokentypeUnix\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_TOKENTYPE_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/InvalidKeywordTokentypeUnix"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_TOKENTYPE_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidKeywordTokentypeWindows\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_TOKENTYPE_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/InvalidKeywordTokentypeWindows"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_TOKENTYPE_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidKeywordTokentypeMac\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_TOKENTYPE_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/InvalidKeywordTokentypeMac"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_TOKENTYPE_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidKeywordTokentypeLastLine\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_TOKENTYPE_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/InvalidKeywordTokentypeLastLine"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_TOKENTYPE_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   errorRegex='^ERROR: \./check_keywords_txt/InvalidKeywordTokentypeLastLine/keywords.txt uses invalid KEYWORD_TOKENTYPE: KEYWORD1x'
   [[ "${lines[2]}" =~ $errorRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidRsyntaxtextareaTokentype\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/InvalidRsyntaxtextareaTokentype"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   errorRegex='^ERROR: \./check_keywords_txt/InvalidRsyntaxtextareaTokentype/keywords.txt uses invalid RSYNTAXTEXTAREA_TOKENTYPE: xRESERVED_WORD'
   [[ "${lines[1]}" =~ $errorRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidRsyntaxtextareaTokentypeNoReferenceLink\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/InvalidRsyntaxtextareaTokentypeNoReferenceLink"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   errorRegex='^ERROR: \./check_keywords_txt/InvalidRsyntaxtextareaTokentypeNoReferenceLink/keywords.txt uses invalid RSYNTAXTEXTAREA_TOKENTYPE: RESERVED_WORDx'
   [[ "${lines[1]}" =~ $errorRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidReferenceLink\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_REFERENCE_LINK_EXIT_STATUS
   run set_application_folder "$TESTS_BATS_APPLICATION_FOLDER"
   # The environment variable set by set_application_folder is not preserved so it must be set here
   ARDUINO_CI_SCRIPT_APPLICATION_FOLDER="$TESTS_BATS_APPLICATION_FOLDER"
@@ -585,38 +762,49 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   # The environment variable set by install_ide is not preserved so it must be set here
   NEWEST_INSTALLED_IDE_VERSION="$TESTS_BATS_IDE_VERSION"
   run check_keywords_txt "./check_keywords_txt/InvalidReferenceLink"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_REFERENCE_LINK_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 # check_library_manager_compliance
 
 @test "check_library_manager_compliance \"./check_library_manager_compliance/ValidLibrary\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_library_manager_compliance "./check_library_manager_compliance/ValidLibrary"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "check_library_manager_compliance \"./check_library_manager_compliance/DoesntExist\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_FOLDER_DOESNT_EXIST_EXIT_STATUS
   run check_library_manager_compliance "./check_library_manager_compliance/DoesntExist"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_FOLDER_DOESNT_EXIST_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_manager_compliance \"./check_library_manager_compliance/ContainsExe\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_EXE_FOUND_EXIT_STATUS
   run check_library_manager_compliance "./check_library_manager_compliance/ContainsExe"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_EXE_FOUND_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_manager_compliance \"./check_library_manager_compliance/ContainsDotDevelopment\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_DOT_DEVELOPMENT_FOUND_EXIT_STATUS
   run check_library_manager_compliance "./check_library_manager_compliance/ContainsDotDevelopment"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_DOT_DEVELOPMENT_FOUND_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_manager_compliance \"./check_library_manager_compliance/ContainsSymlink\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_SYMLINK_FOUND_EXIT_STATUS
   run check_library_manager_compliance "./check_library_manager_compliance/ContainsSymlink"
-  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_SYMLINK_FOUND_EXIT_STATUS ]
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
 }
