@@ -75,9 +75,6 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
 
 @test "install_ide \"$TESTS_BATS_IDE_VERSION\" (w/o setting application folder first)" {
   run install_ide "$TESTS_BATS_IDE_VERSION"
-  echo "status: $status"
-  echo "lines:"
-  echo "$lines"
   [ "$status" -eq $ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS ]
   [ "${#lines[@]}" -eq 1 ]
   errorRegex='^ERROR: Application folder was not set.'
