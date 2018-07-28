@@ -1613,7 +1613,7 @@ function check_library_properties() {
       ! grep --regexp='^[[:space:]]*architectures[[:space:]]*=' <<<"$libraryProperties" | while read -r architecturesLine; do
         local architecturesLineWithoutSpaces=${architecturesLine//[[:space:]]/}
         local architecturesValue=${architecturesLineWithoutSpaces//architectures=/}
-        local validArchitecturesRegex='^((\*)|(avr)|(sam)|(samd)|(stm32f4)|(nrf52)|(i586)|(i686)|(arc32)|(win10)|(esp8266)|(esp32)|(ameba)|(arm)|(efm32)|(iot2000)|(msp430)|(navspark)|(nRF5)|(pic)|(pic32)|(RFduino)|(solox)|(stm32)|(stm)|(STM32)|(STM32F1)|(STM32F3)|(STM32F4)|(STM32F2)|(STM32L1)|(STM32L4))$'
+        local validArchitecturesRegex='^((\*)|(avr)|(sam)|(samd)|(stm32f4)|(nrf52)|(i586)|(i686)|(arc32)|(win10)|(esp8266)|(esp32)|(ameba)|(arm)|(efm32)|(FP51)|(iot2000)|(msp430)|(navspark)|(nRF5)|(nRF51822)|(nRF52832)|(particle-photon)|(particle-electron)|(particle-core)|(pic)|(pic32)|(RFduino)|(Seeed_STM32F4)|(Simblee)|(solox)|(stm32)|(stm)|(STM32)|(STM32F1)|(STM32F3)|(STM32F4)|(STM32F2)|(STM32L1)|(STM32L4)|(teensy)|(x86))$'
         # Split string on ,
         IFS=','
         # Disable globbing, otherwise it fails when one of the architecture values is *
