@@ -446,6 +446,12 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [[ "${lines[0]}" =~ $warningRegex ]]
 }
 
+@test "check_library_properties \"./check_library_properties/BlankUrl\"" {
+  run check_library_properties "./check_library_properties/BlankUrl"
+  [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_BLANK_EXIT_STATUS ]
+  [ "${#lines[@]}" -eq 1 ]
+}
+
 @test "check_library_properties \"./check_library_properties/MissingScheme\"" {
   run check_library_properties "./check_library_properties/MissingScheme"
   [ "$status" -eq $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_MISSING_SCHEME_EXIT_STATUS ]

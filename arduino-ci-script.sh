@@ -1442,6 +1442,8 @@ readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_REDUNDANT_PARAGRAPH_EXIT_STA
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_CATEGORY_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_BLANK_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_MISSING_SCHEME_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_DEAD_URL_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
@@ -1579,26 +1581,30 @@ function check_library_properties() {
       fi
     fi
 
+    # url field checks
+    urlLine=$(grep --regexp='^[[:space:]]*url[[:space:]]*=' <<<"$libraryProperties" | tail --lines=1)
+    local urlLineWithoutSpaces=${urlLine//[[:space:]]/}
+    local urlValue=${urlLineWithoutSpaces//url=/}
+
+    # Check for blank url value
+    if [[ "$urlValue" == "" ]]; then
+      echo "ERROR: ${libraryPropertiesPath} does not define the url field. This results in a \"More info\" link in Library Manager that looks clickable but is not."
+      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_BLANK_EXIT_STATUS
+    fi
+
     # Check for missing scheme on url value
-    if ! grep --quiet --extended-regexp --regexp='^[[:space:]]*url[[:space:]]*=[[:space:]]*(http://)|(https://)' <<<"$libraryProperties"; then
+    local schemeRegex='^(http://)|(https://)'
+    if ! [[ "$urlValue" =~ $schemeRegex ]]; then
       echo "ERROR: ${libraryPropertiesPath}'s url value is missing the scheme (e.g. https://). URL scheme must be specified for Library Manager's \"More info\" link to be clickable."
       return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_MISSING_SCHEME_EXIT_STATUS
     fi
 
     # Check for dead url value
-    if
-      ! grep --regexp='^[[:space:]]*url[[:space:]]*=' <<<"$libraryProperties" | while read -r urlLine; do
-        local urlLineWithoutSpaces=${urlLine//[[:space:]]/}
-        local urlValue=${urlLineWithoutSpaces//url=/}
-        local urlStatus
-        urlStatus=$(curl --location --output /dev/null --silent --head --write-out '%{http_code}' "$urlValue")
-        local errorStatusRegex='^[045]'
-        if [[ "$urlStatus" =~ $errorStatusRegex ]]; then
-          echo "ERROR: ${libraryPropertiesPath}'s url value returned error status $urlStatus."
-          return 1
-        fi
-      done
-    then
+    local urlStatus
+    urlStatus=$(curl --location --output /dev/null --silent --head --write-out '%{http_code}' "$urlValue")
+    local errorStatusRegex='^[045]'
+    if [[ "$urlStatus" =~ $errorStatusRegex ]]; then
+      echo "ERROR: ${libraryPropertiesPath}'s url value returned error status $urlStatus."
       return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_DEAD_URL_EXIT_STATUS
     fi
 
