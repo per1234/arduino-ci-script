@@ -1526,15 +1526,10 @@ function check_library_properties() {
     fi
 
     # Check for characters in the name value disallowed by the Library Manager indexer
-    if
-      ! grep --regexp='^[[:space:]]*name[[:space:]]*=' <<<"$libraryProperties" | while read -r nameLine; do
-        local validNameRegex='^[[:space:]]*name[[:space:]]*=[[:space:]]*[a-zA-Z0-9._ -]+[[:space:]]*$'
-        if ! [[ "$nameLine" =~ $validNameRegex ]]; then
-          echo "ERROR: ${libraryPropertiesPath}'s name value uses characters not allowed by the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-          return 1
-        fi
-      done
-    then
+    nameLine=$(grep --regexp='^[[:space:]]*name[[:space:]]*=' <<<"$libraryProperties" | tail --lines=1)
+    local validNameRegex='^[[:space:]]*name[[:space:]]*=[[:space:]]*[a-zA-Z0-9._ -]+[[:space:]]*$'
+    if ! [[ "$nameLine" =~ $validNameRegex ]]; then
+      echo "ERROR: ${libraryPropertiesPath}'s name value uses characters not allowed by the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
       return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_CHARACTERS_IN_NAME_EXIT_STATUS
     fi
 
@@ -1545,30 +1540,24 @@ function check_library_properties() {
     fi
 
     # Check for repeat of sentence in paragraph
-    if
-      ! grep --regexp='^[[:space:]]*sentence[[:space:]]*=' <<<"$libraryProperties" | while read -r sentenceLine; do
-        local sentenceLineFrontStripped="${sentenceLine#"${sentenceLine%%[![:space:]]*}"}"
-        local sentenceValueEquals=${sentenceLineFrontStripped#sentence}
-        local sentenceValueEqualsFrontStripped="${sentenceValueEquals#"${sentenceValueEquals%%[![:space:]]*}"}"
-        local sentenceValue=${sentenceValueEqualsFrontStripped#=}
-        local sentenceValueFrontStripped="${sentenceValue#"${sentenceValue%%[![:space:]]*}"}"
-        local sentenceValueStripped="${sentenceValueFrontStripped%"${sentenceValueFrontStripped##*[![:space:]]}"}"
-        local sentenceValueStrippedNoPunctuation=${sentenceValueStripped%%\.}
-        if [[ "$sentenceValueStrippedNoPunctuation" != "" ]]; then
-          grep --regexp='^[[:space:]]*paragraph[[:space:]]*=' <<<"$libraryProperties" | while read -r paragraphLine; do
-            local paragraphLineFrontStripped="${paragraphLine#"${paragraphLine%%[![:space:]]*}"}"
-            local paragraphValueEquals=${paragraphLineFrontStripped#sentence}
-            local paragraphValueEqualsFrontStripped="${paragraphValueEquals#"${paragraphValueEquals%%[![:space:]]*}"}"
-            local paragraphValue=${paragraphValueEqualsFrontStripped#=}
-            if [[ "$paragraphValue" == *"$sentenceValueStrippedNoPunctuation"* ]]; then
-              echo "ERROR: ${libraryPropertiesPath}'s paragraph value repeats the sentence. These strings are displayed one after the other in Library Manager so there is no point in redundancy."
-              return 1
-            fi
-          done
-        fi
-      done
-    then
-      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_REDUNDANT_PARAGRAPH_EXIT_STATUS
+    sentenceLine=$(grep --regexp='^[[:space:]]*sentence[[:space:]]*=' <<<"$libraryProperties" | tail --lines=1)
+    local sentenceLineFrontStripped="${sentenceLine#"${sentenceLine%%[![:space:]]*}"}"
+    local sentenceValueEquals=${sentenceLineFrontStripped#sentence}
+    local sentenceValueEqualsFrontStripped="${sentenceValueEquals#"${sentenceValueEquals%%[![:space:]]*}"}"
+    local sentenceValue=${sentenceValueEqualsFrontStripped#=}
+    local sentenceValueFrontStripped="${sentenceValue#"${sentenceValue%%[![:space:]]*}"}"
+    local sentenceValueStripped="${sentenceValueFrontStripped%"${sentenceValueFrontStripped##*[![:space:]]}"}"
+    local sentenceValueStrippedNoPunctuation=${sentenceValueStripped%%\.}
+    if [[ "$sentenceValueStrippedNoPunctuation" != "" ]]; then
+      paragraphLine=$(grep --regexp='^[[:space:]]*paragraph[[:space:]]*=' <<<"$libraryProperties" | tail --lines=1)
+      local paragraphLineFrontStripped="${paragraphLine#"${paragraphLine%%[![:space:]]*}"}"
+      local paragraphValueEquals=${paragraphLineFrontStripped#sentence}
+      local paragraphValueEqualsFrontStripped="${paragraphValueEquals#"${paragraphValueEquals%%[![:space:]]*}"}"
+      local paragraphValue=${paragraphValueEqualsFrontStripped#=}
+      if [[ "$paragraphValue" == *"$sentenceValueStrippedNoPunctuation"* ]]; then
+        echo "ERROR: ${libraryPropertiesPath}'s paragraph value repeats the sentence. These strings are displayed one after the other in Library Manager so there is no point in redundancy."
+        return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_REDUNDANT_PARAGRAPH_EXIT_STATUS
+      fi
     fi
 
     # Check for invalid category
@@ -1609,29 +1598,24 @@ function check_library_properties() {
     fi
 
     # Check for invalid architectures
-    if
-      ! grep --regexp='^[[:space:]]*architectures[[:space:]]*=' <<<"$libraryProperties" | while read -r architecturesLine; do
-        local architecturesLineWithoutSpaces=${architecturesLine//[[:space:]]/}
-        local architecturesValue=${architecturesLineWithoutSpaces//architectures=/}
-        local validArchitecturesRegex='^((\*)|(avr)|(sam)|(samd)|(stm32f4)|(nrf52)|(i586)|(i686)|(arc32)|(win10)|(esp8266)|(esp32)|(ameba)|(arm)|(efm32)|(FP51)|(iot2000)|(msp430)|(navspark)|(nRF5)|(nRF51822)|(nRF52832)|(particle-photon)|(particle-electron)|(particle-core)|(pic)|(pic32)|(RFduino)|(Seeed_STM32F4)|(Simblee)|(solox)|(stm32)|(stm)|(STM32)|(STM32F1)|(STM32F3)|(STM32F4)|(STM32F2)|(STM32L1)|(STM32L4)|(teensy)|(x86))$'
-        # Split string on ,
-        IFS=','
-        # Disable globbing, otherwise it fails when one of the architecture values is *
-        set -o noglob
-        for architecture in $architecturesValue; do
-          if ! [[ "$architecture" =~ $validArchitecturesRegex ]]; then
-            echo "ERROR: ${libraryPropertiesPath}'s architectures field contains an invalid architecture ${architecture}. Note: architecture values are case-sensitive."
-            return 1
-          fi
-        done
-        # Re-enable globbing
-        set +o noglob
-        # Set IFS back to default
-        unset IFS
-      done
-    then
-      return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS
-    fi
+    architecturesLine=$(grep --regexp='^[[:space:]]*architectures[[:space:]]*=' <<<"$libraryProperties" | tail --lines=1)
+    local architecturesLineWithoutSpaces=${architecturesLine//[[:space:]]/}
+    local architecturesValue=${architecturesLineWithoutSpaces//architectures=/}
+    local validArchitecturesRegex='^((\*)|(avr)|(sam)|(samd)|(stm32f4)|(nrf52)|(i586)|(i686)|(arc32)|(win10)|(esp8266)|(esp32)|(ameba)|(arm)|(efm32)|(FP51)|(iot2000)|(msp430)|(navspark)|(nRF5)|(nRF51822)|(nRF52832)|(particle-photon)|(particle-electron)|(particle-core)|(pic)|(pic32)|(RFduino)|(Seeed_STM32F4)|(Simblee)|(solox)|(stm32)|(stm)|(STM32)|(STM32F1)|(STM32F3)|(STM32F4)|(STM32F2)|(STM32L1)|(STM32L4)|(teensy)|(x86))$'
+    # Split string on ,
+    IFS=','
+    # Disable globbing, otherwise it fails when one of the architecture values is *
+    set -o noglob
+    for architecture in $architecturesValue; do
+      if ! [[ "$architecture" =~ $validArchitecturesRegex ]]; then
+        echo "ERROR: ${libraryPropertiesPath}'s architectures field contains an invalid architecture ${architecture}. Note: architecture values are case-sensitive."
+        return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS
+      fi
+    done
+    # Re-enable globbing
+    set +o noglob
+    # Set IFS back to default
+    unset IFS
 
     # Check for empty includes value
     if grep --quiet --regexp='^[[:space:]]*includes[[:space:]]*=[[:space:]]*$' <<<"$libraryProperties"; then
