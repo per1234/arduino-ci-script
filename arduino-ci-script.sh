@@ -1691,6 +1691,8 @@ function check_library_properties() {
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=1
 readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCONSEQUENTIAL_MULTIPLE_TABS_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_LINE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCONSEQUENTIAL_LEADING_SPACE_ON_KEYWORD_TOKENTYPE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_MULTIPLE_TABS_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
@@ -1750,6 +1752,7 @@ function check_keywords_txt() {
           local spacesSeparatorRegex='^[[:space:]]*[^[:space:]]+ +[^[:space:]]+'
           local consequentialMultipleSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t\t''+((KEYWORD1)|(LITERAL1))'
           local inconsequentialMultipleSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t\t''+((KEYWORD2)|(KEYWORD3)|(LITERAL2))'
+          local invalidLineRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*$'
           # Check for invalid separator
           if [[ "$keywordsTxtLine" =~ $spacesSeparatorRegex ]]; then
             echo "ERROR: $keywordsTxtPath uses space(s) as a field separator. It must be a true tab."
@@ -1762,6 +1765,9 @@ function check_keywords_txt() {
             # Check for multiple tabs used as separator where this causes no unintended results
             echo "ERROR: $keywordsTxtPath uses multiple tabs as field separator. It must be a single tab. This causes the default keyword coloring (as used by KEYWORD2, KEYWORD3, LITERAL2). In this case that doesn't cause the keywords to be incorrectly colored as expected but it's recommended to fully comply with the Arduino library specification."
             exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCONSEQUENTIAL_MULTIPLE_TABS_EXIT_STATUS)
+          elif [[ "$keywordsTxtLine" =~ $invalidLineRegex ]]; then
+            echo "ERROR: $keywordsTxtPath has an invalid line: ${keywordsTxtLine}. If this was intended as a comment, it should use the correct # syntax."
+            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_LINE_EXIT_STATUS)
           else
             # The rest of the checks will be borked by messed up field separators so only do these if the above passed
 
