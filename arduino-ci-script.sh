@@ -1856,6 +1856,20 @@ function check_keywords_txt() {
             fi
           fi
 
+          # Check for invalid REFERENCE_LINK
+          if [[ "$referenceLink" != "" ]]; then
+            # The Arduino IDE must be installed to check if the reference page exists
+            if [[ "$NEWEST_INSTALLED_IDE_VERSION" == "" ]]; then
+              echo "WARNING: Arduino IDE is not installed so unable to check for invalid reference links. Please call install_ide before running check_keywords_txt."
+            else
+              install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
+              if [[ ! $(find "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/reference/www.arduino.cc/en/Reference/" -type f -name "${referenceLink}.html") ]]; then
+                echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses a REFERENCE_LINK value: $referenceLink that is not a valid Arduino Language Reference page. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#reference_link"
+                exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_REFERENCE_LINK_EXIT_STATUS)
+              fi
+            fi
+          fi
+
           # Check for invalid RSYNTAXTEXTAREA_TOKENTYPE
           if [[ "$rsyntaxtextareaTokentype" != "" ]]; then
             if ! [[ "$rsyntaxtextareaTokentype" =~ $validRsyntaxtextareaTokentypeRegex ]]; then
@@ -1867,20 +1881,6 @@ function check_keywords_txt() {
               else
                 echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses invalid RSYNTAXTEXTAREA_TOKENTYPE: ${rsyntaxtextareaTokentype}, which causes the default keyword highlighting to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#rsyntaxtextarea_tokentype"
                 exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS)
-              fi
-            fi
-          fi
-
-          # Check for invalid REFERENCE_LINK
-          if [[ "$referenceLink" != "" ]]; then
-            # The Arduino IDE must be installed to check if the reference page exists
-            if [[ "$NEWEST_INSTALLED_IDE_VERSION" == "" ]]; then
-              echo "WARNING: Arduino IDE is not installed so unable to check for invalid reference links. Please call install_ide before running check_keywords_txt."
-            else
-              install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
-              if [[ ! $(find "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/reference/www.arduino.cc/en/Reference/" -type f -name "${referenceLink}.html") ]]; then
-                echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses a REFERENCE_LINK value: $referenceLink that is not a valid Arduino Language Reference page. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#reference_link"
-                exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_REFERENCE_LINK_EXIT_STATUS)
               fi
             fi
           fi
