@@ -819,6 +819,20 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [ "${#lines[@]}" -eq 1 ]
 }
 
+@test "check_keywords_txt \"./check_keywords_txt/IncorrectCaseReferenceLink\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_REFERENCE_LINK_EXIT_STATUS
+  run set_application_folder "$TESTS_BATS_APPLICATION_FOLDER"
+  # The environment variable set by set_application_folder is not preserved so it must be set here
+  ARDUINO_CI_SCRIPT_APPLICATION_FOLDER="$TESTS_BATS_APPLICATION_FOLDER"
+  run install_ide "$TESTS_BATS_IDE_VERSION"
+  # The environment variable set by install_ide is not preserved so it must be set here
+  NEWEST_INSTALLED_IDE_VERSION="$TESTS_BATS_IDE_VERSION"
+  run check_keywords_txt "./check_keywords_txt/IncorrectCaseReferenceLink"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 1 ]
+}
+
 # check_library_manager_compliance
 
 @test "check_library_manager_compliance \"./check_library_manager_compliance/ValidLibrary\"" {
