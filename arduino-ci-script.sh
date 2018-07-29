@@ -1379,7 +1379,7 @@ function check_library_structure() {
   elif [[ $(find "$normalizedLibraryPath" -maxdepth 1 \( -type f -and -name 'library.properties' \)) && $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -regex '^.*[sS][rR][cC]$') ]]; then
     # 1.5 format library
     if [[ ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'src') ]]; then
-      echo 'ERROR: 1.5 format library with incorrect case in src subfolder name, which causes library to not be recognized on a filename case-sensitive OS such as Linux.'
+      echo "ERROR: $libraryPath is a 1.5 format library with incorrect case in src subfolder name, which causes library to not be recognized on a filename case-sensitive OS such as Linux."
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_SRC_FOLDER_CASE_EXIT_STATUS)
     elif [[ $(find "${normalizedLibraryPath}/src" -maxdepth 1 -type f \( -name '*.h' -or -name '*.hh' -or -name '*.hpp' \)) ]]; then
       local -r onePointFiveFormat=true
@@ -1398,19 +1398,19 @@ function check_library_structure() {
 
   # Check for incorrect spelling of examples folder
   if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -regex '^.*/[eE][xX][aA][mM][pP][lL][eE].?$') && ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'examples') ]]; then
-    echo 'ERROR: Incorrect examples folder name.'
+    echo "ERROR: $libraryPath has incorrect examples folder name. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#library-examples"
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_EXAMPLES_FOLDER_NAME_EXIT_STATUS)
   fi
 
   # Check for 1.5 format with  src and utility folders in library root
   if [[ "$onePointFiveFormat" == true && $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'utility') ]]; then
-    echo 'ERROR: 1.5 format library with src and utility folders in library root.'
+    echo "ERROR: $libraryPath is a 1.5 format library with src and utility folders in library root. The utility folder should be moved under the src folder. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#source-code"
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SRC_AND_UTILITY_FOLDERS_EXIT_STATUS)
   fi
 
   # Check for sketch files outside of the src or extras folders
   if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -path './examples' -prune -or -path './extras' -prune -or \( -type f -and \( -regex '^.*\.[iI][nN][oO]' -or -regex '^.*\.[pP][dD][eE]' \) \)) ]]; then
-    echo 'ERROR: Sketch files found outside of examples and extras folders.'
+    echo "ERROR: $libraryPath has sketch files found outside the examples and extras folders."
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_SKETCH_EXIT_STATUS)
   fi
 
@@ -1512,7 +1512,7 @@ function check_library_properties() {
 
     # Check for missing name field
     if ! grep --quiet --regexp='^[[:space:]]*name[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "ERROR: $libraryPropertiesPath is missing required name field."
+      echo "ERROR: $libraryPropertiesPath is missing the required name field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_NAME_EXIT_STATUS)
     else
       # Check for characters in the name value disallowed by the Library Manager indexer
@@ -1533,41 +1533,41 @@ function check_library_properties() {
 
     # Check for missing version field
     if ! grep --quiet --regexp='^[[:space:]]*version[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "ERROR: $libraryPropertiesPath is missing required version field."
+      echo "ERROR: $libraryPropertiesPath is the missing the required version field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_VERSION_EXIT_STATUS)
     else
       # Check for invalid version
       if ! grep --quiet --extended-regexp --regexp='^[[:space:]]*version[[:space:]]*=[[:space:]]*(((([1-9][0-9]*)|0)\.){0,2})(([1-9][0-9]*)|0)(-(([a-zA-Z0-9-]*\.)*)([a-zA-Z0-9-]+))?(\+(([a-zA-Z0-9-]*\.)*)([a-zA-Z0-9-]+))?[[:space:]]*$' <<<"$libraryProperties"; then
-        echo "ERROR: $libraryPropertiesPath has an invalid version value. Follow the semver specification: https://semver.org/"
+        echo "ERROR: $libraryPropertiesPath has an invalid version value. Follow the semver specification: https://semver.org"
         exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_VERSION_EXIT_STATUS)
       fi
     fi
 
     # Check for missing author field
     if ! grep --quiet --regexp='^[[:space:]]*author[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "ERROR: $libraryPropertiesPath is missing required author field."
+      echo "ERROR: $libraryPropertiesPath is missing the required author field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_AUTHOR_EXIT_STATUS)
     fi
 
     # Check for missing maintainer field
     if ! grep --quiet --regexp='^[[:space:]]*maintainer[[:space:]]*=' <<<"$libraryProperties"; then
       if grep --quiet --regexp='^[[:space:]]*email[[:space:]]*=' <<<"$libraryProperties"; then
-        echo "WARNING: Use of undocumented email field in $libraryPropertiesPath. It's recommended to use the maintainer field instead, per the Arduino Library Specification."
+        echo "WARNING: Use of undocumented email field in $libraryPropertiesPath. It's recommended to use the maintainer field instead, per the Arduino Library Specification. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
       else
-        echo "ERROR: $libraryPropertiesPath is missing required maintainer field."
+        echo "ERROR: $libraryPropertiesPath is missing the required maintainer field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
         exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_MAINTAINER_EXIT_STATUS)
       fi
     fi
 
     # Check for missing sentence field
     if ! grep --quiet --regexp='^[[:space:]]*sentence[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "ERROR: $libraryPropertiesPath is missing required sentence field."
+      echo "ERROR: $libraryPropertiesPath is missing tne required sentence field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_SENTENCE_EXIT_STATUS)
     fi
 
     # Check for missing paragraph field
     if ! grep --quiet --regexp='^[[:space:]]*paragraph[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "ERROR: $libraryPropertiesPath is missing required paragraph field."
+      echo "ERROR: $libraryPropertiesPath is missing the required paragraph field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_PARAGRAPH_EXIT_STATUS)
     else
       # Check for repeat of sentence in paragraph
@@ -1594,7 +1594,7 @@ function check_library_properties() {
 
     # Check for missing category field
     if ! grep --quiet --regexp='^[[:space:]]*category[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "ERROR: $libraryPropertiesPath is missing category field. This results in an invalid category warning."
+      echo "ERROR: $libraryPropertiesPath is missing the category field. This results in an invalid category warning. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_CATEGORY_EXIT_STATUS)
     else
       # Check for invalid category
@@ -1610,7 +1610,7 @@ function check_library_properties() {
 
     # Check for missing url field
     if ! grep --quiet --regexp='^[[:space:]]*url[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "ERROR: $libraryPropertiesPath is missing required url field."
+      echo "ERROR: $libraryPropertiesPath is missing the required url field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_URL_EXIT_STATUS)
     else
       # url field checks
@@ -1626,7 +1626,7 @@ function check_library_properties() {
         # Check for missing scheme on url value
         local schemeRegex='^(http://)|(https://)'
         if ! [[ "$urlValue" =~ $schemeRegex ]]; then
-          echo "ERROR: ${libraryPropertiesPath}'s url value is missing the scheme (e.g. https://). URL scheme must be specified for Library Manager's \"More info\" link to be clickable."
+          echo "ERROR: ${libraryPropertiesPath}'s url value $urlValue is missing the scheme (e.g. https://). URL scheme must be specified for Library Manager's \"More info\" link to be clickable."
           exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_MISSING_SCHEME_EXIT_STATUS)
         fi
 
@@ -1635,7 +1635,7 @@ function check_library_properties() {
         urlStatus=$(curl --location --output /dev/null --silent --head --write-out '%{http_code}' "$urlValue")
         local errorStatusRegex='^[045]'
         if [[ "$urlStatus" =~ $errorStatusRegex ]]; then
-          echo "ERROR: ${libraryPropertiesPath}'s url value returned error status $urlStatus."
+          echo "ERROR: ${libraryPropertiesPath}'s url value $urlValue returned error status $urlStatus."
           exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_DEAD_URL_EXIT_STATUS)
         fi
       fi
@@ -1647,7 +1647,7 @@ function check_library_properties() {
         echo "ERROR: $libraryPropertiesPath has misspelled architecutures field name as \"architecture\"."
         exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_ARCHITECTURES_MISSPELLED_EXIT_STATUS)
       else
-        echo "WARNING: $libraryPropertiesPath is missing architectures field. This causes the Arduino IDE to assume the library is compatible with all architectures (*)."
+        echo "WARNING: $libraryPropertiesPath is missing the architectures field. This causes the Arduino IDE to assume the library is compatible with all architectures (*). See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
       fi
     else
       # Check for invalid architectures
@@ -1679,7 +1679,7 @@ function check_library_properties() {
 
     # Check for empty includes value
     if grep --quiet --regexp='^[[:space:]]*includes[[:space:]]*=[[:space:]]*$' <<<"$libraryProperties"; then
-      echo "ERROR: ${libraryPropertiesPath}'s includes value is empty. Either define the field or remove it."
+      echo "ERROR: ${libraryPropertiesPath}'s includes value is empty. Either define the field or remove it. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_EMPTY_INCLUDES_EXIT_STATUS)
     fi
 
@@ -1739,7 +1739,7 @@ function check_keywords_txt() {
 
     # Check for incorrect filename case
     if [[ "${keywordsTxtPath: -12}" != 'keywords.txt' ]]; then
-      echo "ERROR: $keywordsTxtPath uses incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux."
+      echo "ERROR: $keywordsTxtPath uses incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux. It must be exactly keywords.txt."
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCORRECT_FILENAME_CASE_EXIT_STATUS)
     fi
 
@@ -1756,7 +1756,7 @@ function check_keywords_txt() {
           local invalidLineRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*$'
           # Check for invalid separator
           if [[ "$keywordsTxtLine" =~ $spacesSeparatorRegex ]]; then
-            echo "ERROR: $keywordsTxtPath uses space(s) as a field separator. It must be a true tab."
+            echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses space(s) as a field separator. It must be a true tab."
             exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_FIELD_SEPARATOR_EXIT_STATUS)
             # The rest of the checks will be borked by messed up field separators so continue to the next line
             continue
@@ -1765,7 +1765,7 @@ function check_keywords_txt() {
           # Check for multiple tabs used as separator where this causes unintended results
           local consequentialMultipleSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t\t''+((KEYWORD1)|(LITERAL1))'
           if [[ "$keywordsTxtLine" =~ $consequentialMultipleSeparatorRegex ]]; then
-            echo "ERROR: $keywordsTxtPath uses multiple tabs as field separator. It must be a single tab. This causes the default keyword coloring (as used by KEYWORD2, KEYWORD3, LITERAL2) to be used rather than the intended coloration."
+            echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses multiple tabs as field separator. It must be a single tab. This causes the default keyword highlighting (as used by KEYWORD2, KEYWORD3, LITERAL2) to be used rather than the intended highlighting."
             exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_MULTIPLE_TABS_EXIT_STATUS)
             # The rest of the checks will be borked by messed up field separators so continue to the next line
             continue
@@ -1774,7 +1774,7 @@ function check_keywords_txt() {
           # Check for multiple tabs used as separator where this causes no unintended results
           local inconsequentialMultipleSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t\t''+((KEYWORD2)|(KEYWORD3)|(LITERAL2))'
           if [[ "$keywordsTxtLine" =~ $inconsequentialMultipleSeparatorRegex ]]; then
-            echo "ERROR: $keywordsTxtPath uses multiple tabs as field separator. It must be a single tab. This causes the default keyword coloring (as used by KEYWORD2, KEYWORD3, LITERAL2). In this case that doesn't cause the keywords to be incorrectly colored as expected but it's recommended to fully comply with the Arduino library specification."
+            echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses multiple tabs as field separator. It must be a single tab. This causes the default keyword highlighting (as used by KEYWORD2, KEYWORD3, LITERAL2). In this case that doesn't cause the keywords to be incorrectly colored as expected but it's recommended to fully comply with the Arduino library specification."
             exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCONSEQUENTIAL_MULTIPLE_TABS_EXIT_STATUS)
             # The rest of the checks will be borked by messed up field separators so continue to the next line
             continue
@@ -1838,17 +1838,17 @@ function check_keywords_txt() {
             # Check if it's invalid only because of leading space
             local keywordTokentypeWithoutLeadingSpace="${keywordTokentype#"${keywordTokentype%%[![:space:]]*}"}"
             if [[ "$keywordTokentypeWithoutLeadingSpace" =~ $validKeywordTokentypeRegex ]]; then
-              # Check if the issue doesn't cause any change from the intended coloration
+              # Check if the issue doesn't cause any change from the intended highlighting
               local inconsequentialTokentypeRegex='((KEYWORD2)|(KEYWORD3)|(LITERAL2))'
               if [[ "$keywordTokentypeWithoutLeadingSpace" =~ $inconsequentialTokentypeRegex ]]; then
-                echo "ERROR: $keywordsTxtPath has leading space on the KEYWORD_TOKENTYPE field, which causes it to not be recognized, so the default keyword coloration is used.  In this case that doesn't cause the keywords to be incorrectly colored as expected but it's recommended to fully comply with the Arduino library specification."
+                echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) has leading space on the KEYWORD_TOKENTYPE field, which causes it to not be recognized, so the default keyword highlighting is used.  In this case that doesn't cause the keywords to be incorrectly colored as expected but it's recommended to fully comply with the Arduino library specification."
                 exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCONSEQUENTIAL_LEADING_SPACE_ON_KEYWORD_TOKENTYPE_EXIT_STATUS)
               else
-                echo "ERROR: $keywordsTxtPath has leading space on the KEYWORD_TOKENTYPE field, which causes it to not be recognized, so the default keyword coloration is used."
+                echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) has leading space on the KEYWORD_TOKENTYPE field, which causes it to not be recognized, so the default keyword highlighting is used."
                 exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_LEADING_SPACE_ON_KEYWORD_TOKENTYPE_EXIT_STATUS)
               fi
             else
-              echo "ERROR: $keywordsTxtPath uses invalid KEYWORD_TOKENTYPE: ${keywordTokentype}, which causes the default keyword coloration to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keyword_tokentype"
+              echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses invalid KEYWORD_TOKENTYPE: ${keywordTokentype}, which causes the default keyword highlighting to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keyword_tokentype"
               exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_TOKENTYPE_EXIT_STATUS)
             fi
           fi
@@ -1860,10 +1860,10 @@ function check_keywords_txt() {
               # Check if it's invalid only because of leading space
               local rsyntaxtextareaTokentypeWithoutLeadingSpace="${rsyntaxtextareaTokentype#"${rsyntaxtextareaTokentype%%[![:space:]]*}"}"
               if [[ "$rsyntaxtextareaTokentypeWithoutLeadingSpace" =~ $validRsyntaxtextareaTokentypeRegex ]]; then
-                echo "ERROR: $keywordsTxtPath has leading space on the RSYNTAXTEXTAREA_TOKENTYPE field, which causes it to not be recognized, so the default keyword coloration is used."
+                echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) has leading space on the RSYNTAXTEXTAREA_TOKENTYPE field, which causes it to not be recognized, so the default keyword highlighting is used."
                 exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_LEADING_SPACE_ON_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS)
               else
-                echo "ERROR: $keywordsTxtPath uses invalid RSYNTAXTEXTAREA_TOKENTYPE: ${rsyntaxtextareaTokentype}, which causes the default keyword coloration to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#rsyntaxtextarea_tokentype"
+                echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses invalid RSYNTAXTEXTAREA_TOKENTYPE: ${rsyntaxtextareaTokentype}, which causes the default keyword highlighting to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#rsyntaxtextarea_tokentype"
                 exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS)
               fi
             fi
@@ -1877,7 +1877,7 @@ function check_keywords_txt() {
             else
               install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
               if ! [[ -e "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/reference/www.arduino.cc/en/Reference/${referenceLink}.html" ]]; then
-                echo "ERROR: $keywordsTxtPath uses a REFERENCE_LINK value: $referenceLink that is not a valid Arduino Language Reference page. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#reference_link"
+                echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses a REFERENCE_LINK value: $referenceLink that is not a valid Arduino Language Reference page. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#reference_link"
                 exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_REFERENCE_LINK_EXIT_STATUS)
               fi
             fi
@@ -1914,20 +1914,23 @@ function check_library_manager_compliance() {
   fi
 
   # Check for .exe files
-  if [[ $(find "$normalizedLibraryPath" -type f -name '*.exe') ]]; then
-    echo "ERROR: .exe file found."
+  local -r exePath=$(find "$normalizedLibraryPath" -type f -name '*.exe')
+  if [[ "$exePath" != "" ]]; then
+    echo "ERROR: .exe file found at $exePath"
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_EXE_FOUND_EXIT_STATUS)
   fi
 
   # Check for .development file
-  if [[ $(find "$normalizedLibraryPath" -type f -name '.development') ]]; then
-    echo "ERROR: .development file found."
+  local -r dotDevelopmentPath=$(find "$normalizedLibraryPath" -type f -name '.development')
+  if [[ "$dotDevelopmentPath" != "" ]]; then
+    echo "ERROR: .development file found at $dotDevelopmentPath"
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_DOT_DEVELOPMENT_FOUND_EXIT_STATUS)
   fi
 
-  # Check for .development file
-  if [[ $(find "$normalizedLibraryPath" -type l) ]]; then
-    echo "ERROR: Symlink found."
+  # Check for symlink
+  local -r symlinkPath=$(find "$normalizedLibraryPath" -type l)
+  if [[ "$symlinkPath" != "" ]]; then
+    echo "ERROR: Symlink found at $symlinkPath"
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_SYMLINK_FOUND_EXIT_STATUS)
   fi
   return "$exitStatus"

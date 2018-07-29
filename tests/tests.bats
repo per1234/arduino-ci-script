@@ -523,7 +523,7 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  warningRegex='^WARNING: .* is missing architectures field'
+  warningRegex='^WARNING: .* is missing the architectures field'
   [[ "${lines[0]}" =~ $warningRegex ]]
 }
 
@@ -782,8 +782,6 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/InvalidKeywordTokentypeLastLine"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-  errorRegex='^ERROR: \./check_keywords_txt/InvalidKeywordTokentypeLastLine/keywords.txt uses invalid KEYWORD_TOKENTYPE: KEYWORD1x'
-  [[ "${lines[2]}" =~ $errorRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/LeadingSpaceOnRsyntaxtextareaTokentype\"" {
@@ -791,8 +789,6 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/LeadingSpaceOnRsyntaxtextareaTokentype"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-  errorRegex='^ERROR: \./check_keywords_txt/LeadingSpaceOnRsyntaxtextareaTokentype/keywords.txt has leading space on the RSYNTAXTEXTAREA_TOKENTYPE field, which causes it to not be recognized, so the default keyword coloration is used.'
-  [[ "${lines[2]}" =~ $errorRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidRsyntaxtextareaTokentype\"" {
@@ -800,8 +796,6 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/InvalidRsyntaxtextareaTokentype"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-  errorRegex='^ERROR: \./check_keywords_txt/InvalidRsyntaxtextareaTokentype/keywords.txt uses invalid RSYNTAXTEXTAREA_TOKENTYPE: xRESERVED_WORD'
-  [[ "${lines[1]}" =~ $errorRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidRsyntaxtextareaTokentypeNoReferenceLink\"" {
@@ -809,8 +803,6 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/InvalidRsyntaxtextareaTokentypeNoReferenceLink"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-  errorRegex='^ERROR: \./check_keywords_txt/InvalidRsyntaxtextareaTokentypeNoReferenceLink/keywords.txt uses invalid RSYNTAXTEXTAREA_TOKENTYPE: RESERVED_WORDx'
-  [[ "${lines[1]}" =~ $errorRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidReferenceLink\"" {
