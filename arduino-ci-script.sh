@@ -1691,7 +1691,11 @@ function check_library_properties() {
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=1
 readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCONSEQUENTIAL_MULTIPLE_TABS_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCONSEQUENTIAL_LEADING_SPACE_ON_KEYWORD_TOKENTYPE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_MULTIPLE_TABS_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_LEADING_SPACE_ON_KEYWORD_TOKENTYPE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_FOLDER_DOESNT_EXIST_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
@@ -1700,6 +1704,8 @@ ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER +
 readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_FIELD_SEPARATOR_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_TOKENTYPE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_LEADING_SPACE_ON_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
@@ -1741,12 +1747,12 @@ function check_keywords_txt() {
         local blankLineRegex='^[[:space:]]*$'
         local commentRegex='^[[:space:]]*#'
         if ! [[ "$keywordsTxtLine" =~ $blankLineRegex ]] && ! [[ "$keywordsTxtLine" =~ $commentRegex ]]; then
-          local validSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t''+[^[:space:]]+'
+          local spacesSeparatorRegex='^[[:space:]]*[^[:space:]]+ +[^[:space:]]+'
           local consequentialMultipleSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t\t''+((KEYWORD1)|(LITERAL1))'
           local inconsequentialMultipleSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t\t''+((KEYWORD2)|(KEYWORD3)|(LITERAL2))'
           # Check for invalid separator
-          if ! [[ "$keywordsTxtLine" =~ $validSeparatorRegex ]]; then
-            echo "ERROR: $keywordsTxtPath uses invalid field separator. It must be a true tab."
+          if [[ "$keywordsTxtLine" =~ $spacesSeparatorRegex ]]; then
+            echo "ERROR: $keywordsTxtPath uses space(s) as a field separator. It must be a true tab."
             exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_FIELD_SEPARATOR_EXIT_STATUS)
           elif [[ "$keywordsTxtLine" =~ $consequentialMultipleSeparatorRegex ]]; then
             # Check for multiple tabs used as separator where this causes unintended results
@@ -1801,16 +1807,37 @@ function check_keywords_txt() {
             # Check for invalid KEYWORD_TOKENTYPE
             local validKeywordTokentypeRegex='^((KEYWORD1)|(KEYWORD2)|(KEYWORD3)|(LITERAL1)|(LITERAL2))$'
             if ! [[ "$keywordTokentype" =~ $validKeywordTokentypeRegex ]]; then
-              echo "ERROR: $keywordsTxtPath uses invalid KEYWORD_TOKENTYPE: ${keywordTokentype}, which causes the default keyword coloration to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keyword_tokentype"
-              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_TOKENTYPE_EXIT_STATUS)
+              # Check if it's invalid only because of leading space
+              local keywordTokentypeWithoutLeadingSpace="${keywordTokentype#"${keywordTokentype%%[![:space:]]*}"}"
+              if [[ "$keywordTokentypeWithoutLeadingSpace" =~ $validKeywordTokentypeRegex ]]; then
+                # Check if the issue doesn't cause any change from the intended coloration
+                local inconsequentialTokentypeRegex='((KEYWORD2)|(KEYWORD3)|(LITERAL2))'
+                if [[ "$keywordTokentypeWithoutLeadingSpace" =~ $inconsequentialTokentypeRegex ]]; then
+                  echo "ERROR: $keywordsTxtPath has leading space on the KEYWORD_TOKENTYPE field, which causes it to not be recognized, so the default keyword coloration is used.  In this case that doesn't cause the keywords to be incorrectly colored as expected but it's recommended to fully comply with the Arduino library specification."
+                  exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCONSEQUENTIAL_LEADING_SPACE_ON_KEYWORD_TOKENTYPE_EXIT_STATUS)
+                else
+                  echo "ERROR: $keywordsTxtPath has leading space on the KEYWORD_TOKENTYPE field, which causes it to not be recognized, so the default keyword coloration is used."
+                  exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_LEADING_SPACE_ON_KEYWORD_TOKENTYPE_EXIT_STATUS)
+                fi
+              else
+                echo "ERROR: $keywordsTxtPath uses invalid KEYWORD_TOKENTYPE: ${keywordTokentype}, which causes the default keyword coloration to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keyword_tokentype"
+                exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_TOKENTYPE_EXIT_STATUS)
+              fi
             fi
 
             # Check for invalid RSYNTAXTEXTAREA_TOKENTYPE
             if [[ "$rsyntaxtextareaTokentype" != "" ]]; then
               local validRsyntaxtextareaTokentypeRegex='^((RESERVED_WORD)|(RESERVED_WORD_2)|(DATA_TYPE)|(PREPROCESSOR)|(LITERAL_BOOLEAN))$'
               if ! [[ "$rsyntaxtextareaTokentype" =~ $validRsyntaxtextareaTokentypeRegex ]]; then
-                echo "ERROR: $keywordsTxtPath uses invalid RSYNTAXTEXTAREA_TOKENTYPE: ${rsyntaxtextareaTokentype}, which causes the default keyword coloration to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#rsyntaxtextarea_tokentype"
-                exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS)
+                # Check if it's invalid only because of leading space
+                local rsyntaxtextareaTokentypeWithoutLeadingSpace="${rsyntaxtextareaTokentype#"${rsyntaxtextareaTokentype%%[![:space:]]*}"}"
+                if [[ "$rsyntaxtextareaTokentypeWithoutLeadingSpace" =~ $validRsyntaxtextareaTokentypeRegex ]]; then
+                  echo "ERROR: $keywordsTxtPath has leading space on the RSYNTAXTEXTAREA_TOKENTYPE field, which causes it to not be recognized, so the default keyword coloration is used."
+                  exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_LEADING_SPACE_ON_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS)
+                else
+                  echo "ERROR: $keywordsTxtPath uses invalid RSYNTAXTEXTAREA_TOKENTYPE: ${rsyntaxtextareaTokentype}, which causes the default keyword coloration to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#rsyntaxtextarea_tokentype"
+                  exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS)
+                fi
               fi
             fi
 
