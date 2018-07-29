@@ -1435,9 +1435,11 @@ function check_library_structure() {
 # https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=1
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_REDUNDANT_PARAGRAPH_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
-ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
-readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_CHARACTERS_IN_NAME_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
-ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_CHECK_VALID_FOLDER_NAME_OFFSET=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_FOLDER_NAME_HAS_INVALID_FIRST_CHARACTER_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_CHECK_VALID_FOLDER_NAME_OFFSET + ARDUINO_CI_SCRIPT_CHECK_VALID_FOLDER_NAME_INVALID_FIRST_CHARACTER_EXIT_STATUS))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_FOLDER_NAME_HAS_INVALID_CHARACTER_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_CHECK_VALID_FOLDER_NAME_OFFSET + ARDUINO_CI_SCRIPT_CHECK_VALID_FOLDER_NAME_INVALID_CHARACTER_EXIT_STATUS))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_FOLDER_NAME_TOO_LONG_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_CHECK_VALID_FOLDER_NAME_OFFSET + ARDUINO_CI_SCRIPT_CHECK_VALID_FOLDER_NAME_TOO_LONG_EXIT_STATUS))
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_FOLDER_NAME_TOO_LONG_EXIT_STATUS + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_FOLDER_DOESNT_EXIST_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
@@ -1517,10 +1519,13 @@ function check_library_properties() {
       local nameValueEquals=${nameLineFrontStripped#name}
       local nameValueEqualsFrontStripped="${nameValueEquals#"${nameValueEquals%%[![:space:]]*}"}"
       local nameValue=${nameValueEqualsFrontStripped#=}
-      local validNameRegex='^[a-zA-Z0-9._ -]*[[:space:]]*$'
-      if ! [[ "$nameValue" =~ $validNameRegex ]]; then
-        echo "ERROR: ${libraryPropertiesPath}'s name value uses characters not allowed by the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_CHARACTERS_IN_NAME_EXIT_STATUS)
+      # Library Manager installs libraries to a folder that is the name field value with any spaces replaced with _
+      local libraryManagerFolderName="${nameValue// /_}"
+      check_valid_folder_name "$libraryManagerFolderName"
+      local -r checkValidFolderNameExitStatus=$?
+      if [[ $checkValidFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
+        echo "ERROR: ${libraryPropertiesPath}'s name value $nameValue uses characters not allowed by the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+        exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_CHECK_VALID_FOLDER_NAME_OFFSET + checkValidFolderNameExitStatus)))
       fi
     fi
 

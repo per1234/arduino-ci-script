@@ -535,12 +535,29 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [ "${#lines[@]}" -eq 1 ]
 }
 
-@test "check_library_properties \"./check_library_properties/InvalidName\"" {
-  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_CHARACTERS_IN_NAME_EXIT_STATUS
-  run check_library_properties "./check_library_properties/InvalidName"
+@test "check_library_properties \"./check_library_properties/InvalidCharactersAtStartOfName\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_FOLDER_NAME_HAS_INVALID_FIRST_CHARACTER_EXIT_STATUS
+  run check_library_properties "./check_library_properties/InvalidCharactersAtStartOfName"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-  [ "${#lines[@]}" -eq 1 ]
+  # check_valid_folder_name outputs an error message, then check_library_properties another
+  [ "${#lines[@]}" -eq 2 ]
+}
+
+@test "check_library_properties \"./check_library_properties/InvalidCharactersInName\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_FOLDER_NAME_HAS_INVALID_CHARACTER_EXIT_STATUS
+  run check_library_properties "./check_library_properties/InvalidCharactersInName"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 2 ]
+}
+
+@test "check_library_properties \"./check_library_properties/NameTooLong\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_FOLDER_NAME_TOO_LONG_EXIT_STATUS
+  run check_library_properties "./check_library_properties/NameTooLong"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 2 ]
 }
 
 @test "check_library_properties \"./check_library_properties/InvalidVersion\"" {
