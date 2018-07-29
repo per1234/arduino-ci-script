@@ -1705,6 +1705,8 @@ readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCORRECT_FILENAME_CASE_EXIT_STATU
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_FIELD_SEPARATOR_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_BOM_CORRUPTED_KEYWORD_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_TOKENTYPE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_LEADING_SPACE_ON_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
@@ -1778,14 +1780,13 @@ function check_keywords_txt() {
             # Change tabs to the field separator character for line splitting
             local keywordsTxtLineSwappedTabs=(${keywordsTxtLine//$'\t'/$fieldSeparator})
 
-            # Unused, so commented
-            # # KEYWORD is the 1st field
-            # local keywordRaw=${keywordsTxtLineSwappedTabs[0]}
-            # # The Arduino IDE strips leading whitespace and trailing spaces from KEYWORD
-            # # Strip leading whitespace
-            # local keywordFrontStripped="${keywordRaw#"${keywordRaw%%[![:space:]]*}"}"
-            # # Strip trailing spaces
-            # local keyword="${keywordFrontStripped%"${keywordFrontStripped##*[! ]}"}"
+            # KEYWORD is the 1st field
+            local keywordRaw=${keywordsTxtLineSwappedTabs[0]}
+            # The Arduino IDE strips leading whitespace and trailing spaces from KEYWORD
+            # Strip leading whitespace
+            local keywordFrontStripped="${keywordRaw#"${keywordRaw%%[![:space:]]*}"}"
+            # Strip trailing spaces
+            local keyword="${keywordFrontStripped%"${keywordFrontStripped##*[! ]}"}"
 
             # KEYWORD_TOKENTYPE is the 2nd field
             local keywordTokentypeRaw=${keywordsTxtLineSwappedTabs[1]}
@@ -1809,6 +1810,12 @@ function check_keywords_txt() {
 
             # Reset IFS to default
             unset IFS
+
+            # Check for corruption of KEYWORD field caused by UTF-8 BOM file encoding
+            if grep --quiet $'\xEF\xBB\xBF' <<<"$keyword"; then
+              echo "ERROR: $keywordsTxtPath uses UTF-8 BOM file encoding, which has corrupted the first keyword definition. Please change the file encoding to standard UTF-8."
+              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_BOM_CORRUPTED_KEYWORD_EXIT_STATUS)
+            fi
 
             # Check for invalid KEYWORD_TOKENTYPE
             local validKeywordTokentypeRegex='^((KEYWORD1)|(KEYWORD2)|(KEYWORD3)|(LITERAL1)|(LITERAL2))$'
