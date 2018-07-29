@@ -1834,6 +1834,7 @@ function check_keywords_txt() {
 
           # Check for invalid KEYWORD_TOKENTYPE
           local validKeywordTokentypeRegex='^((KEYWORD1)|(KEYWORD2)|(KEYWORD3)|(LITERAL1)|(LITERAL2))$'
+          local validRsyntaxtextareaTokentypeRegex='^((RESERVED_WORD)|(RESERVED_WORD_2)|(DATA_TYPE)|(PREPROCESSOR)|(LITERAL_BOOLEAN))$'
           if ! [[ "$keywordTokentype" =~ $validKeywordTokentypeRegex ]]; then
             # Check if it's invalid only because of leading space
             local keywordTokentypeWithoutLeadingSpace="${keywordTokentype#"${keywordTokentype%%[![:space:]]*}"}"
@@ -1847,7 +1848,8 @@ function check_keywords_txt() {
                 echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) has leading space on the KEYWORD_TOKENTYPE field, which causes it to not be recognized, so the default keyword highlighting is used."
                 exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_LEADING_SPACE_ON_KEYWORD_TOKENTYPE_EXIT_STATUS)
               fi
-            else
+            elif ! [[ "$keywordTokentypeWithoutLeadingSpace" == "" && "$rsyntaxtextareaTokentype" =~ $validRsyntaxtextareaTokentypeRegex ]]; then
+              # It's reasonable to leave KEYWORD_TOKENTYPE blank if RSYNTAXTEXTAREA_TOKENTYPE is defined and valid. This will not be compatible with 1.6.4 and older but that's really no big deal.
               echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses invalid KEYWORD_TOKENTYPE: ${keywordTokentype}, which causes the default keyword highlighting to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keyword_tokentype"
               exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_TOKENTYPE_EXIT_STATUS)
             fi
@@ -1855,7 +1857,6 @@ function check_keywords_txt() {
 
           # Check for invalid RSYNTAXTEXTAREA_TOKENTYPE
           if [[ "$rsyntaxtextareaTokentype" != "" ]]; then
-            local validRsyntaxtextareaTokentypeRegex='^((RESERVED_WORD)|(RESERVED_WORD_2)|(DATA_TYPE)|(PREPROCESSOR)|(LITERAL_BOOLEAN))$'
             if ! [[ "$rsyntaxtextareaTokentype" =~ $validRsyntaxtextareaTokentypeRegex ]]; then
               # Check if it's invalid only because of leading space
               local rsyntaxtextareaTokentypeWithoutLeadingSpace="${rsyntaxtextareaTokentype#"${rsyntaxtextareaTokentype%%[![:space:]]*}"}"
