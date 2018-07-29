@@ -1442,6 +1442,8 @@ readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_FOLDER_NAME_TOO_LONG_EXIT_ST
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_FOLDER_NAME_TOO_LONG_EXIT_STATUS + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_ARCHITECTURES_MISSPELLED_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_FOLDER_DOESNT_EXIST_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCORRECT_FILENAME_CASE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
@@ -1641,7 +1643,12 @@ function check_library_properties() {
 
     # Check for missing architectures field
     if ! grep --quiet --regexp='^[[:space:]]*architectures[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "WARNING: $libraryPropertiesPath is missing architectures field. This causes the Arduino IDE to assume the library is compatible with all architectures (*)."
+      if grep --quiet --regexp='^[[:space:]]*architecture[[:space:]]*=' <<<"$libraryProperties"; then
+        echo "ERROR: $libraryPropertiesPath has misspelled architecutures field name as \"architecture\"."
+        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_ARCHITECTURES_MISSPELLED_EXIT_STATUS)
+      else
+        echo "WARNING: $libraryPropertiesPath is missing architectures field. This causes the Arduino IDE to assume the library is compatible with all architectures (*)."
+      fi
     else
       # Check for invalid architectures
       architecturesLine=$(grep --regexp='^[[:space:]]*architectures[[:space:]]*=' <<<"$libraryProperties" | tail --lines=1)

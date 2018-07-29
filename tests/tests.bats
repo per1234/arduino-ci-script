@@ -618,6 +618,14 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [ "${#lines[@]}" -eq 1 ]
 }
 
+@test "check_library_properties \"./check_library_properties/ArchitecturesMisspelled\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_ARCHITECTURES_MISSPELLED_EXIT_STATUS
+  run check_library_properties "./check_library_properties/ArchitecturesMisspelled"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 1 ]
+}
+
 @test "check_library_properties \"./check_library_properties/InvalidArchitecture\"" {
   expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS
   run check_library_properties "./check_library_properties/InvalidArchitecture"
