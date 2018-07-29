@@ -1794,16 +1794,15 @@ function check_keywords_txt() {
           # Use a unique, non-whitespace field separator character
           fieldSeparator=$'\a'
           IFS=$fieldSeparator
+          # Strip leading whitespace. This is ignored by the Arduino IDE (even tabs)
+          local keywordsTxtLineFrontStripped="${keywordsTxtLine#"${keywordsTxtLine%%[![:space:]]*}"}"
           # Change tabs to the field separator character for line splitting
-          local keywordsTxtLineSwappedTabs=(${keywordsTxtLine//$'\t'/$fieldSeparator})
+          local keywordsTxtLineSwappedTabs=(${keywordsTxtLineFrontStripped//$'\t'/$fieldSeparator})
 
           # KEYWORD is the 1st field
           local keywordRaw=${keywordsTxtLineSwappedTabs[0]}
-          # The Arduino IDE strips leading whitespace and trailing spaces from KEYWORD
-          # Strip leading whitespace
-          local keywordFrontStripped="${keywordRaw#"${keywordRaw%%[![:space:]]*}"}"
           # Strip trailing spaces
-          local keyword="${keywordFrontStripped%"${keywordFrontStripped##*[! ]}"}"
+          local keyword="${keywordRaw%"${keywordRaw##*[! ]}"}"
 
           # KEYWORD_TOKENTYPE is the 2nd field
           local keywordTokentypeRaw=${keywordsTxtLineSwappedTabs[1]}
