@@ -71,7 +71,7 @@ before_install:
   # Check for tabs
   - find . -path './.git' -prune -or -path './tests/check_keywords_txt' -prune -or -path './tests/check_library_manager_compliance' -prune -or -path './tests/check_library_properties' -prune -or -path './tests/check_library_structure' -prune -or -type f -exec grep --with-filename --line-number --binary-files=without-match --regexp=$'\t' '{}' \; -exec echo 'Tab found.' \; -exec false '{}' +
   # Check for trailing whitespace
-  - "if grep --line-number --recursive --binary-files=without-match --exclude-dir=.git --regexp='[[:blank:]]$' .; then echo 'Trailing whitespace found.'; false; fi"
+  - find . -path './.git' -prune -or -path './tests/check_library_properties' -prune -or -type f -exec grep --with-filename --line-number --binary-files=without-match --regexp='[[:blank:]]$' '{}' \; -exec echo 'Trailing whitespace found.' \; -exec false '{}' +
   # Check for non-Unix line endings
   - find . -path './.git' -prune -or -path './tests/check_keywords_txt' -prune -or -path './tests/check_library_manager_compliance' -prune -or -path './tests/check_library_properties' -prune -or -path './tests/check_library_structure' -prune -or -type f -exec grep --files-with-matches --regexp=$'\r$' '{}' \; -exec echo 'Non-Unix EOL detected.' \; -exec false '{}' +
   # Check for blank lines at end of files
