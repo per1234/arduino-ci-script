@@ -626,12 +626,40 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [ "${#lines[@]}" -eq 1 ]
 }
 
+@test "check_library_properties \"./check_library_properties/ArchitectureAliasWithValidMatch\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
+  run check_library_properties "./check_library_properties/ArchitectureAliasWithValidMatch"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 1 ]
+  unrecognizedArchitectureRegex='^WARNING: \./check_library_properties/ArchitectureAliasWithValidMatch/library\.properties'\''s architectures field contains an unknown architecture Avr'
+  [[ "${lines[0]}" =~ $IDEnotInstalledRegex ]]
+}
+
+@test "check_library_properties \"./check_library_properties/ArchitectureAliasWithoutValidMatch\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS
+  run check_library_properties "./check_library_properties/ArchitectureAliasWithoutValidMatch"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 2 ]
+}
+
+@test "check_library_properties \"./check_library_properties/NoRecognizedArchitecture\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS
+  run check_library_properties "./check_library_properties/NoRecognizedArchitecture"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 2 ]
+}
+
 @test "check_library_properties \"./check_library_properties/InvalidArchitecture\"" {
   expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS
   run check_library_properties "./check_library_properties/InvalidArchitecture"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-  [ "${#lines[@]}" -eq 1 ]
+  [ "${#lines[@]}" -eq 2 ]
+  unrecognizedArchitectureRegex='^WARNING:\./check_library_properties/InvalidArchitecture/library\.properties'\''s architectures field contains an unknown architecture asdf'
+  [[ "${lines[0]}" =~ $IDEnotInstalledRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/EmptyIncludes\"" {
