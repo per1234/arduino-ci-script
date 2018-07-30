@@ -1681,53 +1681,64 @@ function check_library_properties() {
       local validArchitectureFound=false
       # Disable globbing, otherwise it fails when one of the architecture values is *
       set -o noglob
+      # Check for * architecture. If this is found then the other architecture values don't matter
+      local wildcardArchitectureFound=false
       for architecture in $architecturesValue; do
-        if [[ "$architecture" =~ $validArchitecturesRegex ]]; then
+        if [[ "$architecture" == "*" ]]; then
+          wildcardArchitectureFound=true
           validArchitectureFound=true
-        else
-          local aliasCheckPassed=true
-          # If an architecture alias is used then the correct architecture must also be present
-          check_architecture_alias "$architecture" '^((Avr)|(AVR)|(atmelavr)|([aA][tT][mM][eE][lL].?[aA][vV][rR]))$' "$architecturesValue" 'avr' "$libraryPropertiesPath"
-          if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
-            aliasCheckPassed=false
-            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
-          fi
-          check_architecture_alias "$architecture" '^((Sam)|(SAM))$' "$architecturesValue" 'sam' "$libraryPropertiesPath"
-          if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
-            aliasCheckPassed=false
-            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
-          fi
-          check_architecture_alias "$architecture" '^((Samd)|(SAMD)|(SamD)|((samD)|([aA][tT][mM][eE][lL].?[sS][aA][mM]))$' "$architecturesValue" 'samd' "$libraryPropertiesPath"
-          if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
-            aliasCheckPassed=false
-            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
-          fi
-          check_architecture_alias "$architecture" '^((Arc32)|(ARC32)|([aA][rR][cC].32)|([iI][nN][tT][eE][lL].?[aA][rR][cC]32))$' "$architecturesValue" 'arc32' "$libraryPropertiesPath"
-          if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
-            aliasCheckPassed=false
-            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
-          fi
-          check_architecture_alias "$architecture" '^((Esp8266)|(ESP8266)|([eE][sS][pP].8266)|(8266)|([eE][sS][pP])|([eE][sS][pP][rR][eE][sS][sS][iI][fF].?(8266)?))$' "$architecturesValue" 'esp8266' "$libraryPropertiesPath"
-          if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
-            aliasCheckPassed=false
-            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
-          fi
-          check_architecture_alias "$architecture" '^((Esp32)|(ESP32)|([eE][sS][pP].32)|(arduino-esp32)|([eE][sS][pP][rR][eE][sS][sS][iI][fF].?32))$' "$architecturesValue" 'esp32' "$libraryPropertiesPath"
-          if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
-            aliasCheckPassed=false
-            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
-          fi
-          check_architecture_alias "$architecture" '^((Teensy)|(TEENSY))$' "$architecturesValue" 'teensy' "$libraryPropertiesPath"
-          if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
-            aliasCheckPassed=false
-            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
-          fi
-
-          if [[ "$aliasCheckPassed" == true ]]; then
-            echo "WARNING: ${libraryPropertiesPath}'s architectures field contains an unknown architecture ${architecture}. Note: architecture values are case-sensitive."
-          fi
+          break
         fi
       done
+      if [[ "$wildcardArchitectureFound" == false ]]; then
+        for architecture in $architecturesValue; do
+          if [[ "$architecture" =~ $validArchitecturesRegex ]]; then
+            validArchitectureFound=true
+          else
+            local aliasCheckPassed=true
+            # If an architecture alias is used then the correct architecture must also be present
+            check_architecture_alias "$architecture" '^((Avr)|(AVR)|(atmelavr)|([aA][tT][mM][eE][lL].?[aA][vV][rR]))$' "$architecturesValue" 'avr' "$libraryPropertiesPath"
+            if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
+              aliasCheckPassed=false
+              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
+            fi
+            check_architecture_alias "$architecture" '^((Sam)|(SAM))$' "$architecturesValue" 'sam' "$libraryPropertiesPath"
+            if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
+              aliasCheckPassed=false
+              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
+            fi
+            check_architecture_alias "$architecture" '^((Samd)|(SAMD)|(SamD)|((samD)|([aA][tT][mM][eE][lL].?[sS][aA][mM]))$' "$architecturesValue" 'samd' "$libraryPropertiesPath"
+            if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
+              aliasCheckPassed=false
+              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
+            fi
+            check_architecture_alias "$architecture" '^((Arc32)|(ARC32)|([aA][rR][cC].32)|([iI][nN][tT][eE][lL].?[aA][rR][cC]32))$' "$architecturesValue" 'arc32' "$libraryPropertiesPath"
+            if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
+              aliasCheckPassed=false
+              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
+            fi
+            check_architecture_alias "$architecture" '^((Esp8266)|(ESP8266)|([eE][sS][pP].8266)|(8266)|([eE][sS][pP])|([eE][sS][pP][rR][eE][sS][sS][iI][fF].?(8266)?))$' "$architecturesValue" 'esp8266' "$libraryPropertiesPath"
+            if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
+              aliasCheckPassed=false
+              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
+            fi
+            check_architecture_alias "$architecture" '^((Esp32)|(ESP32)|([eE][sS][pP].32)|(arduino-esp32)|([eE][sS][pP][rR][eE][sS][sS][iI][fF].?32))$' "$architecturesValue" 'esp32' "$libraryPropertiesPath"
+            if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
+              aliasCheckPassed=false
+              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
+            fi
+            check_architecture_alias "$architecture" '^((Teensy)|(TEENSY))$' "$architecturesValue" 'teensy' "$libraryPropertiesPath"
+            if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
+              aliasCheckPassed=false
+              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
+            fi
+
+            if [[ "$aliasCheckPassed" == true ]]; then
+              echo "WARNING: ${libraryPropertiesPath}'s architectures field contains an unknown architecture ${architecture}. Note: architecture values are case-sensitive."
+            fi
+          fi
+        done
+      fi
       # Re-enable globbing
       set +o noglob
       # Set IFS back to default
