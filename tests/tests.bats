@@ -535,6 +535,14 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [ "${#lines[@]}" -eq 1 ]
 }
 
+@test "check_library_properties \"./check_library_properties/BlankName\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_BLANK_NAME
+  run check_library_properties "./check_library_properties/BlankName"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 1 ]
+}
+
 @test "check_library_properties \"./check_library_properties/InvalidCharactersAtStartOfName\"" {
   expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_NAME_HAS_INVALID_FIRST_CHARACTER_EXIT_STATUS
   run check_library_properties "./check_library_properties/InvalidCharactersAtStartOfName"

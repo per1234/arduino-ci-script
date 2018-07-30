@@ -1461,6 +1461,8 @@ function check_architecture_alias() {
 # https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=1
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_REDUNDANT_PARAGRAPH_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_BLANK_NAME=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_CHECK_FOLDER_NAME_OFFSET=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_NAME_HAS_INVALID_FIRST_CHARACTER_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_CHECK_FOLDER_NAME_OFFSET + ARDUINO_CI_SCRIPT_CHECK_FOLDER_NAME_INVALID_FIRST_CHARACTER_EXIT_STATUS))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_NAME_HAS_INVALID_CHARACTER_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_CHECK_FOLDER_NAME_OFFSET + ARDUINO_CI_SCRIPT_CHECK_FOLDER_NAME_INVALID_CHARACTER_EXIT_STATUS))
@@ -1546,14 +1548,24 @@ function check_library_properties() {
       local nameLineFrontStripped="${nameLine#"${nameLine%%[![:space:]]*}"}"
       local nameValueEquals=${nameLineFrontStripped#name}
       local nameValueEqualsFrontStripped="${nameValueEquals#"${nameValueEquals%%[![:space:]]*}"}"
-      local nameValue=${nameValueEqualsFrontStripped#=}
-      # Library Manager installs libraries to a folder that is the name field value with any spaces replaced with _
-      local libraryManagerFolderName="${nameValue// /_}"
-      check_folder_name "$libraryManagerFolderName"
-      local -r checkFolderNameExitStatus=$?
-      if [[ $checkFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
-        echo "ERROR: ${libraryPropertiesPath}'s name value $nameValue uses characters not allowed by the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-        exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_CHECK_FOLDER_NAME_OFFSET + checkFolderNameExitStatus)))
+      local nameValueRaw=${nameValueEqualsFrontStripped#=}
+      local nameValueFrontStripped="${nameValueRaw#"${nameValueRaw%%[![:space:]]*}"}"
+      local nameValue="${nameValueFrontStripped%"${nameValueFrontStripped##*[![:space:]]}"}"
+
+      # Check for blank name value
+      if [[ "$nameValue" == "" ]]; then
+        echo "ERROR: ${libraryPropertiesPath}'s has an blank name value."
+        exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_BLANK_NAME + checkFolderNameExitStatus)))
+      else
+        # Check for invalid name value
+        # Library Manager installs libraries to a folder that is the name field value with any spaces replaced with _
+        local libraryManagerFolderName="${nameValue// /_}"
+        check_folder_name "$libraryManagerFolderName"
+        local -r checkFolderNameExitStatus=$?
+        if [[ $checkFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
+          echo "ERROR: ${libraryPropertiesPath}'s name value $nameValue uses characters not allowed by the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+          exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_CHECK_FOLDER_NAME_OFFSET + checkFolderNameExitStatus)))
+        fi
       fi
     fi
 
