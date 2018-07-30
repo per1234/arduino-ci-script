@@ -1440,7 +1440,12 @@ function check_architecture_alias() {
   local -r libraryPropertiesPath="$5"
   if [[ "$architecture" =~ $architectureAliasRegex ]]; then
     local correctArchitectureFound=false
-    for architecture2 in $architecturesList; do
+    for rawArchitecture2 in $architecturesList; do
+      # The Arduino IDE ignores leading or trailing whitespace on architectures
+      # Strip leading whitespace
+      local architecture2="${rawArchitecture2#"${rawArchitecture2%%[![:space:]]*}"}"
+      # Strip trailing whitespace
+      architecture2="${architecture2%"${architecture2##*[![:space:]]}"}"
       if [[ "$architecture2" == "$correctArchitecture" ]]; then
         correctArchitectureFound=true
       fi
@@ -1672,9 +1677,9 @@ function check_library_properties() {
       fi
     else
       # Check for invalid architectures
+      local architecturesLine
       architecturesLine=$(grep --regexp='^[[:space:]]*architectures[[:space:]]*=' <<<"$libraryProperties" | tail --lines=1)
-      local architecturesLineWithoutSpaces=${architecturesLine//[[:space:]]/}
-      local architecturesValue=${architecturesLineWithoutSpaces//architectures=/}
+      local architecturesValue=${architecturesLine//architectures=/}
       local validArchitecturesRegex='^((\*)|(avr)|(sam)|(samd)|(stm32f4)|(nrf52)|(i586)|(i686)|(arc32)|(win10)|(esp8266)|(esp32)|(ameba)|(arm)|(efm32)|(FP51)|(iot2000)|(msp430)|(navspark)|(nRF5)|(nRF51822)|(nRF52832)|(particle-photon)|(particle-electron)|(particle-core)|(pic)|(pic32)|(RFduino)|(Seeed_STM32F4)|(Simblee)|(solox)|(stm32)|(stm)|(STM32)|(STM32F1)|(STM32F3)|(STM32F4)|(STM32F2)|(STM32L1)|(STM32L4)|(teensy)|(x86))$'
       # Split string on ,
       IFS=','
@@ -1683,7 +1688,13 @@ function check_library_properties() {
       set -o noglob
       # Check for * architecture. If this is found then the other architecture values don't matter
       local wildcardArchitectureFound=false
-      for architecture in $architecturesValue; do
+      for rawArchitecture in $architecturesValue; do
+        # The Arduino IDE ignores leading or trailing whitespace on architectures
+        # Strip leading whitespace
+        local architecture="${rawArchitecture#"${rawArchitecture%%[![:space:]]*}"}"
+        # Strip trailing whitespace
+        architecture="${architecture%"${architecture##*[![:space:]]}"}"
+
         if [[ "$architecture" == "*" ]]; then
           wildcardArchitectureFound=true
           validArchitectureFound=true
@@ -1691,7 +1702,13 @@ function check_library_properties() {
         fi
       done
       if [[ "$wildcardArchitectureFound" == false ]]; then
-        for architecture in $architecturesValue; do
+        for rawArchitecture in $architecturesValue; do
+          # The Arduino IDE ignores leading or trailing whitespace on architectures
+          # Strip leading whitespace
+          local architecture="${rawArchitecture#"${rawArchitecture%%[![:space:]]*}"}"
+          # Strip trailing whitespace
+          architecture="${architecture%"${architecture##*[![:space:]]}"}"
+
           if [[ "$architecture" =~ $validArchitecturesRegex ]]; then
             validArchitectureFound=true
           else
