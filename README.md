@@ -12,7 +12,7 @@ The script can be used in multiple ways:
 Include the latest release of the script in your project by adding the following lines to your build configuration file:
 ```yaml
   # Clone the script repository
-  - git clone https://github.com/per1234/arduino-ci-script.git "${HOME}/scripts"
+  - git clone --depth 1 https://github.com/per1234/arduino-ci-script.git "${HOME}/scripts"
   - cd "${HOME}/scripts"
   # Get new tags from the remote
   - git fetch --tags
