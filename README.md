@@ -83,7 +83,7 @@ Install a range of version(s) of the Arduino IDE.
 - Parameter(optional): **branchName** - Branch of the repository to install. If this argument is not specified or is left blank the default branch will be used.
 
 ##### `install_package packageID [packageURL]`
-Install a hardware package using the Arduino IDE (Boards Manager). Only the **Arduino AVR Boards** package is included with the Arduino IDE installation. Packages are installed to `$HOME/.arduino15/packages. You must call `install_ide` before this function. This feature is only available with Arduino IDE 1.6.4 and newer.
+Install a hardware package using the Arduino IDE (Boards Manager). Only the **Arduino AVR Boards** package is included with the Arduino IDE installation. Packages are installed to `$HOME/.arduino15/packages`. You must call `install_ide` before this function. This feature is only available with Arduino IDE 1.6.4 and newer.
 - Parameter: **packageID** - `package name:platform architecture[:version]`. If `version` is omitted the most recent version will be installed. e.g. `arduino:samd` will install the most recent version of **Arduino SAM Boards**.
 - Parameter(optional): **packageURL** - The URL of the Boards Manager JSON file for 3rd party hardware packages. This can be omitted for hardware packages that are included in the official Arduino JSON file (e.g. Arduino SAM Boards, Arduino SAMD Boards, Intel Curie Boards).
 
@@ -97,7 +97,7 @@ Install a library that is listed in the Arduino Library Manager index. The libra
 ##### `install_library libraryURL [newFolderName]`
 Download a library in a compressed file from a URL. The library is installed to the `libraries` subfolder of the sketchbook folder.
 - Parameter: **libraryURL** - The URL of the library download or library name in the Arduino Library Manager. The scheme component of the URL (e.g. `http://`, `https://`) is required. This can be any compressed file format. Assumes the library is located in the root of the file.
-- Parameter(optional): **newFolderName** - Folder name to rename the installed library folder to. This can be useful if the default folder name of the downloaded file is problematic. The Arduino IDE gives include file preference when the filename matches the library folder name. GitHub's "Download ZIP" file is given the folder name {repository name}-{branch name}. Library folder names that contain `-` or `.` are not compatible with Arduino IDE 1.5.6 and older, arduino will hang if it's started with a library using an invalid folder name installed.
+- Parameter(optional): **newFolderName** - Folder name to rename the installed library folder to. This can be useful if the default folder name of the downloaded file is problematic. The Arduino IDE gives include file preference when the filename matches the library folder name. GitHub's "Download ZIP" file is given the folder name `{repository name}-{branch name}`. Library folder names that contain `-` or `.` are not compatible with Arduino IDE 1.5.6 and older, arduino will hang if it's started with a library using an invalid folder name installed.
 
 ##### `install_library libraryURL [branchName [newFolderName]]`
 Install a library by cloning a Git repository). The library is installed to the `libraries` subfolder of the sketchbook folder. Assumes the library is located in the root of the repository.
@@ -109,23 +109,23 @@ Install a library by cloning a Git repository). The library is installed to the 
 Turn on/off arduino verbose output during compilation (same as the IDE's **File > Preferences > Show verbose output during: > compilation**). This will show all the commands arduino runs during the process rather than just the compiler output. This is usually not very useful output and only clutters up the log. This feature is off by default.
 - Parameter: **verboseOutputDuringCompilation** - `true`/`false`
 
-##### `check_sketch_structure searchPath'
+##### `check_sketch_structure searchPath`
 Check sketches to ensure they have the correct structure.
 - Parameter: **searchPath** - Path containing sketches. The path will be searched recursively and all sketches found under it will be checked.
 
-##### `check_library_structure libraryPath'
+##### `check_library_structure libraryPath`
 Check a library to ensure they have the correct structure. This will also run `check_sketch_structure` on all sketches bundled with the library.
 - Parameter: **libraryPath** - Path containing a library.
 
-##### `check_library_properties searchPath'
+##### `check_library_properties searchPath`
 Check [library.properties](https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format) metadata files for errors.
 - Parameter: **searchPath** - Path containing library.properties files. The path will be searched recursively and all library.properties files found under it will be checked.
 
-##### `check_keywords_txt searchPath'
+##### `check_keywords_txt searchPath`
 Check [keywords.txt](https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keywords) files for errors.
 - Parameter: **searchPath** - Path containing keywords.txt files. The path will be searched recursively and all keywords.txt files found under it will be checked.
 
-##### `check_library_manager_compliance libraryPath'
+##### `check_library_manager_compliance libraryPath`
 Make some additional checks for compliance with the requirements for adding a library to the [Library Manager index](https://github.com/arduino/Arduino/wiki/Library-Manager-FAQ). This function should be used in combination with `check_library_structure' and 'check_library_properties' to ensure full compliance with the requirements.
 - Parameter: **libraryPath** - Path of the library to check.
 
