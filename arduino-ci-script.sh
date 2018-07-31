@@ -1753,7 +1753,7 @@ function check_library_properties() {
           else
             local aliasCheckPassed=true
             # If an architecture alias is used then the correct architecture must also be present
-            check_architecture_alias "$architecture" '^((Avr)|(AVR)|(atmelavr)|([aA][tT][mM][eE][lL].?[aA][vV][rR]))$' "$architecturesValue" 'avr' "$libraryPropertiesPath"
+            check_architecture_alias "$architecture" '^((Avr)|(AVR)|([aA][tT][mM][eE][lL].?[aA][vV][rR]))$' "$architecturesValue" 'avr' "$libraryPropertiesPath"
             if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
               aliasCheckPassed=false
               exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
