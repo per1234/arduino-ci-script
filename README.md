@@ -189,7 +189,7 @@ NOTE: For security reasons, reports for builds of pull requests from a fork of t
 ##### Creating a GitHub personal access token
 This is required for either publishing option.
 1. Sign in to your GitHub account.
-2. Click your avatar at the top right corner of GitHub > **Settings** > **Personal access tokens** > **Generate new token**.
+2. Click your avatar at the top right corner of GitHub > **Settings** > **Developer settings** > **Personal access tokens** > **Generate new token**.
 3. Check the appropriate permissions for the token:
   1. If using `publish_report_to_gist` check **gist**.
   2. If using `publish_report_to_repository` or setting the `doLinkComment` argument of `publish_report_to_gist` check **public_repo** (for public repositories only) or **repo** (for private and public repositories).
