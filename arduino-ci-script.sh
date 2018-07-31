@@ -1377,6 +1377,7 @@ function check_library_structure() {
   fi
 
   # Check for valid 1.0 or 1.5 format
+  # The Arduino IDE only recognizes libraries if they have at least one file with a header extension of the correct case (even on Windows)
   if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type f \( -name '*.h' -or -name '*.hh' -or -name '*.hpp' \)) ]]; then
     # 1.0 format library, do nothing (this if just makes the logic more simple)
     :
