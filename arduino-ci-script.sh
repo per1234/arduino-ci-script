@@ -1588,7 +1588,7 @@ function check_library_properties() {
         # Library Manager installs libraries to a folder that is the name field value with any spaces replaced with _
         local libraryManagerFolderName="${nameValue// /_}"
         check_folder_name "$libraryManagerFolderName"
-        local -r checkFolderNameExitStatus=$?
+        local checkFolderNameExitStatus=$?
         if [[ $checkFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
           echo "ERROR: ${libraryPropertiesPath}'s name value $nameValue does not meet the requirements of the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
           exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_CHECK_FOLDER_NAME_OFFSET + checkFolderNameExitStatus)))
