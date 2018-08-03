@@ -1485,6 +1485,27 @@ function check_architecture_alias() {
   return "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS"
 }
 
+function get_library_properties_field_value() {
+  local -r libraryProperties="$1"
+  local -r fieldName="$2"
+
+  local line
+  line=$(grep --regexp='^[[:space:]]*'"$fieldName"'[[:space:]]*=' <<<"$libraryProperties" | tail --lines=1)
+  # Strip leading whitespace
+  line="${line#"${line%%[![:space:]]*}"}"
+  # Strip field name
+  line="${line#$fieldName}"
+  # Strip leading whitespace
+  line="${line#"${line%%[![:space:]]*}"}"
+  # Strip equals sign
+  line="${line#=}"
+  # Strip leading whitespace
+  line="${line#"${line%%[![:space:]]*}"}"
+  # Strip trailing whitespace
+  line="${line%"${line##*[![:space:]]}"}"
+  echo "$line"
+}
+
 # https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=1
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_REDUNDANT_PARAGRAPH_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
@@ -1571,13 +1592,8 @@ function check_library_properties() {
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_NAME_EXIT_STATUS)
     else
       # Check for characters in the name value disallowed by the Library Manager indexer
-      nameLine=$(grep --regexp='^[[:space:]]*name[[:space:]]*=' <<<"$libraryProperties" | tail --lines=1)
-      local nameLineFrontStripped="${nameLine#"${nameLine%%[![:space:]]*}"}"
-      local nameValueEquals=${nameLineFrontStripped#name}
-      local nameValueEqualsFrontStripped="${nameValueEquals#"${nameValueEquals%%[![:space:]]*}"}"
-      local nameValueRaw=${nameValueEqualsFrontStripped#=}
-      local nameValueFrontStripped="${nameValueRaw#"${nameValueRaw%%[![:space:]]*}"}"
-      local nameValue="${nameValueFrontStripped%"${nameValueFrontStripped##*[![:space:]]}"}"
+      local nameValue
+      nameValue="$(get_library_properties_field_value "$libraryProperties" 'name')"
 
       # Check for blank name value
       if [[ "$nameValue" == "" ]]; then
@@ -1636,21 +1652,13 @@ function check_library_properties() {
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_PARAGRAPH_EXIT_STATUS)
     else
       # Check for repeat of sentence in paragraph
-      sentenceLine=$(grep --regexp='^[[:space:]]*sentence[[:space:]]*=' <<<"$libraryProperties" | tail --lines=1)
-      local sentenceLineFrontStripped="${sentenceLine#"${sentenceLine%%[![:space:]]*}"}"
-      local sentenceValueEquals=${sentenceLineFrontStripped#sentence}
-      local sentenceValueEqualsFrontStripped="${sentenceValueEquals#"${sentenceValueEquals%%[![:space:]]*}"}"
-      local sentenceValue=${sentenceValueEqualsFrontStripped#=}
-      local sentenceValueFrontStripped="${sentenceValue#"${sentenceValue%%[![:space:]]*}"}"
-      local sentenceValueStripped="${sentenceValueFrontStripped%"${sentenceValueFrontStripped##*[![:space:]]}"}"
-      local sentenceValueStrippedNoPunctuation=${sentenceValueStripped%%\.}
-      if [[ "$sentenceValueStrippedNoPunctuation" != "" ]]; then
-        paragraphLine=$(grep --regexp='^[[:space:]]*paragraph[[:space:]]*=' <<<"$libraryProperties" | tail --lines=1)
-        local paragraphLineFrontStripped="${paragraphLine#"${paragraphLine%%[![:space:]]*}"}"
-        local paragraphValueEquals=${paragraphLineFrontStripped#paragraph}
-        local paragraphValueEqualsFrontStripped="${paragraphValueEquals#"${paragraphValueEquals%%[![:space:]]*}"}"
-        local paragraphValue=${paragraphValueEqualsFrontStripped#=}
-        if [[ "$paragraphValue" == *"$sentenceValueStrippedNoPunctuation"* ]]; then
+      local sentenceValue
+      sentenceValue="$(get_library_properties_field_value "$libraryProperties" 'sentence')"
+      local sentenceValueNoPunctuation=${sentenceValue%%\.}
+      if [[ "$sentenceValueNoPunctuation" != "" ]]; then
+        local paragraphValue
+        paragraphValue="$(get_library_properties_field_value "$libraryProperties" 'paragraph')"
+        if [[ "$paragraphValue" == *"$sentenceValueNoPunctuation"* ]]; then
           echo "ERROR: ${libraryPropertiesPath}'s paragraph value repeats the sentence. These strings are displayed one after the other in Library Manager so there is no point in redundancy."
           exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_REDUNDANT_PARAGRAPH_EXIT_STATUS)
         fi
@@ -1679,9 +1687,8 @@ function check_library_properties() {
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_URL_EXIT_STATUS)
     else
       # url field checks
-      urlLine=$(grep --regexp='^[[:space:]]*url[[:space:]]*=' <<<"$libraryProperties" | tail --lines=1)
-      local urlLineWithoutSpaces=${urlLine//[[:space:]]/}
-      local urlValue=${urlLineWithoutSpaces//url=/}
+      local urlValue
+      urlValue="$(get_library_properties_field_value "$libraryProperties" 'url')"
 
       # Check for blank url value
       if [[ "$urlValue" == "" ]]; then
@@ -1716,9 +1723,8 @@ function check_library_properties() {
       fi
     else
       # Check for invalid architectures
-      local architecturesLine
-      architecturesLine=$(grep --regexp='^[[:space:]]*architectures[[:space:]]*=' <<<"$libraryProperties" | tail --lines=1)
-      local architecturesValue=${architecturesLine//architectures=/}
+      local architecturesValue
+      architecturesValue="$(get_library_properties_field_value "$libraryProperties" 'architectures')"
       local validArchitecturesRegex='^((\*)|(avr)|(sam)|(samd)|(stm32f4)|(nrf52)|(i586)|(i686)|(arc32)|(win10)|(esp8266)|(esp32)|(ameba)|(arm)|(efm32)|(FP51)|(iot2000)|(msp430)|(navspark)|(nRF5)|(nRF51822)|(nRF52832)|(particle-photon)|(particle-electron)|(particle-core)|(pic)|(pic32)|(RFduino)|(Seeed_STM32F4)|(Simblee)|(solox)|(stm32)|(stm)|(STM32)|(STM32F1)|(STM32F3)|(STM32F4)|(STM32F2)|(STM32L1)|(STM32L4)|(teensy)|(x86))$'
       # Split string on ,
       IFS=','
