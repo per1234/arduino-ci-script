@@ -1280,6 +1280,10 @@ function check_sketch_structure() {
 
   # find all folders that contain a sketch file
   while read -r sketchPath; do
+    # The while loop always runs once, even when no sketches were found in $normalizedSearchPath
+    if [[ "$sketchPath" == "" ]]; then
+      continue
+    fi
 
     local folderNameMismatch=true
     local primarySketchFound=false
