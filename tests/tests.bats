@@ -760,6 +760,20 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [ "${#lines[@]}" -eq 0 ]
 }
 
+@test "check_keywords_txt \"./check_keywords_txt/BOMcorruptedBlankLine\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
+  run check_keywords_txt "./check_keywords_txt/BOMcorruptedBlankLine"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+}
+
+@test "check_keywords_txt \"./check_keywords_txt/BOMcorruptedComment\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
+  run check_keywords_txt "./check_keywords_txt/BOMcorruptedComment"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+}
+
 @test "check_keywords_txt \"./check_keywords_txt/DoesntExist\"" {
   expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_FOLDER_DOESNT_EXIST_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/DoesntExist"
