@@ -1912,7 +1912,7 @@ function check_keywords_txt() {
           fi
 
           # Check for multiple tabs used as separator where this causes unintended results
-          local consequentialMultipleSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t\t''+((KEYWORD1)|(LITERAL1))'
+          local consequentialMultipleSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t''+[[:space:]]*'$'\t''+[[:space:]]*((KEYWORD1)|(LITERAL1))'
           if [[ "$keywordsTxtLine" =~ $consequentialMultipleSeparatorRegex ]]; then
             echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses multiple tabs as field separator. It must be a single tab. This causes the default keyword highlighting (as used by KEYWORD2, KEYWORD3, LITERAL2) to be used rather than the intended highlighting."
             exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_MULTIPLE_TABS_EXIT_STATUS)
@@ -1921,7 +1921,7 @@ function check_keywords_txt() {
           fi
 
           # Check for multiple tabs used as separator where this causes no unintended results
-          local inconsequentialMultipleSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t\t''+((KEYWORD2)|(KEYWORD3)|(LITERAL2))'
+          local inconsequentialMultipleSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t''+[[:space:]]*'$'\t''+[[:space:]]*((KEYWORD2)|(KEYWORD3)|(LITERAL2))'
           if [[ "$keywordsTxtLine" =~ $inconsequentialMultipleSeparatorRegex ]]; then
             echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses multiple tabs as field separator. It must be a single tab. This causes the default keyword highlighting (as used by KEYWORD2, KEYWORD3, LITERAL2). In this case that doesn't cause the keywords to be incorrectly colored as expected but it's recommended to fully comply with the Arduino library specification."
             exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCONSEQUENTIAL_MULTIPLE_TABS_EXIT_STATUS)
