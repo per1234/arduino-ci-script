@@ -1417,6 +1417,11 @@ function check_library_structure() {
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SRC_AND_UTILITY_FOLDERS_EXIT_STATUS)
   fi
 
+  # Check for inconsequential missing library.properties file
+  if ! [[ -e "$normalizedLibraryPath/library.properties" ]]; then
+    echo "WARNING: The library is missing a library.properties file. While not required, it's recommended to add this file to provide helpful metadata. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#library-metadata"
+  fi
+
   # Check for library.properties files outside of the library root, examples, extras, or lib folders
   while read -r libraryPropertiesPath; do
     # The while loop always runs once, even when no file is found
@@ -1427,6 +1432,11 @@ function check_library_structure() {
     echo "ERROR: $libraryPropertiesPath is a stray file. library.properties should be located in the library root folder."
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_LIBRARY_PROPERTIES_EXIT_STATUS)
   done <<<"$(find "$normalizedLibraryPath" -mindepth 2 -path './examples' -prune -or -path './extras' -prune -or -path './lib' -prune -or -type f -regex '.*/[lL][iI][bB][rR][aA][rR][yY]\.[pP][rR][oO][pP][eE][rR][tT][iI][eE][sS]')"
+
+  # Check for missing keywords.txt file
+  if ! [[ -e "$normalizedLibraryPath/keywords.txt" ]]; then
+    echo "WARNING: The library is missing a keywords.txt file. While not required, it's recommended to add this file to provide keyword highlighting in the Arduino IDE. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keywords"
+  fi
 
   # Check for keywords.txt files outside of the library root, examples, extras, or lib folders
   while read -r keywordsTxtPath; do

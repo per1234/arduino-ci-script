@@ -133,7 +133,7 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_library_structure "./check_library_structure/ValidLibraryOnePointZero"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-  [ "${#lines[@]}" -eq 0 ]
+  [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_structure \"./check_library_structure/ValidLibraryOnePointFive\"" {
@@ -218,12 +218,32 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [ "${#lines[@]}" -eq 1 ]
 }
 
+@test "check_library_structure \"./check_library_structure/MissingLibraryProperties\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
+  run check_library_structure "./check_library_structure/MissingLibraryProperties"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 1 ]
+  missingLibraryPropertiesWarningRegex='^WARNING: The library is missing a library\.properties'
+  [[ "${lines[0]}" =~ $missingLibraryPropertiesWarningRegex ]]
+}
+
 @test "check_library_structure \"./check_library_structure/StrayLibraryProperties\"" {
   expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_LIBRARY_PROPERTIES_EXIT_STATUS
   run check_library_structure "./check_library_structure/StrayLibraryProperties"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+}
+
+@test "check_library_structure \"./check_library_structure/MissingKeywordsTxt\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
+  run check_library_structure "./check_library_structure/MissingKeywordsTxt"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 1 ]
+  missingKeywordsTxtWarningRegex='^WARNING: The library is missing a keywords\.txt'
+  [[ "${lines[0]}" =~ $missingKeywordsTxtWarningRegex ]]
 }
 
 @test "check_library_structure \"./check_library_structure/StrayKeywordsTxt\"" {
