@@ -451,7 +451,9 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_library_properties "./check_library_properties/NoLibraryProperties"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-  [ "${#lines[@]}" -eq 0 ]
+  [ "${#lines[@]}" -eq 1 ]
+  warningRegex='^WARNING: Specified folder: \./check_library_properties/NoLibraryProperties doesn'\''t contain a library\.properties file\.'
+  [[ "${lines[0]}" =~ $warningRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/DoesntExist\"" {
@@ -467,7 +469,7 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_library_properties "./check_library_properties/InvalidFilenameCase"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-  [ "${#lines[@]}" -eq 1 ]
+  [ "${#lines[@]}" -eq 2 ]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingName\"" {

@@ -118,8 +118,8 @@ Check a library to ensure they have the correct structure. This will also run `c
 - Parameter: **libraryPath** - Path containing a library.
 
 ##### `check_library_properties searchPath`
-Check [library.properties](https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format) metadata files for errors.
-- Parameter: **searchPath** - Path containing library.properties files. The path will be searched recursively and all library.properties files found under it will be checked.
+Check [library.properties](https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format) library metadata files for errors.
+- Parameter: **searchPath** - Path containing library.properties.
 
 ##### `check_keywords_txt searchPath`
 Check [keywords.txt](https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keywords) files for errors.

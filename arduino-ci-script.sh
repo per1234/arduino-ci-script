@@ -1423,13 +1423,13 @@ function check_library_structure() {
   fi
 
   # Check for library.properties files outside of the library root, examples, extras, or lib folders
-  while read -r libraryPropertiesPath; do
+  while read -r normalizedLibraryPropertiesPath; do
     # The while loop always runs once, even when no file is found
-    if [[ "$libraryPropertiesPath" == "" ]]; then
+    if [[ "$normalizedLibraryPropertiesPath" == "" ]]; then
       continue
     fi
 
-    echo "ERROR: $libraryPropertiesPath is a stray file. library.properties should be located in the library root folder."
+    echo "ERROR: $normalizedLibraryPropertiesPath is a stray file. library.properties should be located in the library root folder."
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_LIBRARY_PROPERTIES_EXIT_STATUS)
   done <<<"$(find "$normalizedLibraryPath" -mindepth 2 -path './examples' -prune -or -path './extras' -prune -or -path './lib' -prune -or -type f -regex '.*/[lL][iI][bB][rR][aA][rR][yY]\.[pP][rR][oO][pP][eE][rR][tT][iI][eE][sS]')"
 
@@ -1478,7 +1478,7 @@ function check_architecture_alias() {
   local -r architectureAliasRegex="$2"
   local -r architecturesList="$3"
   local -r correctArchitecture="$4"
-  local -r libraryPropertiesPath="$5"
+  local -r normalizedLibraryPropertiesPath="$5"
   if [[ "$architecture" =~ $architectureAliasRegex ]]; then
     local correctArchitectureFound=false
     for rawArchitecture2 in $architecturesList; do
@@ -1492,7 +1492,7 @@ function check_architecture_alias() {
       fi
     done
     if [[ "$correctArchitectureFound" == false ]]; then
-      echo "ERROR: ${libraryPropertiesPath}'s architectures field contains an invalid architecture ${architecture}. Note: architecture values are case-sensitive."
+      echo "ERROR: ${normalizedLibraryPropertiesPath}'s architectures field contains an invalid architecture ${architecture}. Note: architecture values are case-sensitive."
       return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
     fi
   fi
@@ -1568,185 +1568,217 @@ readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_DEAD_URL_EXIT_STATUS=$ARDUIN
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_EMPTY_INCLUDES_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 function check_library_properties() {
-  local -r searchPath="$1"
-
-  # Replace backslashes with slashes
-  local -r searchPathWithSlashes="${searchPath//\\//}"
-  # Remove trailing slash
-  local -r normalizedSearchPath="${searchPathWithSlashes%/}"
+  local -r libraryPropertiesPath="$1"
 
   local exitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
 
+  # Replace backslashes with slashes
+  local -r libraryPropertiesPathWithSlashes="${libraryPropertiesPath//\\//}"
+  local -r libraryPropertiesRegex='[lL][iI][bB][rR][aA][rR][yY]\.[pP][rR][oO][pP][eE][rR][tT][iI][eE][sS]$'
+  if [[ ! -d "$libraryPropertiesPathWithSlashes" ]]; then
+    if [[ "$libraryPropertiesPathWithSlashes" =~ $libraryPropertiesRegex ]]; then
+      # Path contains the filename but we only want the folder
+      local -r libraryPropertiesPathWithoutFile="${libraryPropertiesPathWithSlashes::-18}"
+    fi
+  else
+    local -r libraryPropertiesPathWithoutFile="$libraryPropertiesPathWithSlashes"
+  fi
+  # Remove trailing slash
+  local -r normalizedLibraryPropertiesPath="${libraryPropertiesPathWithoutFile%/}"
+
   # Check whether folder exists
-  if [[ ! -d "$normalizedSearchPath" ]]; then
-    echo "ERROR: Specified folder: $normalizedSearchPath doesn't exist."
+  if [[ ! -d "$normalizedLibraryPropertiesPath" ]]; then
+    echo "ERROR: Specified folder: $normalizedLibraryPropertiesPath doesn't exist."
     return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_FOLDER_DOESNT_EXIST_EXIT_STATUS
   fi
 
-  # find all folders that contain a library.properties file
-  while read -r libraryPropertiesPath; do
-    # the while loop still runs even if no file was found
-    if [[ "$libraryPropertiesPath" == "" ]]; then
+  # Check for incorrect filename case
+  local libraryPropertiesFound=false
+  while read -r foundLibraryPropertiesPath; do
+    # The while loop always runs once, even if no file was found
+    if [[ "$foundLibraryPropertiesPath" == "" ]]; then
       continue
     fi
 
-    # Check for incorrect filename case
-    if [[ "${libraryPropertiesPath: -18}" != 'library.properties' ]]; then
-      echo "ERROR: $libraryPropertiesPath has incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux. It must be library.properties"
+    if [[ "${foundLibraryPropertiesPath: -18}" == 'library.properties' ]]; then
+      libraryPropertiesFound=true
+    else
+      echo "ERROR: $foundLibraryPropertiesPath has incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux. It must be exactly library.properties"
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCORRECT_FILENAME_CASE_EXIT_STATUS)
     fi
+  done <<<"$(find "$normalizedLibraryPropertiesPath" -type f -regex '.*/[lL][iI][bB][rR][aA][rR][yY]\.[pP][rR][oO][pP][eE][rR][tT][iI][eE][sS]')"
 
-    # Get rid of the CRs
-    local libraryProperties
-    libraryProperties=$(tr "\r" "\n" <"$libraryPropertiesPath")
+  # Check whether the folder contains a library.properties file
+  if [[ "$libraryPropertiesFound" == false ]]; then
+    echo "WARNING: Specified folder: $normalizedLibraryPropertiesPath doesn't contain a library.properties file."
+    return "$exitStatus"
+  fi
 
-    # Check for missing name field
-    if ! grep --quiet --regexp='^[[:space:]]*name[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "ERROR: $libraryPropertiesPath is missing the required name field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_NAME_EXIT_STATUS)
+  # Get rid of the CRs
+  local libraryProperties
+  libraryProperties=$(tr "\r" "\n" <"$normalizedLibraryPropertiesPath/library.properties")
+
+  # Check for missing name field
+  if ! grep --quiet --regexp='^[[:space:]]*name[[:space:]]*=' <<<"$libraryProperties"; then
+    echo "ERROR: $normalizedLibraryPropertiesPath is missing the required name field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_NAME_EXIT_STATUS)
+  else
+    # Check for characters in the name value disallowed by the Library Manager indexer
+    local nameValue
+    nameValue="$(get_library_properties_field_value "$libraryProperties" 'name')"
+
+    # Check for blank name value
+    if [[ "$nameValue" == "" ]]; then
+      echo "ERROR: ${normalizedLibraryPropertiesPath}'s has an blank name value."
+      exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_BLANK_NAME + checkFolderNameExitStatus)))
     else
-      # Check for characters in the name value disallowed by the Library Manager indexer
-      local nameValue
-      nameValue="$(get_library_properties_field_value "$libraryProperties" 'name')"
+      # Check for invalid name value
+      # Library Manager installs libraries to a folder that is the name field value with any spaces replaced with _
+      local -r libraryManagerFolderName="${nameValue// /_}"
+      check_folder_name "$libraryManagerFolderName"
+      local -r checkFolderNameExitStatus=$?
+      if [[ $checkFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
+        echo "ERROR: ${normalizedLibraryPropertiesPath}'s name value $nameValue does not meet the requirements of the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+        exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_CHECK_FOLDER_NAME_OFFSET + checkFolderNameExitStatus)))
+      fi
+    fi
+  fi
 
-      # Check for blank name value
-      if [[ "$nameValue" == "" ]]; then
-        echo "ERROR: ${libraryPropertiesPath}'s has an blank name value."
-        exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_BLANK_NAME + checkFolderNameExitStatus)))
+  # Check for missing version field
+  if ! grep --quiet --regexp='^[[:space:]]*version[[:space:]]*=' <<<"$libraryProperties"; then
+    echo "ERROR: $normalizedLibraryPropertiesPath is the missing the required version field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_VERSION_EXIT_STATUS)
+  else
+    # Check for invalid version
+    if ! grep --quiet --extended-regexp --regexp='^[[:space:]]*version[[:space:]]*=[[:space:]]*(((([1-9][0-9]*)|0)\.){0,2})(([1-9][0-9]*)|0)(-(([a-zA-Z0-9-]*\.)*)([a-zA-Z0-9-]+))?(\+(([a-zA-Z0-9-]*\.)*)([a-zA-Z0-9-]+))?[[:space:]]*$' <<<"$libraryProperties"; then
+      echo "ERROR: $normalizedLibraryPropertiesPath has an invalid version value. Follow the semver specification: https://semver.org"
+      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_VERSION_EXIT_STATUS)
+    fi
+  fi
+
+  # Check for missing author field
+  if ! grep --quiet --regexp='^[[:space:]]*author[[:space:]]*=' <<<"$libraryProperties"; then
+    echo "ERROR: $normalizedLibraryPropertiesPath is missing the required author field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_AUTHOR_EXIT_STATUS)
+  fi
+
+  # Check for missing maintainer field
+  if ! grep --quiet --regexp='^[[:space:]]*maintainer[[:space:]]*=' <<<"$libraryProperties"; then
+    if grep --quiet --regexp='^[[:space:]]*email[[:space:]]*=' <<<"$libraryProperties"; then
+      echo "WARNING: Use of undocumented email field in $normalizedLibraryPropertiesPath. It's recommended to use the maintainer field instead, per the Arduino Library Specification. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+    else
+      echo "ERROR: $normalizedLibraryPropertiesPath is missing the required maintainer field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_MAINTAINER_EXIT_STATUS)
+    fi
+  fi
+
+  # Check for missing sentence field
+  if ! grep --quiet --regexp='^[[:space:]]*sentence[[:space:]]*=' <<<"$libraryProperties"; then
+    echo "ERROR: $normalizedLibraryPropertiesPath is missing tne required sentence field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_SENTENCE_EXIT_STATUS)
+  fi
+
+  # Check for missing paragraph field
+  if ! grep --quiet --regexp='^[[:space:]]*paragraph[[:space:]]*=' <<<"$libraryProperties"; then
+    echo "ERROR: $normalizedLibraryPropertiesPath is missing the required paragraph field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_PARAGRAPH_EXIT_STATUS)
+  else
+    # Check for repeat of sentence in paragraph
+    local sentenceValue
+    sentenceValue="$(get_library_properties_field_value "$libraryProperties" 'sentence')"
+    local -r sentenceValueNoPunctuation=${sentenceValue%%\.}
+    if [[ "$sentenceValueNoPunctuation" != "" ]]; then
+      local paragraphValue
+      paragraphValue="$(get_library_properties_field_value "$libraryProperties" 'paragraph')"
+      if [[ "$paragraphValue" == *"$sentenceValueNoPunctuation"* ]]; then
+        echo "ERROR: ${normalizedLibraryPropertiesPath}'s paragraph value repeats the sentence. These strings are displayed one after the other in Library Manager so there is no point in redundancy."
+        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_REDUNDANT_PARAGRAPH_EXIT_STATUS)
+      fi
+    fi
+  fi
+
+  # Check for missing category field
+  if ! grep --quiet --regexp='^[[:space:]]*category[[:space:]]*=' <<<"$libraryProperties"; then
+    echo "ERROR: $normalizedLibraryPropertiesPath is missing the category field. This results in an invalid category warning. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_CATEGORY_EXIT_STATUS)
+  else
+    # Check for invalid category
+    if ! grep --quiet --extended-regexp --regexp='^[[:space:]]*category[[:space:]]*=[[:space:]]*((Display)|(Communication)|(Signal Input/Output)|(Sensors)|(Device Control)|(Timing)|(Data Storage)|(Data Processing)|(Other))[[:space:]]*$' <<<"$libraryProperties"; then
+      if grep --quiet --regexp='^[[:space:]]*category[[:space:]]*=[[:space:]]*Uncategorized[[:space:]]*$' <<<"$libraryProperties"; then
+        echo "WARNING: category 'Uncategorized' used in $normalizedLibraryPropertiesPath is not recommended. Please chose an appropriate category from https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
       else
-        # Check for invalid name value
-        # Library Manager installs libraries to a folder that is the name field value with any spaces replaced with _
-        local libraryManagerFolderName="${nameValue// /_}"
-        check_folder_name "$libraryManagerFolderName"
-        local checkFolderNameExitStatus=$?
-        if [[ $checkFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
-          echo "ERROR: ${libraryPropertiesPath}'s name value $nameValue does not meet the requirements of the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-          exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_CHECK_FOLDER_NAME_OFFSET + checkFolderNameExitStatus)))
-        fi
+        echo "ERROR: $normalizedLibraryPropertiesPath has an invalid category value. Please chose a valid category from https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_CATEGORY_EXIT_STATUS)
       fi
     fi
+  fi
 
-    # Check for missing version field
-    if ! grep --quiet --regexp='^[[:space:]]*version[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "ERROR: $libraryPropertiesPath is the missing the required version field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_VERSION_EXIT_STATUS)
+  # Check for missing url field
+  if ! grep --quiet --regexp='^[[:space:]]*url[[:space:]]*=' <<<"$libraryProperties"; then
+    echo "ERROR: $normalizedLibraryPropertiesPath is missing the required url field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_URL_EXIT_STATUS)
+  else
+    # url field checks
+    local urlValue
+    urlValue="$(get_library_properties_field_value "$libraryProperties" 'url')"
+
+    # Check for blank url value
+    if [[ "$urlValue" == "" ]]; then
+      echo "ERROR: ${normalizedLibraryPropertiesPath} does not define the url field. This results in a \"More info\" link in Library Manager that looks clickable but is not."
+      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_BLANK_EXIT_STATUS)
     else
-      # Check for invalid version
-      if ! grep --quiet --extended-regexp --regexp='^[[:space:]]*version[[:space:]]*=[[:space:]]*(((([1-9][0-9]*)|0)\.){0,2})(([1-9][0-9]*)|0)(-(([a-zA-Z0-9-]*\.)*)([a-zA-Z0-9-]+))?(\+(([a-zA-Z0-9-]*\.)*)([a-zA-Z0-9-]+))?[[:space:]]*$' <<<"$libraryProperties"; then
-        echo "ERROR: $libraryPropertiesPath has an invalid version value. Follow the semver specification: https://semver.org"
-        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_VERSION_EXIT_STATUS)
+      # Check for missing scheme on url value
+      local -r schemeRegex='^(http://)|(https://)'
+      if ! [[ "$urlValue" =~ $schemeRegex ]]; then
+        echo "ERROR: ${normalizedLibraryPropertiesPath}'s url value $urlValue is missing the scheme (e.g. https://). URL scheme must be specified for Library Manager's \"More info\" link to be clickable."
+        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_MISSING_SCHEME_EXIT_STATUS)
+      fi
+
+      # Check for dead url value
+      local urlStatus
+      urlStatus=$(curl --location --output /dev/null --silent --head --write-out '%{http_code}' "$urlValue")
+      local -r errorStatusRegex='^[045]'
+      if [[ "$urlStatus" =~ $errorStatusRegex ]]; then
+        echo "ERROR: ${normalizedLibraryPropertiesPath}'s url value $urlValue returned error status $urlStatus."
+        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_DEAD_URL_EXIT_STATUS)
       fi
     fi
+  fi
 
-    # Check for missing author field
-    if ! grep --quiet --regexp='^[[:space:]]*author[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "ERROR: $libraryPropertiesPath is missing the required author field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_AUTHOR_EXIT_STATUS)
-    fi
-
-    # Check for missing maintainer field
-    if ! grep --quiet --regexp='^[[:space:]]*maintainer[[:space:]]*=' <<<"$libraryProperties"; then
-      if grep --quiet --regexp='^[[:space:]]*email[[:space:]]*=' <<<"$libraryProperties"; then
-        echo "WARNING: Use of undocumented email field in $libraryPropertiesPath. It's recommended to use the maintainer field instead, per the Arduino Library Specification. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-      else
-        echo "ERROR: $libraryPropertiesPath is missing the required maintainer field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_MAINTAINER_EXIT_STATUS)
-      fi
-    fi
-
-    # Check for missing sentence field
-    if ! grep --quiet --regexp='^[[:space:]]*sentence[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "ERROR: $libraryPropertiesPath is missing tne required sentence field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_SENTENCE_EXIT_STATUS)
-    fi
-
-    # Check for missing paragraph field
-    if ! grep --quiet --regexp='^[[:space:]]*paragraph[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "ERROR: $libraryPropertiesPath is missing the required paragraph field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_PARAGRAPH_EXIT_STATUS)
+  # Check for missing architectures field
+  if ! grep --quiet --regexp='^[[:space:]]*architectures[[:space:]]*=' <<<"$libraryProperties"; then
+    if grep --quiet --regexp='^[[:space:]]*architecture[[:space:]]*=' <<<"$libraryProperties"; then
+      echo "ERROR: $normalizedLibraryPropertiesPath has misspelled architecutures field name as \"architecture\"."
+      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_ARCHITECTURES_MISSPELLED_EXIT_STATUS)
     else
-      # Check for repeat of sentence in paragraph
-      local sentenceValue
-      sentenceValue="$(get_library_properties_field_value "$libraryProperties" 'sentence')"
-      local sentenceValueNoPunctuation=${sentenceValue%%\.}
-      if [[ "$sentenceValueNoPunctuation" != "" ]]; then
-        local paragraphValue
-        paragraphValue="$(get_library_properties_field_value "$libraryProperties" 'paragraph')"
-        if [[ "$paragraphValue" == *"$sentenceValueNoPunctuation"* ]]; then
-          echo "ERROR: ${libraryPropertiesPath}'s paragraph value repeats the sentence. These strings are displayed one after the other in Library Manager so there is no point in redundancy."
-          exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_REDUNDANT_PARAGRAPH_EXIT_STATUS)
-        fi
-      fi
+      echo "WARNING: $normalizedLibraryPropertiesPath is missing the architectures field. This causes the Arduino IDE to assume the library is compatible with all architectures (*). See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
     fi
+  else
+    # Check for invalid architectures
+    local architecturesValue
+    architecturesValue="$(get_library_properties_field_value "$libraryProperties" 'architectures')"
+    local -r validArchitecturesRegex='^((\*)|(avr)|(sam)|(samd)|(stm32f4)|(nrf52)|(i586)|(i686)|(arc32)|(win10)|(esp8266)|(esp32)|(ameba)|(arm)|(efm32)|(FP51)|(iot2000)|(msp430)|(navspark)|(nRF5)|(nRF51822)|(nRF52832)|(particle-photon)|(particle-electron)|(particle-core)|(pic)|(pic32)|(RFduino)|(Seeed_STM32F4)|(Simblee)|(solox)|(stm32)|(stm)|(STM32)|(STM32F1)|(STM32F3)|(STM32F4)|(STM32F2)|(STM32L1)|(STM32L4)|(teensy)|(x86))$'
+    # Split string on ,
+    IFS=','
+    local validArchitectureFound=false
+    # Disable globbing, otherwise it fails when one of the architecture values is *
+    set -o noglob
+    # Check for * architecture. If this is found then the other architecture values don't matter
+    local wildcardArchitectureFound=false
+    for rawArchitecture in $architecturesValue; do
+      # The Arduino IDE ignores leading or trailing whitespace on architectures
+      # Strip leading whitespace
+      local architecture="${rawArchitecture#"${rawArchitecture%%[![:space:]]*}"}"
+      # Strip trailing whitespace
+      architecture="${architecture%"${architecture##*[![:space:]]}"}"
 
-    # Check for missing category field
-    if ! grep --quiet --regexp='^[[:space:]]*category[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "ERROR: $libraryPropertiesPath is missing the category field. This results in an invalid category warning. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_CATEGORY_EXIT_STATUS)
-    else
-      # Check for invalid category
-      if ! grep --quiet --extended-regexp --regexp='^[[:space:]]*category[[:space:]]*=[[:space:]]*((Display)|(Communication)|(Signal Input/Output)|(Sensors)|(Device Control)|(Timing)|(Data Storage)|(Data Processing)|(Other))[[:space:]]*$' <<<"$libraryProperties"; then
-        if grep --quiet --regexp='^[[:space:]]*category[[:space:]]*=[[:space:]]*Uncategorized[[:space:]]*$' <<<"$libraryProperties"; then
-          echo "WARNING: category 'Uncategorized' used in $libraryPropertiesPath is not recommended. Please chose an appropriate category from https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-        else
-          echo "ERROR: $libraryPropertiesPath has an invalid category value. Please chose a valid category from https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-          exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_CATEGORY_EXIT_STATUS)
-        fi
+      if [[ "$architecture" == "*" ]]; then
+        wildcardArchitectureFound=true
+        validArchitectureFound=true
+        break
       fi
-    fi
-
-    # Check for missing url field
-    if ! grep --quiet --regexp='^[[:space:]]*url[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "ERROR: $libraryPropertiesPath is missing the required url field. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_URL_EXIT_STATUS)
-    else
-      # url field checks
-      local urlValue
-      urlValue="$(get_library_properties_field_value "$libraryProperties" 'url')"
-
-      # Check for blank url value
-      if [[ "$urlValue" == "" ]]; then
-        echo "ERROR: ${libraryPropertiesPath} does not define the url field. This results in a \"More info\" link in Library Manager that looks clickable but is not."
-        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_BLANK_EXIT_STATUS)
-      else
-        # Check for missing scheme on url value
-        local schemeRegex='^(http://)|(https://)'
-        if ! [[ "$urlValue" =~ $schemeRegex ]]; then
-          echo "ERROR: ${libraryPropertiesPath}'s url value $urlValue is missing the scheme (e.g. https://). URL scheme must be specified for Library Manager's \"More info\" link to be clickable."
-          exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_MISSING_SCHEME_EXIT_STATUS)
-        fi
-
-        # Check for dead url value
-        local urlStatus
-        urlStatus=$(curl --location --output /dev/null --silent --head --write-out '%{http_code}' "$urlValue")
-        local errorStatusRegex='^[045]'
-        if [[ "$urlStatus" =~ $errorStatusRegex ]]; then
-          echo "ERROR: ${libraryPropertiesPath}'s url value $urlValue returned error status $urlStatus."
-          exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_DEAD_URL_EXIT_STATUS)
-        fi
-      fi
-    fi
-
-    # Check for missing architectures field
-    if ! grep --quiet --regexp='^[[:space:]]*architectures[[:space:]]*=' <<<"$libraryProperties"; then
-      if grep --quiet --regexp='^[[:space:]]*architecture[[:space:]]*=' <<<"$libraryProperties"; then
-        echo "ERROR: $libraryPropertiesPath has misspelled architecutures field name as \"architecture\"."
-        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_ARCHITECTURES_MISSPELLED_EXIT_STATUS)
-      else
-        echo "WARNING: $libraryPropertiesPath is missing the architectures field. This causes the Arduino IDE to assume the library is compatible with all architectures (*). See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-      fi
-    else
-      # Check for invalid architectures
-      local architecturesValue
-      architecturesValue="$(get_library_properties_field_value "$libraryProperties" 'architectures')"
-      local validArchitecturesRegex='^((\*)|(avr)|(sam)|(samd)|(stm32f4)|(nrf52)|(i586)|(i686)|(arc32)|(win10)|(esp8266)|(esp32)|(ameba)|(arm)|(efm32)|(FP51)|(iot2000)|(msp430)|(navspark)|(nRF5)|(nRF51822)|(nRF52832)|(particle-photon)|(particle-electron)|(particle-core)|(pic)|(pic32)|(RFduino)|(Seeed_STM32F4)|(Simblee)|(solox)|(stm32)|(stm)|(STM32)|(STM32F1)|(STM32F3)|(STM32F4)|(STM32F2)|(STM32L1)|(STM32L4)|(teensy)|(x86))$'
-      # Split string on ,
-      IFS=','
-      local validArchitectureFound=false
-      # Disable globbing, otherwise it fails when one of the architecture values is *
-      set -o noglob
-      # Check for * architecture. If this is found then the other architecture values don't matter
-      local wildcardArchitectureFound=false
+    done
+    if [[ "$wildcardArchitectureFound" == false ]]; then
       for rawArchitecture in $architecturesValue; do
         # The Arduino IDE ignores leading or trailing whitespace on architectures
         # Strip leading whitespace
@@ -1754,93 +1786,78 @@ function check_library_properties() {
         # Strip trailing whitespace
         architecture="${architecture%"${architecture##*[![:space:]]}"}"
 
-        if [[ "$architecture" == "*" ]]; then
-          wildcardArchitectureFound=true
+        if [[ "$architecture" =~ $validArchitecturesRegex ]]; then
           validArchitectureFound=true
-          break
+        else
+          local aliasCheckPassed=true
+          # If an architecture alias is used then the correct architecture must also be present
+          check_architecture_alias "$architecture" '^((Avr)|(AVR)|([aA][tT][mM][eE][lL].?[aA][vV][rR]))$' "$architecturesValue" 'avr' "$normalizedLibraryPropertiesPath"
+          if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
+            aliasCheckPassed=false
+            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
+          fi
+          check_architecture_alias "$architecture" '^((Sam)|(SAM))$' "$architecturesValue" 'sam' "$normalizedLibraryPropertiesPath"
+          if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
+            aliasCheckPassed=false
+            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
+          fi
+          check_architecture_alias "$architecture" '^((Samd)|(SAMD)|(SamD)|((samD)|([aA][tT][mM][eE][lL].?[sS][aA][mM]))$' "$architecturesValue" 'samd' "$normalizedLibraryPropertiesPath"
+          if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
+            aliasCheckPassed=false
+            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
+          fi
+          check_architecture_alias "$architecture" '^((Arc32)|(ARC32)|([aA][rR][cC].32)|([iI][nN][tT][eE][lL].?[aA][rR][cC]32))$' "$architecturesValue" 'arc32' "$normalizedLibraryPropertiesPath"
+          if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
+            aliasCheckPassed=false
+            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
+          fi
+          check_architecture_alias "$architecture" '^((Esp8266)|(ESP8266)|([eE][sS][pP].8266)|(8266)|([eE][sS][pP])|([eE][sS][pP][rR][eE][sS][sS][iI][fF].?(8266)?))$' "$architecturesValue" 'esp8266' "$normalizedLibraryPropertiesPath"
+          if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
+            aliasCheckPassed=false
+            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
+          fi
+          check_architecture_alias "$architecture" '^((Esp32)|(ESP32)|([eE][sS][pP].32)|(arduino-esp32)|([eE][sS][pP][rR][eE][sS][sS][iI][fF].?32))$' "$architecturesValue" 'esp32' "$normalizedLibraryPropertiesPath"
+          if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
+            aliasCheckPassed=false
+            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
+          fi
+          check_architecture_alias "$architecture" '^((Teensy)|(TEENSY))$' "$architecturesValue" 'teensy' "$normalizedLibraryPropertiesPath"
+          if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
+            aliasCheckPassed=false
+            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
+          fi
+
+          if [[ "$aliasCheckPassed" == true ]]; then
+            echo "WARNING: ${normalizedLibraryPropertiesPath}'s architectures field contains an unknown architecture ${architecture}. Note: architecture values are case-sensitive."
+          fi
         fi
       done
-      if [[ "$wildcardArchitectureFound" == false ]]; then
-        for rawArchitecture in $architecturesValue; do
-          # The Arduino IDE ignores leading or trailing whitespace on architectures
-          # Strip leading whitespace
-          local architecture="${rawArchitecture#"${rawArchitecture%%[![:space:]]*}"}"
-          # Strip trailing whitespace
-          architecture="${architecture%"${architecture##*[![:space:]]}"}"
+    fi
+    # Re-enable globbing
+    set +o noglob
+    # Set IFS back to default
+    unset IFS
 
-          if [[ "$architecture" =~ $validArchitecturesRegex ]]; then
-            validArchitectureFound=true
-          else
-            local aliasCheckPassed=true
-            # If an architecture alias is used then the correct architecture must also be present
-            check_architecture_alias "$architecture" '^((Avr)|(AVR)|([aA][tT][mM][eE][lL].?[aA][vV][rR]))$' "$architecturesValue" 'avr' "$libraryPropertiesPath"
-            if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
-              aliasCheckPassed=false
-              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
-            fi
-            check_architecture_alias "$architecture" '^((Sam)|(SAM))$' "$architecturesValue" 'sam' "$libraryPropertiesPath"
-            if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
-              aliasCheckPassed=false
-              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
-            fi
-            check_architecture_alias "$architecture" '^((Samd)|(SAMD)|(SamD)|((samD)|([aA][tT][mM][eE][lL].?[sS][aA][mM]))$' "$architecturesValue" 'samd' "$libraryPropertiesPath"
-            if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
-              aliasCheckPassed=false
-              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
-            fi
-            check_architecture_alias "$architecture" '^((Arc32)|(ARC32)|([aA][rR][cC].32)|([iI][nN][tT][eE][lL].?[aA][rR][cC]32))$' "$architecturesValue" 'arc32' "$libraryPropertiesPath"
-            if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
-              aliasCheckPassed=false
-              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
-            fi
-            check_architecture_alias "$architecture" '^((Esp8266)|(ESP8266)|([eE][sS][pP].8266)|(8266)|([eE][sS][pP])|([eE][sS][pP][rR][eE][sS][sS][iI][fF].?(8266)?))$' "$architecturesValue" 'esp8266' "$libraryPropertiesPath"
-            if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
-              aliasCheckPassed=false
-              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
-            fi
-            check_architecture_alias "$architecture" '^((Esp32)|(ESP32)|([eE][sS][pP].32)|(arduino-esp32)|([eE][sS][pP][rR][eE][sS][sS][iI][fF].?32))$' "$architecturesValue" 'esp32' "$libraryPropertiesPath"
-            if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
-              aliasCheckPassed=false
-              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
-            fi
-            check_architecture_alias "$architecture" '^((Teensy)|(TEENSY))$' "$architecturesValue" 'teensy' "$libraryPropertiesPath"
-            if [[ "$?" == "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS" ]]; then
-              aliasCheckPassed=false
-              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
-            fi
-
-            if [[ "$aliasCheckPassed" == true ]]; then
-              echo "WARNING: ${libraryPropertiesPath}'s architectures field contains an unknown architecture ${architecture}. Note: architecture values are case-sensitive."
-            fi
-          fi
-        done
-      fi
-      # Re-enable globbing
-      set +o noglob
-      # Set IFS back to default
-      unset IFS
-
-      # At least one known architecture must be present
-      if [[ "$validArchitectureFound" == false ]]; then
-        echo "ERROR: ${libraryPropertiesPath}'s architectures field (${architecturesValue}) doesn't contain any known architecture values."
-        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
-      fi
-
+    # At least one known architecture must be present
+    if [[ "$validArchitectureFound" == false ]]; then
+      echo "ERROR: ${normalizedLibraryPropertiesPath}'s architectures field (${architecturesValue}) doesn't contain any known architecture values."
+      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_ARCHITECTURE_EXIT_STATUS)
     fi
 
-    # Check for invalid lines (anything other than property, comment, or blank line)
-    if grep --quiet --invert-match --extended-regexp --regexp='=' --regexp='^[[:space:]]*(#|$)' <<<"$libraryProperties"; then
-      echo "ERROR: $libraryPropertiesPath contains an invalid line."
-      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_LINE_EXIT_STATUS)
-    fi
+  fi
 
-    # Check for empty includes value
-    if grep --quiet --regexp='^[[:space:]]*includes[[:space:]]*=[[:space:]]*$' <<<"$libraryProperties"; then
-      echo "ERROR: ${libraryPropertiesPath}'s includes value is empty. Either define the field or remove it. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_EMPTY_INCLUDES_EXIT_STATUS)
-    fi
+  # Check for invalid lines (anything other than property, comment, or blank line)
+  if grep --quiet --invert-match --extended-regexp --regexp='=' --regexp='^[[:space:]]*(#|$)' <<<"$libraryProperties"; then
+    echo "ERROR: $normalizedLibraryPropertiesPath contains an invalid line."
+    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_LINE_EXIT_STATUS)
+  fi
 
-  done <<<"$(find "$normalizedSearchPath" -type f -regex '.*/[lL][iI][bB][rR][aA][rR][yY]\.[pP][rR][oO][pP][eE][rR][tT][iI][eE][sS]')"
+  # Check for empty includes value
+  if grep --quiet --regexp='^[[:space:]]*includes[[:space:]]*=[[:space:]]*$' <<<"$libraryProperties"; then
+    echo "ERROR: ${normalizedLibraryPropertiesPath}'s includes value is empty. Either define the field or remove it. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_EMPTY_INCLUDES_EXIT_STATUS)
+  fi
+
   return "$exitStatus"
 }
 
