@@ -1891,196 +1891,214 @@ readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_RSYNTAXTEXTAREA_TOKENTYPE_
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_REFERENCE_LINK_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 function check_keywords_txt() {
-  local -r searchPath="$1"
-
-  # Replace backslashes with slashes
-  local -r searchPathWithSlashes="${searchPath//\\//}"
-  # Remove trailing slash
-  local -r normalizedSearchPath="${searchPathWithSlashes%/}"
+  local -r keywordsTxtPath="$1"
 
   local exitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
 
+  # Replace backslashes with slashes
+  local -r keywordsTxtPathWithSlashes="${keywordsTxtPath//\\//}"
+  local -r keywordsTxtRegex='[kK][eE][yY][wW][oO][rR][dD][sS]\.[tT][xX][tT]$'
+  if [[ ! -d "$keywordsTxtPathWithSlashes" ]]; then
+    if [[ "$keywordsTxtPathWithSlashes" =~ $keywordsTxtRegex ]]; then
+      # Path contains the filename but we only want the folder
+      local -r keywordsTxtPathWithoutFile="${keywordsTxtPathWithSlashes::-12}"
+    fi
+  else
+    local -r keywordsTxtPathWithoutFile="$keywordsTxtPathWithSlashes"
+  fi
+  # Remove trailing slash
+  local -r normalizedKeywordsTxtPath="${keywordsTxtPathWithoutFile%/}"
+
   # Check whether folder exists
-  if [[ ! -d "$normalizedSearchPath" ]]; then
-    echo "ERROR: Specified folder: $normalizedSearchPath doesn't exist."
+  if [[ ! -d "$normalizedKeywordsTxtPath" ]]; then
+    echo "ERROR: Specified folder: $normalizedKeywordsTxtPath doesn't exist."
     return $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_FOLDER_DOESNT_EXIST_EXIT_STATUS
   fi
 
-  # find all folders that contain a keywords.txt file
-  while read -r keywordsTxtPath; do
-    # the while loop still runs even if no file was found
-    if [[ "$keywordsTxtPath" == "" ]]; then
+  # Check for incorrect filename case
+  local keywordsTxtFound=false
+  while read -r foundKeywordsTxtPath; do
+    # The while loop always runs once, even if no file was found
+    if [[ "$foundKeywordsTxtPath" == "" ]]; then
       continue
     fi
 
-    # Check for incorrect filename case
-    if [[ "${keywordsTxtPath: -12}" != 'keywords.txt' ]]; then
-      echo "ERROR: $keywordsTxtPath uses incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux. It must be exactly keywords.txt."
+    if [[ "${foundKeywordsTxtPath: -12}" == 'keywords.txt' ]]; then
+      keywordsTxtFound=true
+    else
+      echo "ERROR: $foundKeywordsTxtPath has incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux. It must be exactly keywords.txt"
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCORRECT_FILENAME_CASE_EXIT_STATUS)
     fi
+  done <<<"$(find "$normalizedKeywordsTxtPath" -type f -regex '.*/[kK][eE][yY][wW][oO][rR][dD][sS]\.[tT][xX][tT]')"
 
-    # Read the keywords.txt file line by line
-    # Split into lines by CR
-    while IFS='' read -d $'\r' -r keywordsTxtCRline || [[ -n "$keywordsTxtCRline" ]]; do
-      # Split into lines by LN
-      while IFS='' read -r keywordsTxtLine || [[ -n "$keywordsTxtLine" ]]; do
-        # Skip blank lines and comments
-        local blankLineRegex='^[[:space:]]*$'
-        local commentRegex='^[[:space:]]*#'
-        if [[ "$keywordsTxtLine" =~ $blankLineRegex ]] || [[ "$keywordsTxtLine" =~ $commentRegex ]]; then
+  # Check whether the folder contains a keywords.txt file
+  if [[ "$keywordsTxtFound" == false ]]; then
+    echo "WARNING: Specified folder: $normalizedKeywordsTxtPath doesn't contain a keywords.txt file."
+    return "$exitStatus"
+  fi
+
+  # Read the keywords.txt file line by line
+  # Split into lines by CR
+  while IFS='' read -d $'\r' -r keywordsTxtCRline || [[ -n "$keywordsTxtCRline" ]]; do
+    # Split into lines by LN
+    while IFS='' read -r keywordsTxtLine || [[ -n "$keywordsTxtLine" ]]; do
+      # Skip blank lines and comments
+      local blankLineRegex='^[[:space:]]*$'
+      local commentRegex='^[[:space:]]*#'
+      if [[ "$keywordsTxtLine" =~ $blankLineRegex ]] || [[ "$keywordsTxtLine" =~ $commentRegex ]]; then
+        continue
+      fi
+
+      # Skip BOM corrupted blank lines and comments
+      if grep --quiet $'\xEF\xBB\xBF' <<<"$keywordsTxtLine"; then
+        echo "BOM found"
+        local BOMcorruptedCommentRegex='^.[[:space:]]*#'
+        local BOMcorruptedBlankLineRegex='^.[[:space:]]*$'
+        if [[ "$keywordsTxtLine" =~ $BOMcorruptedCommentRegex ]] || [[ "$keywordsTxtLine" =~ $BOMcorruptedBlankLineRegex ]]; then
           continue
         fi
+      fi
 
-        # Skip BOM corrupted blank lines and comments
-        if grep --quiet $'\xEF\xBB\xBF' <<<"$keywordsTxtLine"; then
-          echo "BOM found"
-          local BOMcorruptedCommentRegex='^.[[:space:]]*#'
-          local BOMcorruptedBlankLineRegex='^.[[:space:]]*$'
-          if [[ "$keywordsTxtLine" =~ $BOMcorruptedCommentRegex ]] || [[ "$keywordsTxtLine" =~ $BOMcorruptedBlankLineRegex ]]; then
-            continue
-          fi
-        fi
+      local spacesSeparatorRegex='^[[:space:]]*[^[:space:]]+ +[^[:space:]]+'
 
-        local spacesSeparatorRegex='^[[:space:]]*[^[:space:]]+ +[^[:space:]]+'
+      local invalidLineRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*$'
+      # Check for invalid separator
+      if [[ "$keywordsTxtLine" =~ $spacesSeparatorRegex ]]; then
+        echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses space(s) as a field separator. It must be a true tab."
+        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_FIELD_SEPARATOR_EXIT_STATUS)
+        # The rest of the checks will be borked by messed up field separators so continue to the next line
+        continue
+      fi
 
-        local invalidLineRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*$'
-        # Check for invalid separator
-        if [[ "$keywordsTxtLine" =~ $spacesSeparatorRegex ]]; then
-          echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses space(s) as a field separator. It must be a true tab."
-          exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_FIELD_SEPARATOR_EXIT_STATUS)
-          # The rest of the checks will be borked by messed up field separators so continue to the next line
-          continue
-        fi
+      # Check for multiple tabs used as separator where this causes unintended results
+      local consequentialMultipleSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t''+[[:space:]]*'$'\t''+[[:space:]]*((KEYWORD1)|(LITERAL1))'
+      if [[ "$keywordsTxtLine" =~ $consequentialMultipleSeparatorRegex ]]; then
+        echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses multiple tabs as field separator. It must be a single tab. This causes the default keyword highlighting (as used by KEYWORD2, KEYWORD3, LITERAL2) to be used rather than the intended highlighting."
+        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_MULTIPLE_TABS_EXIT_STATUS)
+        # The rest of the checks will be borked by messed up field separators so continue to the next line
+        continue
+      fi
 
-        # Check for multiple tabs used as separator where this causes unintended results
-        local consequentialMultipleSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t''+[[:space:]]*'$'\t''+[[:space:]]*((KEYWORD1)|(LITERAL1))'
-        if [[ "$keywordsTxtLine" =~ $consequentialMultipleSeparatorRegex ]]; then
-          echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses multiple tabs as field separator. It must be a single tab. This causes the default keyword highlighting (as used by KEYWORD2, KEYWORD3, LITERAL2) to be used rather than the intended highlighting."
-          exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_MULTIPLE_TABS_EXIT_STATUS)
-          # The rest of the checks will be borked by messed up field separators so continue to the next line
-          continue
-        fi
+      # Check for multiple tabs used as separator where this causes no unintended results
+      local inconsequentialMultipleSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t''+[[:space:]]*'$'\t''+[[:space:]]*((KEYWORD2)|(KEYWORD3)|(LITERAL2))'
+      if [[ "$keywordsTxtLine" =~ $inconsequentialMultipleSeparatorRegex ]]; then
+        echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses multiple tabs as field separator. It must be a single tab. This causes the default keyword highlighting (as used by KEYWORD2, KEYWORD3, LITERAL2). In this case that doesn't cause the keywords to be incorrectly colored as expected but it's recommended to fully comply with the Arduino library specification."
+        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCONSEQUENTIAL_MULTIPLE_TABS_EXIT_STATUS)
+        # The rest of the checks will be borked by messed up field separators so continue to the next line
+        continue
+      fi
 
-        # Check for multiple tabs used as separator where this causes no unintended results
-        local inconsequentialMultipleSeparatorRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*'$'\t''+[[:space:]]*'$'\t''+[[:space:]]*((KEYWORD2)|(KEYWORD3)|(LITERAL2))'
-        if [[ "$keywordsTxtLine" =~ $inconsequentialMultipleSeparatorRegex ]]; then
-          echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses multiple tabs as field separator. It must be a single tab. This causes the default keyword highlighting (as used by KEYWORD2, KEYWORD3, LITERAL2). In this case that doesn't cause the keywords to be incorrectly colored as expected but it's recommended to fully comply with the Arduino library specification."
-          exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCONSEQUENTIAL_MULTIPLE_TABS_EXIT_STATUS)
-          # The rest of the checks will be borked by messed up field separators so continue to the next line
-          continue
-        fi
+      # Check for invalid line
+      if [[ "$keywordsTxtLine" =~ $invalidLineRegex ]]; then
+        echo "ERROR: $keywordsTxtPath has an invalid line: ${keywordsTxtLine}. If this was intended as a comment, it should use the correct # syntax."
+        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_LINE_EXIT_STATUS)
+        # The rest of the checks will be borked by messed up field separators so continue to the next line
+        continue
+      fi
 
-        # Check for invalid line
-        if [[ "$keywordsTxtLine" =~ $invalidLineRegex ]]; then
-          echo "ERROR: $keywordsTxtPath has an invalid line: ${keywordsTxtLine}. If this was intended as a comment, it should use the correct # syntax."
-          exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_LINE_EXIT_STATUS)
-          # The rest of the checks will be borked by messed up field separators so continue to the next line
-          continue
-        fi
+      # Get the field values
+      # Use a unique, non-whitespace field separator character
+      fieldSeparator=$'\a'
+      IFS=$fieldSeparator
+      # Strip leading whitespace. This is ignored by the Arduino IDE (even tabs)
+      local keywordsTxtLineFrontStripped="${keywordsTxtLine#"${keywordsTxtLine%%[![:space:]]*}"}"
+      # Change tabs to the field separator character for line splitting
+      local keywordsTxtLineSwappedTabs=(${keywordsTxtLineFrontStripped//$'\t'/$fieldSeparator})
 
-        # Get the field values
-        # Use a unique, non-whitespace field separator character
-        fieldSeparator=$'\a'
-        IFS=$fieldSeparator
-        # Strip leading whitespace. This is ignored by the Arduino IDE (even tabs)
-        local keywordsTxtLineFrontStripped="${keywordsTxtLine#"${keywordsTxtLine%%[![:space:]]*}"}"
-        # Change tabs to the field separator character for line splitting
-        local keywordsTxtLineSwappedTabs=(${keywordsTxtLineFrontStripped//$'\t'/$fieldSeparator})
+      # KEYWORD is the 1st field
+      local keywordRaw=${keywordsTxtLineSwappedTabs[0]}
+      # Strip trailing spaces
+      local keyword="${keywordRaw%"${keywordRaw##*[! ]}"}"
 
-        # KEYWORD is the 1st field
-        local keywordRaw=${keywordsTxtLineSwappedTabs[0]}
-        # Strip trailing spaces
-        local keyword="${keywordRaw%"${keywordRaw##*[! ]}"}"
+      # KEYWORD_TOKENTYPE is the 2nd field
+      local keywordTokentypeRaw=${keywordsTxtLineSwappedTabs[1]}
+      # The Arduino IDE strips trailing spaces from KEYWORD_TOKENTYPE
+      # Strip trailing spaces
+      local keywordTokentype="${keywordTokentypeRaw%"${keywordTokentypeRaw##*[! ]}"}"
 
-        # KEYWORD_TOKENTYPE is the 2nd field
-        local keywordTokentypeRaw=${keywordsTxtLineSwappedTabs[1]}
-        # The Arduino IDE strips trailing spaces from KEYWORD_TOKENTYPE
-        # Strip trailing spaces
-        local keywordTokentype="${keywordTokentypeRaw%"${keywordTokentypeRaw##*[! ]}"}"
+      # REFERENCE_LINK is the 3rd field
+      local referenceLinkRaw=${keywordsTxtLineSwappedTabs[2]}
+      # The Arduino IDE strips leading and trailing whitespace from REFERENCE_LINK
+      # Strip leading spaces
+      local referenceLinkFrontStripped="${referenceLinkRaw#"${referenceLinkRaw%%[! ]*}"}"
+      # Strip trailing spaces
+      local referenceLink="${referenceLinkFrontStripped%"${referenceLinkFrontStripped##*[! ]}"}"
 
-        # REFERENCE_LINK is the 3rd field
-        local referenceLinkRaw=${keywordsTxtLineSwappedTabs[2]}
-        # The Arduino IDE strips leading and trailing whitespace from REFERENCE_LINK
-        # Strip leading spaces
-        local referenceLinkFrontStripped="${referenceLinkRaw#"${referenceLinkRaw%%[! ]*}"}"
-        # Strip trailing spaces
-        local referenceLink="${referenceLinkFrontStripped%"${referenceLinkFrontStripped##*[! ]}"}"
+      # RSYNTAXTEXTAREA_TOKENTYPE is the 4th field
+      local rsyntaxtextareaTokentypeRaw=${keywordsTxtLineSwappedTabs[3]}
+      # The Arduino IDE strips trailing spaces from RSYNTAXTEXTAREA_TOKENTYPE
+      # Strip trailing spaces
+      local rsyntaxtextareaTokentype="${rsyntaxtextareaTokentypeRaw%"${rsyntaxtextareaTokentypeRaw##*[! ]}"}"
 
-        # RSYNTAXTEXTAREA_TOKENTYPE is the 4th field
-        local rsyntaxtextareaTokentypeRaw=${keywordsTxtLineSwappedTabs[3]}
-        # The Arduino IDE strips trailing spaces from RSYNTAXTEXTAREA_TOKENTYPE
-        # Strip trailing spaces
-        local rsyntaxtextareaTokentype="${rsyntaxtextareaTokentypeRaw%"${rsyntaxtextareaTokentypeRaw##*[! ]}"}"
+      # Reset IFS to default
+      unset IFS
 
-        # Reset IFS to default
-        unset IFS
+      allowedKeywordCharactersRegex='^[a-zA-Z0-9_]+$'
+      # Check for corruption of KEYWORD field caused by UTF-8 BOM file encoding
+      if grep --quiet $'\xEF\xBB\xBF' <<<"$keyword"; then
+        echo "ERROR: $keywordsTxtPath uses UTF-8 BOM file encoding, which has corrupted the first keyword definition. Please change the file encoding to standard UTF-8."
+        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_BOM_CORRUPTED_KEYWORD_EXIT_STATUS)
+      elif ! [[ "$keyword" =~ $allowedKeywordCharactersRegex ]]; then
+        # Check for invalid characters in KEYWORD
+        # The Arduino IDE does recognize keywords that start with a number, even though these are not valid identifiers.
+        echo "ERROR: Keyword $keyword in $keywordsTxtPath contains invalid character(s), which causes it to not be recognized by the Arduino IDE. Keywords may only contain the characters a-z, A-Z, 0-9, and _."
+        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_EXIT_STATUS)
+      fi
 
-        allowedKeywordCharactersRegex='^[a-zA-Z0-9_]+$'
-        # Check for corruption of KEYWORD field caused by UTF-8 BOM file encoding
-        if grep --quiet $'\xEF\xBB\xBF' <<<"$keyword"; then
-          echo "ERROR: $keywordsTxtPath uses UTF-8 BOM file encoding, which has corrupted the first keyword definition. Please change the file encoding to standard UTF-8."
-          exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_BOM_CORRUPTED_KEYWORD_EXIT_STATUS)
-        elif ! [[ "$keyword" =~ $allowedKeywordCharactersRegex ]]; then
-          # Check for invalid characters in KEYWORD
-          # The Arduino IDE does recognize keywords that start with a number, even though these are not valid identifiers.
-          echo "ERROR: Keyword $keyword in $keywordsTxtPath contains invalid character(s), which causes it to not be recognized by the Arduino IDE. Keywords may only contain the characters a-z, A-Z, 0-9, and _."
-          exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_EXIT_STATUS)
-        fi
-
-        # Check for invalid KEYWORD_TOKENTYPE
-        local validKeywordTokentypeRegex='^((KEYWORD1)|(KEYWORD2)|(KEYWORD3)|(LITERAL1)|(LITERAL2))$'
-        local validRsyntaxtextareaTokentypeRegex='^((RESERVED_WORD)|(RESERVED_WORD_2)|(DATA_TYPE)|(PREPROCESSOR)|(LITERAL_BOOLEAN))$'
-        if ! [[ "$keywordTokentype" =~ $validKeywordTokentypeRegex ]]; then
-          # Check if it's invalid only because of leading space
-          local keywordTokentypeWithoutLeadingSpace="${keywordTokentype#"${keywordTokentype%%[![:space:]]*}"}"
-          if [[ "$keywordTokentypeWithoutLeadingSpace" =~ $validKeywordTokentypeRegex ]]; then
-            # Check if the issue doesn't cause any change from the intended highlighting
-            local inconsequentialTokentypeRegex='((KEYWORD2)|(KEYWORD3)|(LITERAL2))'
-            if [[ "$keywordTokentypeWithoutLeadingSpace" =~ $inconsequentialTokentypeRegex ]]; then
-              echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) has leading space on the KEYWORD_TOKENTYPE field, which causes it to not be recognized, so the default keyword highlighting is used.  In this case that doesn't cause the keywords to be incorrectly colored as expected but it's recommended to fully comply with the Arduino library specification."
-              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCONSEQUENTIAL_LEADING_SPACE_ON_KEYWORD_TOKENTYPE_EXIT_STATUS)
-            else
-              echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) has leading space on the KEYWORD_TOKENTYPE field, which causes it to not be recognized, so the default keyword highlighting is used."
-              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_LEADING_SPACE_ON_KEYWORD_TOKENTYPE_EXIT_STATUS)
-            fi
-          elif ! [[ "$keywordTokentypeWithoutLeadingSpace" == "" && "$rsyntaxtextareaTokentype" =~ $validRsyntaxtextareaTokentypeRegex ]]; then
-            # It's reasonable to leave KEYWORD_TOKENTYPE blank if RSYNTAXTEXTAREA_TOKENTYPE is defined and valid. This will not be compatible with 1.6.4 and older but that's really no big deal.
-            echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses invalid KEYWORD_TOKENTYPE: ${keywordTokentype}, which causes the default keyword highlighting to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keyword_tokentype"
-            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_TOKENTYPE_EXIT_STATUS)
-          fi
-        fi
-
-        # Check for invalid REFERENCE_LINK
-        if [[ "$referenceLink" != "" ]]; then
-          # The Arduino IDE must be installed to check if the reference page exists
-          if [[ "$NEWEST_INSTALLED_IDE_VERSION" == "" ]]; then
-            echo "WARNING: Arduino IDE is not installed so unable to check for invalid reference links. Please call install_ide before running check_keywords_txt."
+      # Check for invalid KEYWORD_TOKENTYPE
+      local validKeywordTokentypeRegex='^((KEYWORD1)|(KEYWORD2)|(KEYWORD3)|(LITERAL1)|(LITERAL2))$'
+      local validRsyntaxtextareaTokentypeRegex='^((RESERVED_WORD)|(RESERVED_WORD_2)|(DATA_TYPE)|(PREPROCESSOR)|(LITERAL_BOOLEAN))$'
+      if ! [[ "$keywordTokentype" =~ $validKeywordTokentypeRegex ]]; then
+        # Check if it's invalid only because of leading space
+        local keywordTokentypeWithoutLeadingSpace="${keywordTokentype#"${keywordTokentype%%[![:space:]]*}"}"
+        if [[ "$keywordTokentypeWithoutLeadingSpace" =~ $validKeywordTokentypeRegex ]]; then
+          # Check if the issue doesn't cause any change from the intended highlighting
+          local inconsequentialTokentypeRegex='((KEYWORD2)|(KEYWORD3)|(LITERAL2))'
+          if [[ "$keywordTokentypeWithoutLeadingSpace" =~ $inconsequentialTokentypeRegex ]]; then
+            echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) has leading space on the KEYWORD_TOKENTYPE field, which causes it to not be recognized, so the default keyword highlighting is used.  In this case that doesn't cause the keywords to be incorrectly colored as expected but it's recommended to fully comply with the Arduino library specification."
+            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCONSEQUENTIAL_LEADING_SPACE_ON_KEYWORD_TOKENTYPE_EXIT_STATUS)
           else
-            install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
-            if [[ ! $(find "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/reference/www.arduino.cc/en/Reference/" -type f -name "${referenceLink}.html") ]]; then
-              echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses a REFERENCE_LINK value: $referenceLink that is not a valid Arduino Language Reference page. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#reference_link"
-              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_REFERENCE_LINK_EXIT_STATUS)
-            fi
+            echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) has leading space on the KEYWORD_TOKENTYPE field, which causes it to not be recognized, so the default keyword highlighting is used."
+            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_LEADING_SPACE_ON_KEYWORD_TOKENTYPE_EXIT_STATUS)
           fi
+        elif ! [[ "$keywordTokentypeWithoutLeadingSpace" == "" && "$rsyntaxtextareaTokentype" =~ $validRsyntaxtextareaTokentypeRegex ]]; then
+          # It's reasonable to leave KEYWORD_TOKENTYPE blank if RSYNTAXTEXTAREA_TOKENTYPE is defined and valid. This will not be compatible with 1.6.4 and older but that's really no big deal.
+          echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses invalid KEYWORD_TOKENTYPE: ${keywordTokentype}, which causes the default keyword highlighting to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keyword_tokentype"
+          exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_KEYWORD_TOKENTYPE_EXIT_STATUS)
         fi
+      fi
 
-        # Check for invalid RSYNTAXTEXTAREA_TOKENTYPE
-        if [[ "$rsyntaxtextareaTokentype" != "" ]]; then
-          if ! [[ "$rsyntaxtextareaTokentype" =~ $validRsyntaxtextareaTokentypeRegex ]]; then
-            # Check if it's invalid only because of leading space
-            local rsyntaxtextareaTokentypeWithoutLeadingSpace="${rsyntaxtextareaTokentype#"${rsyntaxtextareaTokentype%%[![:space:]]*}"}"
-            if [[ "$rsyntaxtextareaTokentypeWithoutLeadingSpace" =~ $validRsyntaxtextareaTokentypeRegex ]]; then
-              echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) has leading space on the RSYNTAXTEXTAREA_TOKENTYPE field, which causes it to not be recognized, so the default keyword highlighting is used."
-              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_LEADING_SPACE_ON_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS)
-            else
-              echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses invalid RSYNTAXTEXTAREA_TOKENTYPE: ${rsyntaxtextareaTokentype}, which causes the default keyword highlighting to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#rsyntaxtextarea_tokentype"
-              exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS)
-            fi
+      # Check for invalid REFERENCE_LINK
+      if [[ "$referenceLink" != "" ]]; then
+        # The Arduino IDE must be installed to check if the reference page exists
+        if [[ "$NEWEST_INSTALLED_IDE_VERSION" == "" ]]; then
+          echo "WARNING: Arduino IDE is not installed so unable to check for invalid reference links. Please call install_ide before running check_keywords_txt."
+        else
+          install_ide_version "$NEWEST_INSTALLED_IDE_VERSION"
+          if [[ ! $(find "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/reference/www.arduino.cc/en/Reference/" -type f -name "${referenceLink}.html") ]]; then
+            echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses a REFERENCE_LINK value: $referenceLink that is not a valid Arduino Language Reference page. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#reference_link"
+            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_REFERENCE_LINK_EXIT_STATUS)
           fi
         fi
-      done <<<"$keywordsTxtCRline"
-    done <"$keywordsTxtPath"
-  done <<<"$(find "$normalizedSearchPath" -type f -regex '.*/[kK][eE][yY][wW][oO][rR][dD][sS]\.[tT][xX][tT]')"
+      fi
+
+      # Check for invalid RSYNTAXTEXTAREA_TOKENTYPE
+      if [[ "$rsyntaxtextareaTokentype" != "" ]]; then
+        if ! [[ "$rsyntaxtextareaTokentype" =~ $validRsyntaxtextareaTokentypeRegex ]]; then
+          # Check if it's invalid only because of leading space
+          local rsyntaxtextareaTokentypeWithoutLeadingSpace="${rsyntaxtextareaTokentype#"${rsyntaxtextareaTokentype%%[![:space:]]*}"}"
+          if [[ "$rsyntaxtextareaTokentypeWithoutLeadingSpace" =~ $validRsyntaxtextareaTokentypeRegex ]]; then
+            echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) has leading space on the RSYNTAXTEXTAREA_TOKENTYPE field, which causes it to not be recognized, so the default keyword highlighting is used."
+            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_LEADING_SPACE_ON_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS)
+          else
+            echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses invalid RSYNTAXTEXTAREA_TOKENTYPE: ${rsyntaxtextareaTokentype}, which causes the default keyword highlighting to be used. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#rsyntaxtextarea_tokentype"
+            exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS)
+          fi
+        fi
+      fi
+    done <<<"$keywordsTxtCRline"
+  done <"${normalizedKeywordsTxtPath}/keywords.txt"
+
   return "$exitStatus"
 }
 

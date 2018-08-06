@@ -123,7 +123,7 @@ Check [library.properties](https://github.com/arduino/Arduino/wiki/Arduino-IDE-1
 
 ##### `check_keywords_txt searchPath`
 Check [keywords.txt](https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keywords) files for errors.
-- Parameter: **searchPath** - Path containing keywords.txt files. The path will be searched recursively and all keywords.txt files found under it will be checked.
+- Parameter: **searchPath** - Path containing keywords.txt files.
 
 ##### `check_library_manager_compliance libraryPath`
 Make some additional checks for compliance with the requirements for adding a library to the [Library Manager index](https://github.com/arduino/Arduino/wiki/Library-Manager-FAQ). This function should be used in combination with `check_library_structure' and 'check_library_properties' to ensure full compliance with the requirements.

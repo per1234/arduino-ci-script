@@ -779,7 +779,9 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/NoKeywordsTxt"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-  [ "${#lines[@]}" -eq 0 ]
+  [ "${#lines[@]}" -eq 1 ]
+  warningRegex='^WARNING: Specified folder: \./check_keywords_txt/NoKeywordsTxt doesn'\''t contain a keywords\.txt file\.'
+  [[ "${lines[0]}" =~ $warningRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/BOMcorruptedBlankLine\"" {
