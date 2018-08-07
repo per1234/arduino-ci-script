@@ -806,6 +806,14 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [ "${#lines[@]}" -eq 1 ]
 }
 
+@test "check_keywords_txt \"./check_keywords_txt/MisspelledFilename\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_MISSPELLED_FILENAME_EXIT_STATUS
+  run check_keywords_txt "./check_keywords_txt/MisspelledFilename"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 2 ]
+}
+
 @test "check_keywords_txt \"./check_keywords_txt/IncorrectFilenameCase\"" {
   expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCORRECT_FILENAME_CASE_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/IncorrectFilenameCase"

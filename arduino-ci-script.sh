@@ -1875,6 +1875,8 @@ readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_LEADING_SPACE_ON_KEYWORD_TOKENTYPE
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_FOLDER_DOESNT_EXIST_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_MISSPELLED_FILENAME_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCORRECT_FILENAME_CASE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_FIELD_SEPARATOR_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
@@ -1913,6 +1915,12 @@ function check_keywords_txt() {
   if [[ ! -d "$normalizedKeywordsTxtPath" ]]; then
     echo "ERROR: Specified folder: $normalizedKeywordsTxtPath doesn't exist."
     return $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_FOLDER_DOESNT_EXIST_EXIT_STATUS
+  fi
+
+  # Check for misspelled keywords.txt filename
+  if [[ "$(find "$normalizedKeywordsTxtPath" -type f -regex '.*/[kK][eE][yY][wW][oO][rR][dD]\.[tT][xX][tT]')" || "$(find "$normalizedKeywordsTxtPath" -type f -regex '.*/[kK][eE][yY][wW][oO][rR][dD][sS]?\.[tT][eE][xX][tT]')" || "$(find "$normalizedKeywordsTxtPath" -type f -regex '.*/[kK][eE][yY][wW][oO][rR][dD][sS]?\.[tT][xX][tT]\.[tT][xX][tT]')" ]]; then
+    echo "ERROR: $normalizedKeywordsTxtPath contains an incorrectly spelled keywords.txt file."
+    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_MISSPELLED_FILENAME_EXIT_STATUS)
   fi
 
   # Check for incorrect filename case
