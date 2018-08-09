@@ -1319,7 +1319,7 @@ function check_sketch_structure() {
         fi
         local primarySketchFound=true
       fi
-    done < <(find "$sketchPath" -maxdepth 1 -type f \( -regex '^.*\.[iI][nN][oO]' -or -regex '^.*\.[pP][dD][eE]' \) -print)
+    done < <(find "$sketchPath" -maxdepth 1 -type f \( -iname '*.ino' -or -iname '*.pde' \) -print)
     if [[ "$folderNameMismatch" == true ]]; then
       echo "ERROR: Sketch folder name $sketchPath does not match the sketch filename."
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_SKETCH_NAME_MISMATCH_EXIT_STATUS)
@@ -1332,7 +1332,7 @@ function check_sketch_structure() {
       exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_CHECK_FOLDER_NAME_OFFSET + checkFolderNameExitStatus)))
     fi
 
-  done <<<"$(find "$normalizedSearchPath" -type f \( -regex '^.*\.[iI][nN][oO]' -or -regex '^.*\.[pP][dD][eE]' \) -printf '%h\n' | sort --unique)"
+  done <<<"$(find "$normalizedSearchPath" -type f \( -iname '*.ino' -or -iname '*.pde' \) -printf '%h\n' | sort --unique)"
   return "$exitStatus"
 }
 
@@ -1387,7 +1387,7 @@ function check_library_structure() {
   if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type f \( -name '*.h' -or -name '*.hh' -or -name '*.hpp' \)) ]]; then
     # 1.0 format library, do nothing (this if just makes the logic more simple)
     :
-  elif [[ $(find "$normalizedLibraryPath" -maxdepth 1 \( -type f -and -name 'library.properties' \)) && $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -regex '^.*[sS][rR][cC]$') ]]; then
+  elif [[ $(find "$normalizedLibraryPath" -maxdepth 1 \( -type f -and -name 'library.properties' \)) && $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -iregex '^.*src$') ]]; then
     # 1.5 format library
     if [[ ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'src') ]]; then
       echo "ERROR: $libraryPath is a 1.5 format library with incorrect case in src subfolder name, which causes library to not be recognized on a filename case-sensitive OS such as Linux."
@@ -1408,14 +1408,14 @@ function check_library_structure() {
   fi
 
   # Check for incorrect spelling of extras folder
-  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -iregex '^.*/[eE][xX][tT][rR][aA][sS]?$') && ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'extras') ]]; then
+  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -iregex '^.*/extras?$') && ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'extras') ]]; then
     #if [[ -d "$normalizedLibraryPath/extra" || -d "$normalizedLibraryPath/Extras" || -d "$normalizedLibraryPath/EXTRAS" ]] && [[ ! -d "$normalizedLibraryPath/extras" ]]; then
     echo "ERROR: $libraryPath has incorrectly spelled extras folder name. It should be exactly extras. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#extra-documentation"
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_EXTRAS_FOLDER_NAME_EXIT_STATUS)
   fi
 
   # Check for incorrect spelling of examples folder
-  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -regex '^.*/[eE][xX][aA][mM][pP][lL][eE].?$') && ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'examples') ]]; then
+  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -iregex '^.*/examples?$') && ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'examples') ]]; then
     echo "ERROR: $libraryPath has incorrect examples folder name. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#library-examples"
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_EXAMPLES_FOLDER_NAME_EXIT_STATUS)
   fi
@@ -1440,7 +1440,7 @@ function check_library_structure() {
 
     echo "ERROR: $normalizedLibraryPropertiesPath is a stray file. library.properties should be located in the library root folder."
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_LIBRARY_PROPERTIES_EXIT_STATUS)
-  done <<<"$(find "$normalizedLibraryPath" -mindepth 2 -path './examples' -prune -or -path './extras' -prune -or -path './lib' -prune -or -type f -regex '.*/[lL][iI][bB][rR][aA][rR][yY]\.[pP][rR][oO][pP][eE][rR][tT][iI][eE][sS]')"
+  done <<<"$(find "$normalizedLibraryPath" -mindepth 2 -path './examples' -prune -or -path './extras' -prune -or -path './lib' -prune -or -type f -iname 'library.properties')"
 
   # Check for missing keywords.txt file
   if ! [[ -e "$normalizedLibraryPath/keywords.txt" ]]; then
@@ -1456,10 +1456,10 @@ function check_library_structure() {
 
     echo "ERROR: $keywordsTxtPath is a stray file. keywords.txt should be located in the library root folder."
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_KEYWORDS_TXT_EXIT_STATUS)
-  done <<<"$(find "$normalizedLibraryPath" -mindepth 2 -path './examples' -prune -or -path './extras' -prune -or -path './lib' -prune -or -type f -regex '.*/[kK][eE][yY][wW][oO][rR][dD][sS]\.[tT][xX][tT]')"
+  done <<<"$(find "$normalizedLibraryPath" -mindepth 2 -path './examples' -prune -or -path './extras' -prune -or -path './lib' -prune -or -type f -iname 'keywords.txt')"
 
   # Check for sketch files outside of the src or extras folders
-  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -path './examples' -prune -or -path './extras' -prune -or \( -type f -and \( -regex '^.*\.[iI][nN][oO]' -or -regex '^.*\.[pP][dD][eE]' \) \)) ]]; then
+  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -path './examples' -prune -or -path './extras' -prune -or \( -type f -and \( -iname '*.ino' -or -iname '*.pde' \) \)) ]]; then
     echo "ERROR: $libraryPath has sketch files found outside the examples and extras folders."
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_SKETCH_EXIT_STATUS)
   fi
@@ -1604,7 +1604,7 @@ function check_library_properties() {
   fi
 
   # Check for misspelled library.properties filename
-  if [[ "$(find "$normalizedLibraryPropertiesPath" -type f -regextype posix-extended -regex '.*/[lL][iI][bB][rR][aA][rR]([yY]|([iI][eE][sS]))\.[pP][rR][oO][pP][eE][rR][tT][yY]')" || "$(find "$normalizedLibraryPropertiesPath" -type f -regextype posix-extended -regex '.*/[lL][iI][bB][rR][aA][rR][iI][eE][sS]\.[pP][rR][oO][pP][eE][rR][tT]([yY]|([iI][eE][sS]))')" || "$(find "$normalizedLibraryPropertiesPath" -type f -regextype posix-extended -regex '.*/[lL][iI][bB][rR][aA][rR]([yY]|([iI][eE][sS]))\.[pP][rR][oO][pP][eE][rR][tT]([yY]|([iI][eE][sS]))\.[tT][eE]?[xX][tT]')" ]]; then
+  if [[ "$(find "$normalizedLibraryPropertiesPath" -type f -regextype posix-extended -iregex '.*/librar(y|(ies))\.property')" || "$(find "$normalizedLibraryPropertiesPath" -type f -regextype posix-extended -iregex '.*/libraries\.propert(y|(ies))')" || "$(find "$normalizedLibraryPropertiesPath" -type f -regextype posix-extended -iregex '.*/librar(y|(ies))\.propert(y|(ies))\.te?xt')" ]]; then
     echo "ERROR: $normalizedLibraryPropertiesPath contains an incorrectly spelled library.properties file."
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSPELLED_FILENAME_EXIT_STATUS)
   fi
@@ -1623,7 +1623,7 @@ function check_library_properties() {
       echo "ERROR: $foundLibraryPropertiesPath has incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux. It must be exactly library.properties"
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCORRECT_FILENAME_CASE_EXIT_STATUS)
     fi
-  done <<<"$(find "$normalizedLibraryPropertiesPath" -type f -regex '.*/[lL][iI][bB][rR][aA][rR][yY]\.[pP][rR][oO][pP][eE][rR][tT][iI][eE][sS]')"
+  done <<<"$(find "$normalizedLibraryPropertiesPath" -type f -iname 'library.properties')"
 
   # Check whether the folder contains a library.properties file
   if [[ "$libraryPropertiesFound" == false ]]; then
@@ -1935,7 +1935,7 @@ function check_keywords_txt() {
   fi
 
   # Check for misspelled keywords.txt filename
-  if [[ "$(find "$normalizedKeywordsTxtPath" -type f -regex '.*/[kK][eE][yY][wW][oO][rR][dD]\.[tT][xX][tT]')" || "$(find "$normalizedKeywordsTxtPath" -type f -regex '.*/[kK][eE][yY][wW][oO][rR][dD][sS]?\.[tT][eE][xX][tT]')" || "$(find "$normalizedKeywordsTxtPath" -type f -regex '.*/[kK][eE][yY][wW][oO][rR][dD][sS]?\.[tT][xX][tT]\.[tT][xX][tT]')" ]]; then
+  if [[ "$(find "$normalizedKeywordsTxtPath" -type f -iname 'keyword.txt')" || "$(find "$normalizedKeywordsTxtPath" -type f -iregex '.*/keywords?\.text')" || "$(find "$normalizedKeywordsTxtPath" -type f -iregex '.*/keywords?\.txt\.txt')" ]]; then
     echo "ERROR: $normalizedKeywordsTxtPath contains an incorrectly spelled keywords.txt file."
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_MISSPELLED_FILENAME_EXIT_STATUS)
   fi
@@ -1954,7 +1954,7 @@ function check_keywords_txt() {
       echo "ERROR: $foundKeywordsTxtPath has incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux. It must be exactly keywords.txt"
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCORRECT_FILENAME_CASE_EXIT_STATUS)
     fi
-  done <<<"$(find "$normalizedKeywordsTxtPath" -type f -regex '.*/[kK][eE][yY][wW][oO][rR][dD][sS]\.[tT][xX][tT]')"
+  done <<<"$(find "$normalizedKeywordsTxtPath" -type f -iname 'keywords.txt')"
 
   # Check whether the folder contains a keywords.txt file
   if [[ "$keywordsTxtFound" == false ]]; then

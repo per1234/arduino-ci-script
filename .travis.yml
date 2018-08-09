@@ -86,7 +86,7 @@ before_install:
 
   # Check for typos
   - pip install codespell
-  - codespell --skip="${TRAVIS_BUILD_DIR}/.git" "${TRAVIS_BUILD_DIR}"
+  - codespell --skip="${TRAVIS_BUILD_DIR}/.git" --ignore-words="${TRAVIS_BUILD_DIR}/codespell-ignore-words-list.txt" "${TRAVIS_BUILD_DIR}"
 
   - source "${TRAVIS_BUILD_DIR}/arduino-ci-script.sh"
 
