@@ -1338,6 +1338,8 @@ function check_sketch_structure() {
 
 # https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=1
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_EXTRAS_FOLDER_NAME_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_EXAMPLES_FOLDER_NAME_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_LIBRARY_PROPERTIES_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
@@ -1403,6 +1405,13 @@ function check_library_structure() {
   local -r checkFolderNameExitStatus=$?
   if [[ $checkFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
     exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_CHECK_FOLDER_NAME_OFFSET + checkFolderNameExitStatus)))
+  fi
+
+  # Check for incorrect spelling of extras folder
+  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -iregex '^.*/[eE][xX][tT][rR][aA][sS]?$') && ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'extras') ]]; then
+    #if [[ -d "$normalizedLibraryPath/extra" || -d "$normalizedLibraryPath/Extras" || -d "$normalizedLibraryPath/EXTRAS" ]] && [[ ! -d "$normalizedLibraryPath/extras" ]]; then
+    echo "ERROR: $libraryPath has incorrectly spelled extras folder name. It should be exactly extras. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#extra-documentation"
+    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_EXTRAS_FOLDER_NAME_EXIT_STATUS)
   fi
 
   # Check for incorrect spelling of examples folder
