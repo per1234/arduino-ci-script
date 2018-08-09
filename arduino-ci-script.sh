@@ -1536,6 +1536,8 @@ readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_ARCHITECTURES_MISSPELLED_EXI
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_FOLDER_DOESNT_EXIST_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSPELLED_FILENAME_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCORRECT_FILENAME_CASE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_NAME_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
@@ -1590,6 +1592,12 @@ function check_library_properties() {
   if [[ ! -d "$normalizedLibraryPropertiesPath" ]]; then
     echo "ERROR: Specified folder: $normalizedLibraryPropertiesPath doesn't exist."
     return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_FOLDER_DOESNT_EXIST_EXIT_STATUS
+  fi
+
+  # Check for misspelled library.properties filename
+  if [[ "$(find "$normalizedLibraryPropertiesPath" -type f -regextype posix-extended -regex '.*/[lL][iI][bB][rR][aA][rR]([yY]|([iI][eE][sS]))\.[pP][rR][oO][pP][eE][rR][tT][yY]')" || "$(find "$normalizedLibraryPropertiesPath" -type f -regextype posix-extended -regex '.*/[lL][iI][bB][rR][aA][rR][iI][eE][sS]\.[pP][rR][oO][pP][eE][rR][tT]([yY]|([iI][eE][sS]))')" || "$(find "$normalizedLibraryPropertiesPath" -type f -regextype posix-extended -regex '.*/[lL][iI][bB][rR][aA][rR]([yY]|([iI][eE][sS]))\.[pP][rR][oO][pP][eE][rR][tT]([yY]|([iI][eE][sS]))\.[tT][eE]?[xX][tT]')" ]]; then
+    echo "ERROR: $normalizedLibraryPropertiesPath contains an incorrectly spelled library.properties file."
+    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSPELLED_FILENAME_EXIT_STATUS)
   fi
 
   # Check for incorrect filename case
