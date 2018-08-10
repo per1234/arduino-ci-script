@@ -1431,32 +1431,36 @@ function check_library_structure() {
     echo "WARNING: The library is missing a library.properties file. While not required, it's recommended to add this file to provide helpful metadata. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#library-metadata"
   fi
 
-  # Check for library.properties files outside of the library root, examples, extras, or lib folders
-  while read -r normalizedLibraryPropertiesPath; do
-    # The while loop always runs once, even when no file is found
-    if [[ "$normalizedLibraryPropertiesPath" == "" ]]; then
-      continue
-    fi
+  # Check for library.properties files in the src folder
+  if [[ "$onePointFiveFormat" == true ]]; then
+    while read -r normalizedLibraryPropertiesPath; do
+      # The while loop always runs once, even when no file is found
+      if [[ "$normalizedLibraryPropertiesPath" == "" ]]; then
+        continue
+      fi
 
-    echo "ERROR: $normalizedLibraryPropertiesPath is a stray file. library.properties should be located in the library root folder."
-    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_LIBRARY_PROPERTIES_EXIT_STATUS)
-  done <<<"$(find "$normalizedLibraryPath" -mindepth 2 -path './examples' -prune -or -path './extras' -prune -or -path './lib' -prune -or -type f -iname 'library.properties')"
+      echo "ERROR: $normalizedLibraryPropertiesPath is a stray file. library.properties should be located in the library root folder."
+      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_LIBRARY_PROPERTIES_EXIT_STATUS)
+    done <<<"$(find "$normalizedLibraryPath/src" -maxdepth 1 -type f -iname 'library.properties')"
+  fi
 
   # Check for missing keywords.txt file
   if ! [[ -e "$normalizedLibraryPath/keywords.txt" ]]; then
     echo "WARNING: The library is missing a keywords.txt file. While not required, it's recommended to add this file to provide keyword highlighting in the Arduino IDE. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keywords"
   fi
 
-  # Check for keywords.txt files outside of the library root, examples, extras, or lib folders
-  while read -r keywordsTxtPath; do
-    # The while loop always runs once, even when no file is found
-    if [[ "$keywordsTxtPath" == "" ]]; then
-      continue
-    fi
+  # Check for keywords.txt files in the src folder
+  if [[ "$onePointFiveFormat" == true ]]; then
+    while read -r keywordsTxtPath; do
+      # The while loop always runs once, even when no file is found
+      if [[ "$keywordsTxtPath" == "" ]]; then
+        continue
+      fi
 
-    echo "ERROR: $keywordsTxtPath is a stray file. keywords.txt should be located in the library root folder."
-    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_KEYWORDS_TXT_EXIT_STATUS)
-  done <<<"$(find "$normalizedLibraryPath" -mindepth 2 -path './examples' -prune -or -path './extras' -prune -or -path './lib' -prune -or -type f -iname 'keywords.txt')"
+      echo "ERROR: $keywordsTxtPath is a stray file. keywords.txt should be located in the library root folder."
+      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_KEYWORDS_TXT_EXIT_STATUS)
+    done <<<"$(find "$normalizedLibraryPath/src" -maxdepth 1 -type f -iname 'keywords.txt')"
+  fi
 
   # Check for sketch files outside of the src or extras folders
   if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -path './examples' -prune -or -path './extras' -prune -or \( -type f -and \( -iname '*.ino' -or -iname '*.pde' \) \)) ]]; then
