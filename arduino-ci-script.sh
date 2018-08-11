@@ -1780,7 +1780,10 @@ function check_library_properties() {
 
   # Check for missing architectures field
   if ! grep --quiet --regexp='^[[:space:]]*architectures[[:space:]]*=' <<<"$libraryProperties"; then
-    if grep --quiet --regexp='^[[:space:]]*architecture[[:space:]]*=' <<<"$libraryProperties"; then
+    if grep --quiet --ignore-case --regexp='^[[:space:]]*architectures[[:space:]]*=' <<<"$libraryProperties"; then
+      echo "ERROR: $normalizedLibraryPropertiesPath has incorrect architectures field name case. It must be spelled exactly \"architectures\"."
+      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_ARCHITECTURES_MISSPELLED_EXIT_STATUS)
+    elif grep --quiet --regexp='^[[:space:]]*architecture[[:space:]]*=' <<<"$libraryProperties"; then
       echo "ERROR: $normalizedLibraryPropertiesPath has misspelled architectures field name as \"architecture\"."
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_ARCHITECTURES_MISSPELLED_EXIT_STATUS)
     else
