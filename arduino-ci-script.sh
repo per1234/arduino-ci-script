@@ -1546,6 +1546,20 @@ function get_library_properties_field_value() {
   echo "$line"
 }
 
+function check_field_name_case() {
+  local -r libraryProperties="$1"
+  local -r fieldName="$2"
+  local -r normalizedLibraryPropertiesPath="$3"
+
+  if ! grep --quiet --regexp='^[[:space:]]*'"$fieldName"'[[:space:]]*=' <<<"$libraryProperties"; then
+    if grep --quiet --ignore-case --regexp='^[[:space:]]*'"$fieldName"'[[:space:]]*=' <<<"$libraryProperties"; then
+      echo "ERROR: ${normalizedLibraryPropertiesPath}'s $fieldName field name has incorrect case. It must be spelled exactly ${fieldName}. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+      return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+    fi
+  fi
+  return "$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS"
+}
+
 # https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=1
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_REDUNDANT_PARAGRAPH_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
@@ -1780,8 +1794,7 @@ function check_library_properties() {
 
   # Check for missing architectures field
   if ! grep --quiet --regexp='^[[:space:]]*architectures[[:space:]]*=' <<<"$libraryProperties"; then
-    if grep --quiet --ignore-case --regexp='^[[:space:]]*architectures[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "ERROR: $normalizedLibraryPropertiesPath has incorrect architectures field name case. It must be spelled exactly \"architectures\"."
+    if ! check_field_name_case "$libraryProperties" 'architectures' "$normalizedLibraryPropertiesPath"; then
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_ARCHITECTURES_MISSPELLED_EXIT_STATUS)
     elif grep --quiet --regexp='^[[:space:]]*architecture[[:space:]]*=' <<<"$libraryProperties"; then
       echo "ERROR: $normalizedLibraryPropertiesPath has misspelled architectures field name as \"architecture\"."
@@ -1894,12 +1907,10 @@ function check_library_properties() {
   fi
 
   # Check for misspelled includes field
-  if ! grep --quiet --regexp='^[[:space:]]*includes[[:space:]]*=' <<<"$libraryProperties"; then
-    if grep --quiet --ignore-case --regexp='^[[:space:]]*includes[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "ERROR: ${normalizedLibraryPropertiesPath}'s includes field name has incorrect case. It must be spelled exactly \"includes\". See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCLUDES_MISSPELLED_EXIT_STATUS)
-    fi
+  if ! check_field_name_case "$libraryProperties" 'includes' "$normalizedLibraryPropertiesPath"; then
+    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCLUDES_MISSPELLED_EXIT_STATUS)
   fi
+
   if grep --quiet --ignore-case --regexp='^[[:space:]]*include[[:space:]]*=' <<<"$libraryProperties"; then
     echo "ERROR: ${normalizedLibraryPropertiesPath}'s includes field name is misspelled. It must be spelled exactly \"includes\". See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCLUDES_MISSPELLED_EXIT_STATUS)
