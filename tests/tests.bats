@@ -665,6 +665,22 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [ "${#lines[@]}" -eq 1 ]
 }
 
+@test "check_library_properties \"./check_library_properties/ProblematicGoogleUrl\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
+  run check_library_properties "./check_library_properties/ProblematicGoogleUrl"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 0 ]
+}
+
+@test "check_library_properties \"./check_library_properties/ProblematicMicrosoftUrl\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
+  run check_library_properties "./check_library_properties/ProblematicMicrosoftUrl"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 0 ]
+}
+
 @test "check_library_properties \"./check_library_properties/IncorrectArchitecturesFieldCase\"" {
   expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_ARCHITECTURES_MISSPELLED_EXIT_STATUS
   run check_library_properties "./check_library_properties/IncorrectArchitecturesFieldCase"

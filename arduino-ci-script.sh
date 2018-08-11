@@ -1789,7 +1789,7 @@ function check_library_properties() {
 
       # Check for dead url value
       local urlStatus
-      urlStatus=$(curl --location --output /dev/null --silent --head --write-out '%{http_code}' "$urlValue")
+      urlStatus=$(curl --location --request GET --output /dev/null --silent --head --write-out '%{http_code}' "$urlValue")
       local -r errorStatusRegex='^[045]'
       if [[ "$urlStatus" =~ $errorStatusRegex ]]; then
         echo "ERROR: ${normalizedLibraryPropertiesPath}'s url value $urlValue returned error status $urlStatus."
