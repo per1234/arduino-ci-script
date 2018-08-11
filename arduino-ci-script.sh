@@ -1348,6 +1348,8 @@ readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_KEYWORDS_TXT_EXIT_STATU
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_SKETCH_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SPURIOUS_DOT_FOLDER_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_FOLDER_DOESNT_EXIST_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_SRC_FOLDER_CASE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
@@ -1406,6 +1408,17 @@ function check_library_structure() {
   if [[ $checkFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
     exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_CHECK_FOLDER_NAME_OFFSET + checkFolderNameExitStatus)))
   fi
+
+  # Check for spurious dot folders not on the whitelist: https://github.com/arduino/arduino-builder/blob/master/utils/utils.go#L155
+  while read -r spuriousDotFolderPath; do
+    # The while loop always runs once, even when no file is found
+    if [[ "$spuriousDotFolderPath" == "" ]]; then
+      continue
+    fi
+
+    echo "ERROR: $spuriousDotFolderPath causes the Arduino IDE to display a spurious folder warning."
+    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SPURIOUS_DOT_FOLDER_EXIT_STATUS)
+  done <<<"$(find "$normalizedLibraryPath" -maxdepth 1 -type d -regex '^.*/\..*$' -not -name '.git' -not -name '.github' -not -name '.svn' -not -name '.hg' -not -name '.bzr' -not -name '.vscode')"
 
   # Check for incorrect spelling of extras folder
   if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -iregex '^.*/extras?$') && ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'extras') ]]; then

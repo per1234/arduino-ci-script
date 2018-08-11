@@ -202,6 +202,16 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [ "${#lines[@]}" -eq 1 ]
 }
 
+@test "check_library_structure \"./check_library_structure/SpuriousDotFolder\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SPURIOUS_DOT_FOLDER_EXIT_STATUS
+  run check_library_structure "./check_library_structure/SpuriousDotFolder"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 1 ]
+  errorRegex='^ERROR: \./check_library_structure/SpuriousDotFolder/\.asdf causes the Arduino IDE to display a spurious folder warning\.'
+  [[ "${lines[0]}" =~ $warningRegex ]]
+}
+
 @test "check_library_structure \"./check_library_structure/IncorrectExtrasFolder\"" {
   expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_EXTRAS_FOLDER_NAME_EXIT_STATUS
   run check_library_structure "./check_library_structure/IncorrectExtrasFolder"
