@@ -670,7 +670,9 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_library_properties "./check_library_properties/IncorrectArchitecturesFieldCase"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-  [ "${#lines[@]}" -eq 1 ]
+  [ "${#lines[@]}" -eq 2 ]
+  warningRegex="^WARNING: \./check_library_properties/IncorrectArchitecturesFieldCase is missing the architectures field\."
+  [[ "${lines[1]}" =~ $warningRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/ArchitecturesMisspelled\"" {
@@ -678,7 +680,9 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_library_properties "./check_library_properties/ArchitecturesMisspelled"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-  [ "${#lines[@]}" -eq 1 ]
+  [ "${#lines[@]}" -eq 2 ]
+  warningRegex="^WARNING: \./check_library_properties/ArchitecturesMisspelled is missing the architectures field."
+  [[ "${lines[1]}" =~ $warningRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/ArchitecturesEmpty\"" {

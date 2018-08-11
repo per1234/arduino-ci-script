@@ -1792,16 +1792,20 @@ function check_library_properties() {
     fi
   fi
 
+  # Check for architectures field name case
+  if ! check_field_name_case "$libraryProperties" 'architectures' "$normalizedLibraryPropertiesPath"; then
+    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_ARCHITECTURES_MISSPELLED_EXIT_STATUS)
+  fi
+
+  # Check for misspelled architectures field
+  if grep --quiet --regexp='^[[:space:]]*architecture[[:space:]]*=' <<<"$libraryProperties"; then
+    echo "ERROR: $normalizedLibraryPropertiesPath has misspelled architectures field name as \"architecture\"."
+    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_ARCHITECTURES_MISSPELLED_EXIT_STATUS)
+  fi
+
   # Check for missing architectures field
   if ! grep --quiet --regexp='^[[:space:]]*architectures[[:space:]]*=' <<<"$libraryProperties"; then
-    if ! check_field_name_case "$libraryProperties" 'architectures' "$normalizedLibraryPropertiesPath"; then
-      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_ARCHITECTURES_MISSPELLED_EXIT_STATUS)
-    elif grep --quiet --regexp='^[[:space:]]*architecture[[:space:]]*=' <<<"$libraryProperties"; then
-      echo "ERROR: $normalizedLibraryPropertiesPath has misspelled architectures field name as \"architecture\"."
-      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_ARCHITECTURES_MISSPELLED_EXIT_STATUS)
-    else
-      echo "WARNING: $normalizedLibraryPropertiesPath is missing the architectures field. This causes the Arduino IDE to assume the library is compatible with all architectures (*). See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
-    fi
+    echo "WARNING: $normalizedLibraryPropertiesPath is missing the architectures field. This causes the Arduino IDE to assume the library is compatible with all architectures (*). See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
   else
     local architecturesValue
     architecturesValue="$(get_library_properties_field_value "$libraryProperties" 'architectures')"
