@@ -733,6 +733,22 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [[ "${lines[0]}" =~ $IDEnotInstalledRegex ]]
 }
 
+@test "check_library_properties \"./check_library_properties/IncorrectIncludesFieldCase\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCLUDES_MISSPELLED_EXIT_STATUS
+  run check_library_properties "./check_library_properties/IncorrectIncludesFieldCase"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 1 ]
+}
+
+@test "check_library_properties \"./check_library_properties/IncludeField\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCLUDES_MISSPELLED_EXIT_STATUS
+  run check_library_properties "./check_library_properties/IncludeField"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 1 ]
+}
+
 @test "check_library_properties \"./check_library_properties/EmptyIncludes\"" {
   expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_EMPTY_INCLUDES_EXIT_STATUS
   run check_library_properties "./check_library_properties/EmptyIncludes"

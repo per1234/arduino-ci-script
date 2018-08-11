@@ -1592,6 +1592,8 @@ readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_MISSING_SCHEME_EXIT_STAT
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_DEAD_URL_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCLUDES_MISSPELLED_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_EMPTY_INCLUDES_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 function check_library_properties() {
   local -r libraryPropertiesPath="$1"
@@ -1886,6 +1888,18 @@ function check_library_properties() {
   if grep --quiet --invert-match --extended-regexp --regexp='=' --regexp='^[[:space:]]*(#|$)' <<<"$libraryProperties"; then
     echo "ERROR: $normalizedLibraryPropertiesPath contains an invalid line."
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_LINE_EXIT_STATUS)
+  fi
+
+  # Check for misspelled includes field
+  if ! grep --quiet --regexp='^[[:space:]]*includes[[:space:]]*=' <<<"$libraryProperties"; then
+    if grep --quiet --ignore-case --regexp='^[[:space:]]*includes[[:space:]]*=' <<<"$libraryProperties"; then
+      echo "ERROR: ${normalizedLibraryPropertiesPath}'s includes field name has incorrect case. It must be spelled exactly \"includes\". See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCLUDES_MISSPELLED_EXIT_STATUS)
+    fi
+  fi
+  if grep --quiet --ignore-case --regexp='^[[:space:]]*include[[:space:]]*=' <<<"$libraryProperties"; then
+    echo "ERROR: ${normalizedLibraryPropertiesPath}'s includes field name is misspelled. It must be spelled exactly \"includes\". See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCLUDES_MISSPELLED_EXIT_STATUS)
   fi
 
   # Check for empty includes value
