@@ -2045,7 +2045,7 @@ function check_keywords_txt() {
       echo "ERROR: $foundKeywordsTxtPath has incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux. It must be exactly keywords.txt"
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCORRECT_FILENAME_CASE_EXIT_STATUS)
     fi
-  done <<<"$(find "$normalizedKeywordsTxtPath" -type f -iname 'keywords.txt')"
+  done <<<"$(find "$normalizedKeywordsTxtPath" -maxdepth 1 -type f -iname 'keywords.txt')"
 
   # Check whether the folder contains a keywords.txt file
   if [[ "$keywordsTxtFound" == false ]]; then
