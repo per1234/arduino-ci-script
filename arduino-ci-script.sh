@@ -1910,11 +1910,12 @@ function check_library_properties() {
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_LINE_EXIT_STATUS)
   fi
 
-  # Check for misspelled includes field
+  # Check for incorrect includes field name case
   if ! check_field_name_case "$libraryProperties" 'includes' "$normalizedLibraryPropertiesPath"; then
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCLUDES_MISSPELLED_EXIT_STATUS)
   fi
 
+  # Check for misspelled includes field name
   if grep --quiet --ignore-case --regexp='^[[:space:]]*include[[:space:]]*=' <<<"$libraryProperties"; then
     echo "ERROR: ${normalizedLibraryPropertiesPath}'s includes field name is misspelled. It must be spelled exactly \"includes\". See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCLUDES_MISSPELLED_EXIT_STATUS)
