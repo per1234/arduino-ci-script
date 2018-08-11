@@ -1660,7 +1660,7 @@ function check_library_properties() {
       echo "ERROR: $foundLibraryPropertiesPath has incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux. It must be exactly library.properties"
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCORRECT_FILENAME_CASE_EXIT_STATUS)
     fi
-  done <<<"$(find "$normalizedLibraryPropertiesPath" -type f -iname 'library.properties')"
+  done <<<"$(find "$normalizedLibraryPropertiesPath" -maxdepth 1 -type f -iname 'library.properties')"
 
   # Check whether the folder contains a library.properties file
   if [[ "$libraryPropertiesFound" == false ]]; then
