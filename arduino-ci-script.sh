@@ -2076,8 +2076,6 @@ function check_keywords_txt() {
       fi
 
       local spacesSeparatorRegex='^[[:space:]]*[^[:space:]]+ +[^[:space:]]+'
-
-      local invalidLineRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*$'
       # Check for invalid separator
       if [[ "$keywordsTxtLine" =~ $spacesSeparatorRegex ]]; then
         echo "ERROR: $keywordsTxtPath (${keywordsTxtLine}) uses space(s) as a field separator. It must be a true tab."
@@ -2105,6 +2103,7 @@ function check_keywords_txt() {
       fi
 
       # Check for invalid line
+      local invalidLineRegex='^[[:space:]]*[^[:space:]]+[[:space:]]*$'
       if [[ "$keywordsTxtLine" =~ $invalidLineRegex ]]; then
         echo "ERROR: $keywordsTxtPath has an invalid line: ${keywordsTxtLine}. If this was intended as a comment, it should use the correct # syntax."
         exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_LINE_EXIT_STATUS)
