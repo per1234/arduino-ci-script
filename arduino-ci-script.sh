@@ -2107,7 +2107,7 @@ function check_keywords_txt() {
       if [[ "$keywordsTxtLine" =~ $invalidLineRegex ]]; then
         echo "ERROR: $keywordsTxtPath has an invalid line: ${keywordsTxtLine}. If this was intended as a comment, it should use the correct # syntax."
         exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_LINE_EXIT_STATUS)
-        # The rest of the checks will be borked by messed up field separators so continue to the next line
+        # The rest of the checks are pointless so continue to the next line of keywords.txt
         continue
       fi
 
