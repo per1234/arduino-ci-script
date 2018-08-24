@@ -2267,7 +2267,7 @@ function check_library_manager_compliance() {
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_SYMLINK_FOUND_EXIT_STATUS)
   fi
 
-  # Check for characters in the library.propertied name value disallowed by the Library Manager indexer
+  # Check for characters in the library.properties name value disallowed by the Library Manager indexer
   if [[ -f "$normalizedLibraryPath/library.properties" ]]; then
     # Get rid of the CRs
     local libraryProperties
