@@ -2254,7 +2254,7 @@ function check_library_manager_compliance() {
   fi
 
   # Check for .development file
-  local -r dotDevelopmentPath=$(find "$normalizedLibraryPath" -type f -name '.development')
+  local -r dotDevelopmentPath=$(find "$normalizedLibraryPath" -maxdepth 1 -type f -name '.development')
   if [[ "$dotDevelopmentPath" != "" ]]; then
     echo "ERROR: .development file found at $dotDevelopmentPath"
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_DOT_DEVELOPMENT_FOUND_EXIT_STATUS)
