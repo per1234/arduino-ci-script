@@ -117,9 +117,10 @@ Check sketches to ensure they have the correct structure.
 Check a library to ensure they have the correct structure. This will also run `check_sketch_structure` on all sketches bundled with the library.
 - Parameter: **libraryPath** - Path containing a library.
 
-##### `check_library_properties searchPath`
+##### `check_library_properties searchPath [maximumSearchDepth]`
 Check [library.properties](https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format) library metadata files for errors.
 - Parameter: **searchPath** - Path containing library.properties.
+- Parameter(optional): **maximumSearchDepth** - The recursive search depth. A depth of 0 will only search `searchPath` and no subfolders. The default value is 0.
 
 ##### `check_keywords_txt searchPath`
 Check [keywords.txt](https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keywords) files for errors.

@@ -48,9 +48,23 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_library_properties "./check_library_properties/NoLibraryProperties"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-  [ "${#lines[@]}" -eq 1 ]
-  warningRegex='^WARNING: Specified folder: \./check_library_properties/NoLibraryProperties doesn'\''t contain a library\.properties file\.'
-  [[ "${lines[0]}" =~ $warningRegex ]]
+  [ "${#lines[@]}" -eq 0 ]
+}
+
+@test "check_library_properties \"./check_library_properties/MultipleValidLibraryProperties\" 1" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
+  run check_library_properties "./check_library_properties/MultipleValidLibraryProperties" 1
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 0 ]
+}
+
+@test "check_library_properties \"./check_library_properties/InvalidLibraryPropertiesBelowMaximumSearchDepth\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
+  run check_library_properties "./check_library_properties/InvalidLibraryPropertiesBelowMaximumSearchDepth"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "check_library_properties \"./check_library_properties/DoesntExist\"" {
@@ -66,7 +80,7 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_library_properties "./check_library_properties/MisspelledFilename"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-  [ "${#lines[@]}" -eq 2 ]
+  [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/InvalidFilenameCase\"" {
@@ -74,12 +88,20 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_library_properties "./check_library_properties/InvalidFilenameCase"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-  [ "${#lines[@]}" -eq 2 ]
+  [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingName\"" {
   expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_NAME_EXIT_STATUS
   run check_library_properties "./check_library_properties/MissingName"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 1 ]
+}
+
+@test "check_library_properties \"./check_library_properties/MultipleInvalidLibraryProperties\" 1" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_MISSING_NAME_EXIT_STATUS
+  run check_library_properties "./check_library_properties/MultipleInvalidLibraryProperties" 1
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]

@@ -1619,7 +1619,8 @@ function check_library_properties() {
   local -r libraryPropertiesSearchPath="$1"
   local maximumSearchDepth="$2"
   if [[ "$maximumSearchDepth" == "" ]]; then
-    maximumSearchDepth=1
+    # Set default search depth
+    maximumSearchDepth=0
   fi
 
   local exitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
@@ -1645,6 +1646,7 @@ function check_library_properties() {
   fi
 
   while read -r normalizedLibraryPropertiesPath; do
+
     # Check for misspelled library.properties filename
     if [[ "$(find "$normalizedLibraryPropertiesPath" -type f -regextype posix-extended -iregex '.*/librar(y|(ies))\.property')" || "$(find "$normalizedLibraryPropertiesPath" -type f -regextype posix-extended -iregex '.*/libraries\.propert(y|(ies))')" || "$(find "$normalizedLibraryPropertiesPath" -type f -regextype posix-extended -iregex '.*/librar(y|(ies))\.propert(y|(ies))\.te?xt')" ]]; then
       echo "ERROR: $normalizedLibraryPropertiesPath contains an incorrectly spelled library.properties file."
@@ -1669,8 +1671,8 @@ function check_library_properties() {
 
     # Check whether the folder contains a library.properties file
     if [[ "$libraryPropertiesFound" == false ]]; then
-      echo "WARNING: Specified folder: $normalizedLibraryPropertiesPath doesn't contain a library.properties file."
-      return "$exitStatus"
+      # no point in doing any more checks on this folder
+      continue
     fi
 
     # Get rid of the CRs
@@ -1693,9 +1695,9 @@ function check_library_properties() {
       else
         # Check for invalid name value
         # Library Manager installs libraries to a folder that is the name field value with any spaces replaced with _
-        local -r libraryManagerFolderName="${nameValue// /_}"
+        local libraryManagerFolderName="${nameValue// /_}"
         check_folder_name "$libraryManagerFolderName"
-        local -r checkFolderNameExitStatus=$?
+        local checkFolderNameExitStatus=$?
         if [[ $checkFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
           echo "WARNING: ${normalizedLibraryPropertiesPath}'s name value $nameValue does not meet the requirements of the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
         fi
@@ -1744,7 +1746,7 @@ function check_library_properties() {
       # Check for repeat of sentence in paragraph
       local sentenceValue
       sentenceValue="$(get_library_properties_field_value "$libraryProperties" 'sentence')"
-      local -r sentenceValueNoPunctuation=${sentenceValue%%\.}
+      local sentenceValueNoPunctuation=${sentenceValue%%\.}
       if [[ "$sentenceValueNoPunctuation" != "" ]]; then
         local paragraphValue
         paragraphValue="$(get_library_properties_field_value "$libraryProperties" 'paragraph')"
@@ -1786,7 +1788,7 @@ function check_library_properties() {
         exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_BLANK_EXIT_STATUS)
       else
         # Check for missing scheme on url value
-        local -r schemeRegex='^(http://)|(https://)'
+        local schemeRegex='^(http://)|(https://)'
         if ! [[ "$urlValue" =~ $schemeRegex ]]; then
           echo "ERROR: ${normalizedLibraryPropertiesPath}'s url value $urlValue is missing the scheme (e.g. https://). URL scheme must be specified for Library Manager's \"More info\" link to be clickable."
           exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_URL_MISSING_SCHEME_EXIT_STATUS)
@@ -1795,7 +1797,7 @@ function check_library_properties() {
         # Check for dead url value
         local urlStatus
         urlStatus=$(curl --location --request GET --output /dev/null --silent --head --write-out '%{http_code}' "$urlValue")
-        local -r errorStatusRegex='^[045]'
+        local errorStatusRegex='^[045]'
         if [[ "$urlStatus" =~ $errorStatusRegex ]]; then
           echo "ERROR: ${normalizedLibraryPropertiesPath}'s url value $urlValue returned error status $urlStatus."
           exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_DEAD_URL_EXIT_STATUS)
@@ -1826,7 +1828,7 @@ function check_library_properties() {
         exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_ARCHITECTURES_EMPTY_EXIT_STATUS)
       else
         # Check for invalid architectures
-        local -r validArchitecturesRegex='^((\*)|(avr)|(sam)|(samd)|(stm32f4)|(nrf52)|(i586)|(i686)|(arc32)|(win10)|(esp8266)|(esp32)|(ameba)|(arm)|(efm32)|(FP51)|(iot2000)|(msp430)|(navspark)|(nRF5)|(nRF51822)|(nRF52832)|(particle-photon)|(particle-electron)|(particle-core)|(pic)|(pic32)|(RFduino)|(Seeed_STM32F4)|(Simblee)|(solox)|(stm32)|(stm)|(STM32)|(STM32F1)|(STM32F3)|(STM32F4)|(STM32F2)|(STM32L1)|(STM32L4)|(teensy)|(x86))$'
+        local validArchitecturesRegex='^((\*)|(avr)|(sam)|(samd)|(stm32f4)|(nrf52)|(i586)|(i686)|(arc32)|(win10)|(esp8266)|(esp32)|(ameba)|(arm)|(efm32)|(FP51)|(iot2000)|(msp430)|(navspark)|(nRF5)|(nRF51822)|(nRF52832)|(particle-photon)|(particle-electron)|(particle-core)|(pic)|(pic32)|(RFduino)|(Seeed_STM32F4)|(Simblee)|(solox)|(stm32)|(stm)|(STM32)|(STM32F1)|(STM32F3)|(STM32F4)|(STM32F2)|(STM32L1)|(STM32L4)|(teensy)|(x86))$'
         # Split string on ,
         IFS=','
         local validArchitectureFound=false
@@ -1970,6 +1972,7 @@ function check_library_properties() {
       echo "ERROR: ${normalizedLibraryPropertiesPath}'s ldflags field name is misspelled. It must be spelled exactly \"ldflags\". See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_LDFLAGS_MISSPELLED_EXIT_STATUS)
     fi
+
   done <<<"$(find "$normalizedLibraryPropertiesSearchPath" -maxdepth "$maximumSearchDepth" -type d)"
 
   return "$exitStatus"
