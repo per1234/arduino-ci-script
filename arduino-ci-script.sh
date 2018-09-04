@@ -1743,7 +1743,7 @@ function check_library_properties() {
     if [[ "$sentenceValueNoPunctuation" != "" ]]; then
       local paragraphValue
       paragraphValue="$(get_library_properties_field_value "$libraryProperties" 'paragraph')"
-      if [[ "$paragraphValue" == *"$sentenceValueNoPunctuation"* ]]; then
+      if [[ "$paragraphValue" == "$sentenceValueNoPunctuation"* ]]; then
         echo "ERROR: ${normalizedLibraryPropertiesPath}'s paragraph value repeats the sentence. These strings are displayed one after the other in Library Manager so there is no point in redundancy."
         exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_REDUNDANT_PARAGRAPH_EXIT_STATUS)
       fi
