@@ -275,10 +275,10 @@ function install_ide() {
         local downloadVersion="$IDEversion"
       fi
 
-      wget --no-verbose $ARDUINO_CI_SCRIPT_QUIET_OPTION "http://downloads.arduino.cc/arduino-${downloadVersion}-linux64.${downloadFileExtension}"
-      tar --extract --file="arduino-${downloadVersion}-linux64.${downloadFileExtension}"
-      rm $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "arduino-${downloadVersion}-linux64.${downloadFileExtension}"
-      mv $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "arduino-${downloadVersion}" "$IDEinstallFolder"
+      wget --no-verbose $ARDUINO_CI_SCRIPT_QUIET_OPTION --directory-prefix="${ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER}/" "http://downloads.arduino.cc/arduino-${downloadVersion}-linux64.${downloadFileExtension}"
+      tar --extract --directory="$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER" --file="${ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER}/arduino-${downloadVersion}-linux64.${downloadFileExtension}"
+      rm $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "${ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER}/arduino-${downloadVersion}-linux64.${downloadFileExtension}"
+      mv $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION "${ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER}/arduino-${downloadVersion}" "$IDEinstallFolder"
     fi
   done
 
