@@ -59,14 +59,26 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [ "$status" -eq $expectedExitStatus ]
 }
 
+@test "check_keywords_txt \"./check_keywords_txt/MultipleValidKeywordsTxt\" 1" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
+  run check_keywords_txt "./check_keywords_txt/MultipleValidKeywordsTxt" 1
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+}
+
+@test "check_keywords_txt \"./check_keywords_txt/InvalidKeywordsTxtBelowMaximumSearchDepth\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
+  run check_keywords_txt "./check_keywords_txt/InvalidKeywordsTxtBelowMaximumSearchDepth"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+}
+
 @test "check_keywords_txt \"./check_keywords_txt/NoKeywordsTxt\"" {
   expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/NoKeywordsTxt"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-  [ "${#lines[@]}" -eq 1 ]
-  warningRegex='^WARNING: Specified folder: \./check_keywords_txt/NoKeywordsTxt doesn'\''t contain a keywords\.txt file\.'
-  [[ "${lines[0]}" =~ $warningRegex ]]
+  [ "${#lines[@]}" -eq 0 ]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/BOMcorruptedBlankLine\"" {
@@ -96,7 +108,7 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/MisspelledFilename"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-  [ "${#lines[@]}" -eq 2 ]
+  [ "${#lines[@]}" -eq 1 ]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/IncorrectFilenameCase\"" {
@@ -109,6 +121,13 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
 @test "check_keywords_txt \"./check_keywords_txt/InvalidSeparator\"" {
   expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_FIELD_SEPARATOR_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/InvalidSeparator"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+}
+
+@test "check_keywords_txt \"./check_keywords_txt/MultipleInvalidKeywordsTxt\" 1" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INVALID_FIELD_SEPARATOR_EXIT_STATUS
+  run check_keywords_txt "./check_keywords_txt/MultipleInvalidKeywordsTxt" 1
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
 }
