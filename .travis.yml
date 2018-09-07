@@ -67,7 +67,11 @@ before_install:
   - rm --recursive --force bats-core
   - bats --version
   - cd tests
-  - bats tests.bats
+  - bats check_keywords_txt.bats
+  - bats check_library_manager_compliance.bats
+  - bats check_library_properties.bats
+  - bats check_library_structure.bats
+  - bats miscellaneous.bats
   - cd ..
 
   # Formatting checks:
