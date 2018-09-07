@@ -113,9 +113,10 @@ Turn on/off arduino verbose output during compilation (same as the IDE's **File 
 Check sketches to ensure they have the correct structure.
 - Parameter: **searchPath** - Path containing sketches. The path will be searched recursively and all sketches found under it will be checked.
 
-##### `check_library_structure libraryPath`
+##### `check_library_structure basePath [depth]`
 Check a library to ensure they have the correct structure. This will also run `check_sketch_structure` on all sketches bundled with the library.
-- Parameter: **libraryPath** - Path containing a library.
+- Parameter: **basePath** - Path containing a library.
+- Parameter(optional): **depth** - Folder depth relative to `basePath` where the libraries are located. A depth of 0 will check the library located at `basePath`. The default value is 0.
 
 ##### `check_library_properties searchPath [maximumSearchDepth]`
 Check [library.properties](https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format) library metadata files for errors.

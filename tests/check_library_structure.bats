@@ -35,6 +35,22 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [ "${#lines[@]}" -eq 0 ]
 }
 
+@test "check_library_structure \"./check_library_structure/MultipleValidLibraries\" 1" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
+  run check_library_structure "./check_library_structure/MultipleValidLibraries" 1
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 0 ]
+}
+
+@test "check_library_structure \"./check_library_structure/InvalidLibraryBelowDepth\"" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
+  run check_library_structure "./check_library_structure/InvalidLibraryBelowDepth"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 1 ]
+}
+
 @test "check_library_structure \"./check_library_structure/DoesntExist\"" {
   expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_FOLDER_DOESNT_EXIST_EXIT_STATUS
   run check_library_structure "./check_library_structure/DoesntExist"
@@ -46,6 +62,14 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
 @test "check_library_structure \"./check_library_structure/IncorrectSrcFolderCase\"" {
   expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_SRC_FOLDER_CASE_EXIT_STATUS
   run check_library_structure "./check_library_structure/IncorrectSrcFolderCase"
+  echo "Exit status: $status | Expected: $expectedExitStatus"
+  [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 1 ]
+}
+
+@test "check_library_structure \"./check_library_structure/MultipleInvalidLibraries\" 1" {
+  expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_SRC_FOLDER_CASE_EXIT_STATUS
+  run check_library_structure "./check_library_structure/MultipleInvalidLibraries" 1
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
@@ -133,7 +157,7 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  missingLibraryPropertiesWarningRegex='^WARNING: The library is missing a library\.properties'
+  missingLibraryPropertiesWarningRegex='^WARNING: \./check_library_structure/MissingLibraryProperties is missing a library\.properties file\.'
   [[ "${lines[0]}" =~ $missingLibraryPropertiesWarningRegex ]]
 }
 
@@ -151,7 +175,7 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  missingKeywordsTxtWarningRegex='^WARNING: The library is missing a keywords\.txt'
+  missingKeywordsTxtWarningRegex='^WARNING: \./check_library_structure/MissingKeywordsTxt is missing a keywords\.txt file\.'
   [[ "${lines[0]}" =~ $missingKeywordsTxtWarningRegex ]]
 }
 

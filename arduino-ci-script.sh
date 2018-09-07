@@ -1370,132 +1370,146 @@ readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SKETCH_FOLDER_NAME_HAS_INVALI
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SKETCH_FOLDER_NAME_HAS_INVALID_CHARACTER_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_CHECK_SKETCH_STRUCTURE_OFFSET + ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_NAME_HAS_INVALID_CHARACTER_EXIT_STATUS))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SKETCH_FOLDER_NAME_TOO_LONG_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_CHECK_SKETCH_STRUCTURE_OFFSET + ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_NAME_TOO_LONG_EXIT_STATUS))
 function check_library_structure() {
-  local -r libraryPath="$1"
+  local -r basePath="$1"
+  local depth="$2"
+  if [[ "$depth" == "" ]]; then
+    # Set default search depth
+    depth=0
+  fi
+
   # Replace backslashes with slashes
-  local -r libraryPathWithSlashes="${libraryPath//\\//}"
+  local -r basePathWithSlashes="${basePath//\\//}"
   # Remove trailing slash
-  local -r normalizedLibraryPath="${libraryPathWithSlashes%/}"
+  local -r normalizedBasePath="${basePathWithSlashes%/}"
 
   local exitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
 
   # Check whether folder exists
-  if [[ ! -d "$normalizedLibraryPath" ]]; then
-    echo "ERROR: Specified folder: $libraryPath doesn't exist."
+  if [[ ! -d "$normalizedBasePath" ]]; then
+    echo "ERROR: Specified folder: $basePath doesn't exist."
     return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_FOLDER_DOESNT_EXIST_EXIT_STATUS
   fi
 
-  # Check for valid 1.0 or 1.5 format
-  # The Arduino IDE only recognizes libraries if they have at least one file with a header extension of the correct case (even on Windows)
-  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type f \( -name '*.h' -or -name '*.hh' -or -name '*.hpp' \)) ]]; then
-    # 1.0 format library, do nothing (this if just makes the logic more simple)
-    :
-  elif [[ $(find "$normalizedLibraryPath" -maxdepth 1 \( -type f -and -name 'library.properties' \)) && $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -iregex '^.*src$') ]]; then
-    # 1.5 format library
-    if [[ ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'src') ]]; then
-      echo "ERROR: $libraryPath is a 1.5 format library with incorrect case in src subfolder name, which causes library to not be recognized on a filename case-sensitive OS such as Linux."
-      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_SRC_FOLDER_CASE_EXIT_STATUS)
-    elif [[ $(find "${normalizedLibraryPath}/src" -maxdepth 1 -type f \( -name '*.h' -or -name '*.hh' -or -name '*.hpp' \)) ]]; then
-      local -r onePointFiveFormat=true
-    fi
-  else
-    echo "ERROR: No valid library found in $libraryPath"
-    return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_LIBRARY_NOT_FOUND_EXIT_STATUS
-  fi
+  while read -r normalizedLibraryPath; do
 
-  # Check if folder name is valid
-  check_folder_name "$normalizedLibraryPath"
-  local -r checkFolderNameExitStatus=$?
-  if [[ $checkFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
-    exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_CHECK_FOLDER_NAME_OFFSET + checkFolderNameExitStatus)))
-  fi
-
-  # Check for spurious dot folders not on the whitelist: https://github.com/arduino/arduino-builder/blob/master/utils/utils.go#L155
-  while read -r spuriousDotFolderPath; do
-    # The while loop always runs once, even when no file is found
-    if [[ "$spuriousDotFolderPath" == "" ]]; then
+    # Check for valid 1.0 or 1.5 format
+    # The Arduino IDE only recognizes libraries if they have at least one file with a header extension of the correct case (even on Windows)
+    if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type f \( -name '*.h' -or -name '*.hh' -or -name '*.hpp' \)) ]]; then
+      # 1.0 format library, do nothing (this if just makes the logic more simple)
+      local onePointFiveFormat=false
+    elif [[ $(find "$normalizedLibraryPath" -maxdepth 1 \( -type f -and -name 'library.properties' \)) && $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -iregex '^.*src$') ]]; then
+      # 1.5 format library
+      if [[ ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'src') ]]; then
+        echo "ERROR: $normalizedLibraryPath is a 1.5 format library with incorrect case in src subfolder name, which causes library to not be recognized on a filename case-sensitive OS such as Linux."
+        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_SRC_FOLDER_CASE_EXIT_STATUS)
+        # incorrect src folder case messes up some of the later checks so skip everything else
+        continue
+      elif [[ $(find "${normalizedLibraryPath}/src" -maxdepth 1 -type f \( -name '*.h' -or -name '*.hh' -or -name '*.hpp' \)) ]]; then
+        local onePointFiveFormat=true
+      fi
+    else
+      echo "ERROR: No valid library found in $normalizedLibraryPath"
+      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_LIBRARY_NOT_FOUND_EXIT_STATUS)
       continue
     fi
 
-    echo "ERROR: $spuriousDotFolderPath causes the Arduino IDE to display a spurious folder warning."
-    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SPURIOUS_DOT_FOLDER_EXIT_STATUS)
-  done <<<"$(find "$normalizedLibraryPath" -maxdepth 1 -type d -regex '^.*/\..*$' -not -name '.git' -not -name '.github' -not -name '.svn' -not -name '.hg' -not -name '.bzr' -not -name '.vscode')"
+    # Check if folder name is valid
+    check_folder_name "$normalizedLibraryPath"
+    local checkFolderNameExitStatus=$?
+    if [[ $checkFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
+      exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_CHECK_FOLDER_NAME_OFFSET + checkFolderNameExitStatus)))
+    fi
 
-  # Check for incorrect spelling of extras folder
-  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -iregex '^.*/extras?$') && ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'extras') ]]; then
-    #if [[ -d "$normalizedLibraryPath/extra" || -d "$normalizedLibraryPath/Extras" || -d "$normalizedLibraryPath/EXTRAS" ]] && [[ ! -d "$normalizedLibraryPath/extras" ]]; then
-    echo "ERROR: $libraryPath has incorrectly spelled extras folder name. It should be exactly extras. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#extra-documentation"
-    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_EXTRAS_FOLDER_NAME_EXIT_STATUS)
-  fi
-
-  # Check for incorrect spelling of examples folder
-  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -iregex '^.*/examples?$') && ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'examples') ]]; then
-    echo "ERROR: $libraryPath has incorrect examples folder name. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#library-examples"
-    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_EXAMPLES_FOLDER_NAME_EXIT_STATUS)
-  fi
-
-  # Check for 1.5 format with src and utility folders in library root
-  if [[ "$onePointFiveFormat" == true && $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'utility') ]]; then
-    echo "ERROR: $libraryPath is a 1.5 format library with src and utility folders in library root. The utility folder should be moved under the src folder. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#source-code"
-    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SRC_AND_UTILITY_FOLDERS_EXIT_STATUS)
-  fi
-
-  # Check for inconsequential missing library.properties file
-  if ! [[ -e "$normalizedLibraryPath/library.properties" ]]; then
-    echo "WARNING: The library is missing a library.properties file. While not required, it's recommended to add this file to provide helpful metadata. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#library-metadata"
-  fi
-
-  # Check for library.properties files in the src folder
-  if [[ "$onePointFiveFormat" == true ]]; then
-    while read -r normalizedLibraryPropertiesPath; do
+    # Check for spurious dot folders not on the whitelist: https://github.com/arduino/arduino-builder/blob/master/utils/utils.go#L155
+    while read -r spuriousDotFolderPath; do
       # The while loop always runs once, even when no file is found
-      if [[ "$normalizedLibraryPropertiesPath" == "" ]]; then
+      if [[ "$spuriousDotFolderPath" == "" ]]; then
         continue
       fi
 
-      echo "ERROR: $normalizedLibraryPropertiesPath is a stray file. library.properties should be located in the library root folder."
-      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_LIBRARY_PROPERTIES_EXIT_STATUS)
-    done <<<"$(find "$normalizedLibraryPath/src" -maxdepth 1 -type f -iname 'library.properties')"
-  fi
+      echo "ERROR: $spuriousDotFolderPath causes the Arduino IDE to display a spurious folder warning."
+      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SPURIOUS_DOT_FOLDER_EXIT_STATUS)
+    done <<<"$(find "$normalizedLibraryPath" -maxdepth 1 -type d -regex '^.*/\..*$' -not -name '.git' -not -name '.github' -not -name '.svn' -not -name '.hg' -not -name '.bzr' -not -name '.vscode')"
 
-  # Check for missing keywords.txt file
-  if ! [[ -e "$normalizedLibraryPath/keywords.txt" ]]; then
-    echo "WARNING: The library is missing a keywords.txt file. While not required, it's recommended to add this file to provide keyword highlighting in the Arduino IDE. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keywords"
-  fi
+    # Check for incorrect spelling of extras folder
+    if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -iregex '^.*/extras?$') && ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'extras') ]]; then
+      #if [[ -d "$normalizedLibraryPath/extra" || -d "$normalizedLibraryPath/Extras" || -d "$normalizedLibraryPath/EXTRAS" ]] && [[ ! -d "$normalizedLibraryPath/extras" ]]; then
+      echo "ERROR: $normalizedLibraryPath has incorrectly spelled extras folder name. It should be exactly extras. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#extra-documentation"
+      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_EXTRAS_FOLDER_NAME_EXIT_STATUS)
+    fi
 
-  # Check for keywords.txt files in the src folder
-  if [[ "$onePointFiveFormat" == true ]]; then
-    while read -r keywordsTxtPath; do
-      # The while loop always runs once, even when no file is found
-      if [[ "$keywordsTxtPath" == "" ]]; then
-        continue
+    # Check for incorrect spelling of examples folder
+    if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -iregex '^.*/examples?$') && ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'examples') ]]; then
+      echo "ERROR: $normalizedLibraryPath has incorrect examples folder name. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#library-examples"
+      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_EXAMPLES_FOLDER_NAME_EXIT_STATUS)
+    fi
+
+    # Check for 1.5 format with src and utility folders in library root
+    if [[ "$onePointFiveFormat" == true && $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'utility') ]]; then
+      echo "ERROR: $normalizedLibraryPath is a 1.5 format library with src and utility folders in library root. The utility folder should be moved under the src folder. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#source-code"
+      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SRC_AND_UTILITY_FOLDERS_EXIT_STATUS)
+    fi
+
+    # Check for inconsequential missing library.properties file
+    if ! [[ -e "$normalizedLibraryPath/library.properties" ]]; then
+      echo "WARNING: $normalizedLibraryPath is missing a library.properties file. While not required, it's recommended to add this file to provide helpful metadata. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#library-metadata"
+    fi
+
+    # Check for library.properties files in the src folder
+    if [[ "$onePointFiveFormat" == true ]]; then
+      while read -r normalizedLibraryPropertiesPath; do
+        # The while loop always runs once, even when no file is found
+        if [[ "$normalizedLibraryPropertiesPath" == "" ]]; then
+          continue
+        fi
+
+        echo "ERROR: $normalizedLibraryPropertiesPath is a stray file. library.properties should be located in the library root folder."
+        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_LIBRARY_PROPERTIES_EXIT_STATUS)
+      done <<<"$(find "$normalizedLibraryPath/src" -maxdepth 1 -type f -iname 'library.properties')"
+    fi
+
+    # Check for missing keywords.txt file
+    if ! [[ -e "$normalizedLibraryPath/keywords.txt" ]]; then
+      echo "WARNING: $normalizedLibraryPath is missing a keywords.txt file. While not required, it's recommended to add this file to provide keyword highlighting in the Arduino IDE. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keywords"
+    fi
+
+    # Check for keywords.txt files in the src folder
+    if [[ "$onePointFiveFormat" == true ]]; then
+      while read -r keywordsTxtPath; do
+        # The while loop always runs once, even when no file is found
+        if [[ "$keywordsTxtPath" == "" ]]; then
+          continue
+        fi
+
+        echo "ERROR: $keywordsTxtPath is a stray file. keywords.txt should be located in the library root folder."
+        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_KEYWORDS_TXT_EXIT_STATUS)
+      done <<<"$(find "$normalizedLibraryPath/src" -maxdepth 1 -type f -iname 'keywords.txt')"
+    fi
+
+    # Check for sketch files outside of the src or extras folders
+    if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -path './examples' -prune -or -path './extras' -prune -or \( -type f -and \( -iname '*.ino' -or -iname '*.pde' \) \)) ]]; then
+      echo "ERROR: $normalizedLibraryPath has sketch files found outside the examples and extras folders."
+      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_SKETCH_EXIT_STATUS)
+    fi
+
+    # Run check_sketch_structure() on examples and extras folders
+    if [[ -d "${normalizedLibraryPath}/examples" ]]; then
+      check_sketch_structure "${normalizedLibraryPath}/examples"
+      local checkExamplesSketchStructureExitStatus=$?
+      if [[ $checkExamplesSketchStructureExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
+        exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_CHECK_SKETCH_STRUCTURE_OFFSET + checkExamplesSketchStructureExitStatus)))
       fi
-
-      echo "ERROR: $keywordsTxtPath is a stray file. keywords.txt should be located in the library root folder."
-      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_KEYWORDS_TXT_EXIT_STATUS)
-    done <<<"$(find "$normalizedLibraryPath/src" -maxdepth 1 -type f -iname 'keywords.txt')"
-  fi
-
-  # Check for sketch files outside of the src or extras folders
-  if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -path './examples' -prune -or -path './extras' -prune -or \( -type f -and \( -iname '*.ino' -or -iname '*.pde' \) \)) ]]; then
-    echo "ERROR: $libraryPath has sketch files found outside the examples and extras folders."
-    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_SKETCH_EXIT_STATUS)
-  fi
-
-  # Run check_sketch_structure() on examples and extras folders
-  if [[ -d "${normalizedLibraryPath}/examples" ]]; then
-    check_sketch_structure "${normalizedLibraryPath}/examples"
-    local -r checkExamplesSketchStructureExitStatus=$?
-    if [[ $checkExamplesSketchStructureExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
-      exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_CHECK_SKETCH_STRUCTURE_OFFSET + checkExamplesSketchStructureExitStatus)))
     fi
-  fi
-  if [[ -d "${normalizedLibraryPath}/extras" ]]; then
-    check_sketch_structure "${normalizedLibraryPath}/extras"
-    local -r checkExtrasSketchStructureExitStatus=$?
-    if [[ $checkExtrasSketchStructureExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
-      exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_CHECK_SKETCH_STRUCTURE_OFFSET + checkExtrasSketchStructureExitStatus)))
+    if [[ -d "${normalizedLibraryPath}/extras" ]]; then
+      check_sketch_structure "${normalizedLibraryPath}/extras"
+      local checkExtrasSketchStructureExitStatus=$?
+      if [[ $checkExtrasSketchStructureExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
+        exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_CHECK_SKETCH_STRUCTURE_OFFSET + checkExtrasSketchStructureExitStatus)))
+      fi
     fi
-  fi
+
+  done <<<"$(find "$normalizedBasePath" -mindepth "$depth" -maxdepth "$depth" -type d)"
+
   return "$exitStatus"
 }
 
