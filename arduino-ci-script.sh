@@ -1397,7 +1397,7 @@ function check_library_structure() {
     if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type f \( -name '*.h' -or -name '*.hh' -or -name '*.hpp' \)) ]]; then
       # 1.0 format library, do nothing (this if just makes the logic more simple)
       local onePointFiveFormat=false
-    elif [[ $(find "$normalizedLibraryPath" -maxdepth 1 \( -type f -and -name 'library.properties' \)) && $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -iregex '^.*src$') ]]; then
+    elif [[ $(find "$normalizedLibraryPath" -maxdepth 1 \( -type f -and -name 'library.properties' \)) && $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -iregex '^.*/src$') ]]; then
       # 1.5 format library
       if [[ ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'src') ]]; then
         echo "ERROR: $normalizedLibraryPath is a 1.5 format library with incorrect case in src subfolder name, which causes library to not be recognized on a filename case-sensitive OS such as Linux."
