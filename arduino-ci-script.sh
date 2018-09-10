@@ -1931,7 +1931,7 @@ function check_library_properties() {
 
     # Check for invalid lines (anything other than property, comment, or blank line)
     if grep --quiet --invert-match --extended-regexp --regexp='=' --regexp='^[[:space:]]*(#|$)' <<<"$libraryProperties"; then
-      echo "ERROR: $normalizedLibraryPropertiesPath contains an invalid line."
+      echo "ERROR: $normalizedLibraryPropertiesPath contains an invalid line. Installation of a library with invalid line will cause all compilations to fail. library.properties must only consist of property definitions, blank lines, and comments (#)."
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INVALID_LINE_EXIT_STATUS)
     fi
 
