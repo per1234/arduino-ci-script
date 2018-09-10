@@ -26,9 +26,9 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   [ "$status" -eq $expectedExitStatus ]
   # One warning is printed for each reference link (currently there are two)
   [ "${#lines[@]}" -eq 2 ]
-  IDEnotInstalledRegex='^WARNING: Arduino IDE is not installed'
-  [[ "${lines[0]}" =~ $IDEnotInstalledRegex ]]
-  [[ "${lines[1]}" =~ $IDEnotInstalledRegex ]]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  [[ "${lines[1]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/ValidKeywordsTxtUnix\" (w/ IDE installed)" {
@@ -50,6 +50,10 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/ValidKeywordsTxtWindows"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 2 ]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  [[ "${lines[1]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/ValidKeywordsTxtMac\"" {
@@ -57,6 +61,10 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/ValidKeywordsTxtMac"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 2 ]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  [[ "${lines[1]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/MultipleValidKeywordsTxt\" 1" {
@@ -64,6 +72,12 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/MultipleValidKeywordsTxt" 1
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 4 ]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  [[ "${lines[1]}" =~ $outputRegex ]]
+  [[ "${lines[2]}" =~ $outputRegex ]]
+  [[ "${lines[3]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidKeywordsTxtBelowMaximumSearchDepth\"" {
@@ -71,6 +85,10 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/InvalidKeywordsTxtBelowMaximumSearchDepth"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 2 ]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  [[ "${lines[1]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/NoKeywordsTxt\"" {
@@ -86,6 +104,12 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/BOMcorruptedBlankLine"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 3 ]
+  outputRegex='^WARNING: BOM found'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[1]}" =~ $outputRegex ]]
+  [[ "${lines[2]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/BOMcorruptedComment\"" {
@@ -93,6 +117,12 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/BOMcorruptedComment"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 3 ]
+  outputRegex='^WARNING: BOM found'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[1]}" =~ $outputRegex ]]
+  [[ "${lines[2]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/DoesntExist\"" {
@@ -101,6 +131,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex="^ERROR: Specified folder: \./check_keywords_txt/DoesntExist doesn't exist\.$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/MisspelledFilename\"" {
@@ -109,6 +141,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_keywords_txt/MisspelledFilename contains an incorrectly spelled keywords\.txt file.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/IncorrectFilenameCase\"" {
@@ -116,6 +150,9 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/IncorrectFilenameCase"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_keywords_txt/IncorrectFilenameCase/Keywords\.txt has incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux\. It must be exactly keywords\.txt$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidSeparator\"" {
@@ -123,6 +160,12 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/InvalidSeparator"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 3 ]
+  outputRegex='^ERROR: \./check_keywords_txt/InvalidSeparator \(k1 KEYWORD1\) uses space\(s\) as a field separator\. It must be a true tab\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[1]}" =~ $outputRegex ]]
+  [[ "${lines[2]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/MultipleInvalidKeywordsTxt\" 1" {
@@ -130,6 +173,14 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/MultipleInvalidKeywordsTxt" 1
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 5 ]
+  outputRegex='^ERROR: \./check_keywords_txt/MultipleInvalidKeywordsTxt/InvalidSeparator \(k1 KEYWORD1\) uses space\(s\) as a field separator\. It must be a true tab\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[1]}" =~ $outputRegex ]]
+  [[ "${lines[2]}" =~ $outputRegex ]]
+  [[ "${lines[3]}" =~ $outputRegex ]]
+  [[ "${lines[4]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/ConsequentialMultipleTabs\"" {
@@ -137,6 +188,12 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/ConsequentialMultipleTabs"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 3 ]
+  outputRegex='^ERROR: \./check_keywords_txt/ConsequentialMultipleTabs \(k1		KEYWORD1\) uses multiple tabs as field separator\. It must be a single tab\. This causes the default keyword highlighting \(as used by KEYWORD2, KEYWORD3, LITERAL2\) to be used rather than the intended highlighting\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[1]}" =~ $outputRegex ]]
+  [[ "${lines[2]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InconsequentialMultipleTabs\"" {
@@ -144,6 +201,12 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/InconsequentialMultipleTabs"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 3 ]
+  outputRegex="^ERROR: \./check_keywords_txt/InconsequentialMultipleTabs \(k3		KEYWORD2\) uses multiple tabs as field separator\. It must be a single tab\. This causes the default keyword highlighting \(as used by KEYWORD2, KEYWORD3, LITERAL2\)\. In this case that doesn't cause the keywords to be incorrectly colored as expected but it's recommended to fully comply with the Arduino library specification\.$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[1]}" =~ $outputRegex ]]
+  [[ "${lines[2]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidLine\"" {
@@ -151,6 +214,12 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/InvalidLine"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 3 ]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  [[ "${lines[1]}" =~ $outputRegex ]]
+  outputRegex='^ERROR: \./check_keywords_txt/InvalidLine has an invalid line: invalidLine\. If this was intended as a comment, it should use the correct # syntax\.$'
+  [[ "${lines[2]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/BOMcorruptedKeyword\"" {
@@ -158,6 +227,12 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/BOMcorruptedKeyword"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 3 ]
+  outputRegex='^ERROR: \./check_keywords_txt/BOMcorruptedKeyword uses UTF-8 BOM file encoding, which has corrupted the first keyword definition\. Please change the file encoding to standard UTF-8\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[1]}" =~ $outputRegex ]]
+  [[ "${lines[2]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidKeyword\"" {
@@ -165,6 +240,12 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/InvalidKeyword"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 3 ]
+  outputRegex='^ERROR: Keyword k::3 in \./check_keywords_txt/InvalidKeyword contains invalid character\(s\), which causes it to not be recognized by the Arduino IDE\. Keywords may only contain the characters a-z, A-Z, 0-9, and _\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[1]}" =~ $outputRegex ]]
+  [[ "${lines[2]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InconsequentialLeadingSpaceOnKeywordTokentype\"" {
@@ -172,6 +253,12 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/InconsequentialLeadingSpaceOnKeywordTokentype"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 3 ]
+  outputRegex="^ERROR: \./check_keywords_txt/InconsequentialLeadingSpaceOnKeywordTokentype \(k3	 KEYWORD2\) has leading space on the KEYWORD_TOKENTYPE field, which causes it to not be recognized, so the default keyword highlighting is used\.  In this case that doesn't cause the keywords to be incorrectly colored as expected but it's recommended to fully comply with the Arduino library specification\.$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[1]}" =~ $outputRegex ]]
+  [[ "${lines[2]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/ConsequentialLeadingSpaceOnKeywordTokentype\"" {
@@ -179,6 +266,12 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/ConsequentialLeadingSpaceOnKeywordTokentype"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 3 ]
+  outputRegex='^ERROR: \./check_keywords_txt/ConsequentialLeadingSpaceOnKeywordTokentype \(l1	 LITERAL1\) has leading space on the KEYWORD_TOKENTYPE field, which causes it to not be recognized, so the default keyword highlighting is used\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[1]}" =~ $outputRegex ]]
+  [[ "${lines[2]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidKeywordTokentypeUnix\"" {
@@ -186,6 +279,12 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/InvalidKeywordTokentypeUnix"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 3 ]
+  outputRegex='^ERROR: \./check_keywords_txt/InvalidKeywordTokentypeUnix \(k1	KEYWORD1x\) uses invalid KEYWORD_TOKENTYPE: KEYWORD1x, which causes the default keyword highlighting to be used\. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keyword_tokentype$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[1]}" =~ $outputRegex ]]
+  [[ "${lines[2]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidKeywordTokentypeWindows\"" {
@@ -193,6 +292,12 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/InvalidKeywordTokentypeWindows"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 3 ]
+  outputRegex='^ERROR: \./check_keywords_txt/InvalidKeywordTokentypeWindows \(k1	KEYWORD1x\) uses invalid KEYWORD_TOKENTYPE: KEYWORD1x, which causes the default keyword highlighting to be used\. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keyword_tokentype$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[1]}" =~ $outputRegex ]]
+  [[ "${lines[2]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidKeywordTokentypeMac\"" {
@@ -200,6 +305,12 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/InvalidKeywordTokentypeMac"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 3 ]
+  outputRegex='^ERROR: \./check_keywords_txt/InvalidKeywordTokentypeMac \(k1	KEYWORD1x\) uses invalid KEYWORD_TOKENTYPE: KEYWORD1x, which causes the default keyword highlighting to be used\. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keyword_tokentype$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[1]}" =~ $outputRegex ]]
+  [[ "${lines[2]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidKeywordTokentypeLastLine\"" {
@@ -207,13 +318,25 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/InvalidKeywordTokentypeLastLine"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
-}
+  [ "${#lines[@]}" -eq 3 ]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  [[ "${lines[1]}" =~ $outputRegex ]]
+  outputRegex='^ERROR: \./check_keywords_txt/InvalidKeywordTokentypeLastLine \(k1	KEYWORD1x\) uses invalid KEYWORD_TOKENTYPE: KEYWORD1x, which causes the default keyword highlighting to be used\. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#keyword_tokentype$'
+  [[ "${lines[2]}" =~ $outputRegex ]]
+  }
 
 @test "check_keywords_txt \"./check_keywords_txt/LeadingSpaceOnRsyntaxtextareaTokentype\"" {
   expectedExitStatus=$ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_LEADING_SPACE_ON_RSYNTAXTEXTAREA_TOKENTYPE_EXIT_STATUS
   run check_keywords_txt "./check_keywords_txt/LeadingSpaceOnRsyntaxtextareaTokentype"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 3 ]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  [[ "${lines[1]}" =~ $outputRegex ]]
+  outputRegex='^ERROR: \./check_keywords_txt/LeadingSpaceOnRsyntaxtextareaTokentype \(rw	KEYWORD1		 RESERVED_WORD\) has leading space on the RSYNTAXTEXTAREA_TOKENTYPE field, which causes it to not be recognized, so the default keyword highlighting is used.$'
+  [[ "${lines[2]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidRsyntaxtextareaTokentype\"" {
@@ -221,6 +344,12 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/InvalidRsyntaxtextareaTokentype"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 3 ]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  [[ "${lines[1]}" =~ $outputRegex ]]
+  outputRegex='^ERROR: \./check_keywords_txt/InvalidRsyntaxtextareaTokentype \(ref2	KEYWORD1	AnalogRead	xRESERVED_WORD\) uses invalid RSYNTAXTEXTAREA_TOKENTYPE: xRESERVED_WORD, which causes the default keyword highlighting to be used\. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#rsyntaxtextarea_tokentype$'
+  [[ "${lines[2]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidRsyntaxtextareaTokentypeNoReferenceLink\"" {
@@ -228,6 +357,11 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   run check_keywords_txt "./check_keywords_txt/InvalidRsyntaxtextareaTokentypeNoReferenceLink"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
+  [ "${#lines[@]}" -eq 2 ]
+  outputRegex='^WARNING: Arduino IDE is not installed so unable to check for invalid reference links\. Please call install_ide before running check_keywords_txt\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  outputRegex='^ERROR: \./check_keywords_txt/InvalidRsyntaxtextareaTokentypeNoReferenceLink \(ref2	KEYWORD1		RESERVED_WORDx\) uses invalid RSYNTAXTEXTAREA_TOKENTYPE: RESERVED_WORDx, which causes the default keyword highlighting to be used\. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#rsyntaxtextarea_tokentype$'
+  [[ "${lines[1]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/InvalidReferenceLink\"" {
@@ -242,6 +376,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_keywords_txt/InvalidReferenceLink \(ref2	KEYWORD1	AnalogReadx	RESERVED_WORD\) uses a REFERENCE_LINK value: AnalogReadx that is not a valid Arduino Language Reference page\. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#reference_link$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_keywords_txt \"./check_keywords_txt/IncorrectCaseReferenceLink\"" {
@@ -256,4 +392,6 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_keywords_txt/IncorrectCaseReferenceLink \(ref2	KEYWORD1	Analogread	RESERVED_WORD\) uses a REFERENCE_LINK value: Analogread that is not a valid Arduino Language Reference page\. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#reference_link$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
