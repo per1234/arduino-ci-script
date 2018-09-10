@@ -2036,11 +2036,9 @@ function check_keywords_txt() {
   # Replace backslashes with slashes
   local -r keywordsTxtSearchPathWithSlashes="${keywordsTxtSearchPath//\\//}"
   local -r keywordsTxtRegex='[kK][eE][yY][wW][oO][rR][dD][sS]\.[tT][xX][tT]$'
-  if [[ ! -d "$keywordsTxtSearchPathWithSlashes" ]]; then
-    if [[ "$keywordsTxtSearchPathWithSlashes" =~ $keywordsTxtRegex ]]; then
-      # Path contains the filename but we only want the folder
-      local -r keywordsTxtSearchPathWithoutFile="${keywordsTxtSearchPathWithSlashes::-12}"
-    fi
+  if [[ ! -d "$keywordsTxtSearchPathWithSlashes" && "$keywordsTxtSearchPathWithSlashes" =~ $keywordsTxtRegex ]]; then
+    # Path contains the filename but we only want the folder
+    local -r keywordsTxtSearchPathWithoutFile="${keywordsTxtSearchPathWithSlashes::-12}"
   else
     local -r keywordsTxtSearchPathWithoutFile="$keywordsTxtSearchPathWithSlashes"
   fi
