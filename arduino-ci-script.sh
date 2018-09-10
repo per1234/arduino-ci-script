@@ -2092,10 +2092,10 @@ function check_keywords_txt() {
 
         # Skip BOM corrupted blank lines and comments
         if grep --quiet $'\xEF\xBB\xBF' <<<"$keywordsTxtLine"; then
-          echo "BOM found"
           local BOMcorruptedCommentRegex='^.[[:space:]]*#'
           local BOMcorruptedBlankLineRegex='^.[[:space:]]*$'
           if [[ "$keywordsTxtLine" =~ $BOMcorruptedCommentRegex ]] || [[ "$keywordsTxtLine" =~ $BOMcorruptedBlankLineRegex ]]; then
+            echo "WARNING: BOM found. In this case it does not cause an issue but it's recommended to use UTF-8 encoding for keywords.txt."
             continue
           fi
         fi
