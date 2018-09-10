@@ -1642,11 +1642,9 @@ function check_library_properties() {
   # Replace backslashes with slashes
   local -r libraryPropertiesSearchPathWithSlashes="${libraryPropertiesSearchPath//\\//}"
   local -r libraryPropertiesRegex='[lL][iI][bB][rR][aA][rR][yY]\.[pP][rR][oO][pP][eE][rR][tT][iI][eE][sS]$'
-  if [[ ! -d "$libraryPropertiesSearchPathWithSlashes" ]]; then
-    if [[ "$libraryPropertiesSearchPathWithSlashes" =~ $libraryPropertiesRegex ]]; then
-      # Path contains the filename but we only want the folder
-      local -r libraryPropertiesSearchPathWithoutFile="${libraryPropertiesSearchPathWithSlashes::-18}"
-    fi
+  if [[ ! -d "$libraryPropertiesSearchPathWithSlashes" && "$libraryPropertiesSearchPathWithSlashes" =~ $libraryPropertiesRegex ]]; then
+    # Path contains the filename but we only want the folder
+    local -r libraryPropertiesSearchPathWithoutFile="${libraryPropertiesSearchPathWithSlashes::-18}"
   else
     local -r libraryPropertiesSearchPathWithoutFile="$libraryPropertiesSearchPathWithSlashes"
   fi
