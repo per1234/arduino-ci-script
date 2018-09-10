@@ -1226,20 +1226,20 @@ function check_folder_name() {
   # Starting folder name with a number is only supported by Arduino IDE 1.8.4 and newer
   local -r startsWithNumberRegex="^[0-9]"
   if [[ "$folderName" =~ $startsWithNumberRegex ]]; then
-    echo "WARNING: Folder name (${folderName}) beginning with a number is only supported by Arduino IDE 1.8.4 and newer."
+    echo "WARNING: Discouraged folder name: ${folderName}. Folder name beginning with a number is only supported by Arduino IDE 1.8.4 and newer."
   fi
 
   # Starting folder name with a - or . is not allowed
   local -r startsWithInvalidCharacterRegex="^[-.]"
   if [[ "$folderName" =~ $startsWithInvalidCharacterRegex ]]; then
-    echo "ERROR: Folder name (${folderName}) beginning with a - or . is not allowed."
+    echo "ERROR: Invalid folder name: ${folderName}. Folder name beginning with a - or . is not allowed."
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_FOLDER_NAME_INVALID_FIRST_CHARACTER_EXIT_STATUS)
   fi
 
   # Allowed characters: a-z, A-Z, 0-1, -._
   local -r disallowedCharactersRegex="[^a-zA-Z0-9._-]"
   if [[ "$folderName" =~ $disallowedCharactersRegex ]]; then
-    echo "ERROR: Folder name $folderName contains disallowed characters. Only letters, numbers, dots, dashes, and underscores are allowed."
+    echo "ERROR: Invalid folder name: ${folderName}. Only letters, numbers, dots, dashes, and underscores are allowed."
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_FOLDER_NAME_INVALID_CHARACTER_EXIT_STATUS)
   fi
 
