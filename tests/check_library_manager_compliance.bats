@@ -2,23 +2,6 @@
 
 source ../arduino-ci-script.sh
 
-# Must be >= 1.8.0
-TESTS_BATS_IDE_VERSION="1.8.6"
-TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
-
-# Make sure the test's environment variables were configured
-
-@test "\"\$TESTS_BATS_IDE_VERSION\" != \"\"" {
-  [ "$TESTS_BATS_IDE_VERSION" != "" ]
-  # The Xvfb command breaks the unit tests on Travis CI. That command is run with Arduino IDE 1.6.13 or older.
-  virtualFramebufferRequiredIDEversionsRegex="^1.[56]"
-  [[ ! "$TESTS_BATS_IDE_VERSION" =~ $virtualFramebufferRequiredIDEversionsRegex ]]
-}
-
-@test "\"\$TESTS_BATS_APPLICATION_FOLDER\" != \"\"" {
-  [ "$TESTS_BATS_APPLICATION_FOLDER" != "" ]
-}
-
 @test "check_library_manager_compliance \"./check_library_manager_compliance/ValidLibrary\"" {
   expectedExitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
   run check_library_manager_compliance "./check_library_manager_compliance/ValidLibrary"
