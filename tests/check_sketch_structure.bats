@@ -8,7 +8,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^'
+  outputRegex="^ERROR: Specified folder: \./check_library_structure/DoesntExist doesn't exist\.$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -18,7 +18,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^'
+  outputRegex="^WARNING: File \./check_library_structure/PdeSketchExtension/examples/example1/foo\.pde uses the \.pde extension\. For Arduino sketches, it's recommended to use the \.ino extension instead\. If this is a Processing sketch then \.pde is the correct extension\.$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -28,7 +28,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^'
+  outputRegex='^ERROR: Sketch file ./check_library_structure/IncorrectSketchExtensionCase/examples/example1/example1\.Ino has incorrect extension case, which causes it to not be recognized on a filename case-sensitive OS such as Linux\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -38,7 +38,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^'
+  outputRegex='^WARNING: Discouraged folder name: 1example1\. Folder name beginning with a number is only supported by Arduino IDE 1\.8\.4 and newer\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -48,7 +48,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^'
+  outputRegex='^ERROR: Invalid folder name: -example1\. Folder name beginning with a - or \. is not allowed\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -58,7 +58,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^'
+  outputRegex='^ERROR: Invalid folder name: example 1\. Only letters, numbers, dots, dashes, and underscores are allowed\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -68,7 +68,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: Folder name asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf exceeds the maximum of 63 characters\.'
+  outputRegex='^ERROR: Folder name asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf exceeds the maximum of 63 characters\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -78,7 +78,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: Folder name asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf exceeds the maximum of 63 characters\.'
+  outputRegex='^ERROR: Folder name asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf exceeds the maximum of 63 characters\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -88,7 +88,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: Sketch folder name \./check_library_structure/SketchFolderNameMismatch/examples/example1 does not match the sketch filename\.'
+  outputRegex='^ERROR: Sketch folder name \./check_library_structure/SketchFolderNameMismatch/examples/example1 does not match the sketch filename\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -98,7 +98,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: Multiple sketches found in the same folder \(\./check_library_structure/MultipleSketchesInSameFolderUnix/examples/example1\)\.'
+  outputRegex='^ERROR: Multiple sketches found in the same folder \(\./check_library_structure/MultipleSketchesInSameFolderUnix/examples/example1\)\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -108,6 +108,6 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: Multiple sketches found in the same folder \(\./check_library_structure/MultipleSketchesInSameFolderMac/examples/example1\)\.'
+  outputRegex='^ERROR: Multiple sketches found in the same folder \(\./check_library_structure/MultipleSketchesInSameFolderMac/examples/example1\)\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
