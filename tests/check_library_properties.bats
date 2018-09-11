@@ -73,6 +73,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex="^ERROR: Specified folder: \./check_library_properties/DoesntExist doesn't exist\.$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/MisspelledFilename\"" {
@@ -81,6 +83,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_library_properties/MisspelledFilename contains an incorrectly spelled library\.properties file\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/InvalidFilenameCase\"" {
@@ -89,6 +93,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_library_properties/InvalidFilenameCase/Library\.properties has incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux\. It must be exactly library\.properties$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingName\"" {
@@ -97,6 +103,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_library_properties/MissingName is missing the required name field\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/MultipleInvalidLibraryProperties\" 1" {
@@ -105,6 +113,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_library_properties/MultipleInvalidLibraryProperties/MissingName is missing the required name field\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/BOM\"" {
@@ -114,6 +124,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   # The BOM corrupts the first line, which in this case is the name field
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_library_properties/BOM is missing the required name field\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingVersion\"" {
@@ -122,6 +134,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_library_properties/MissingVersion is the missing the required version field\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingAuthor\"" {
@@ -130,6 +144,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_library_properties/MissingAuthor is missing the required author field\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/EmailInsteadOfMaintainer\"" {
@@ -138,8 +154,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  warningRegex='^WARNING: Use of undocumented email field'
-  [[ "${lines[0]}" =~ $warningRegex ]]
+  outputRegex="^WARNING: Use of undocumented email field in \./check_library_properties/EmailInsteadOfMaintainer\. It's recommended to use the maintainer field instead, per the Arduino Library Specification\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingMaintainer\"" {
@@ -148,6 +164,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_library_properties/MissingMaintainer is missing the required maintainer field\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingSentence\"" {
@@ -156,6 +174,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_library_properties/MissingSentence is missing tne required sentence field\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingParagraph\"" {
@@ -164,6 +184,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_library_properties/MissingParagraph is missing the required paragraph field\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingCategory\"" {
@@ -172,6 +194,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_library_properties/MissingCategory is missing the category field\. This results in an invalid category warning\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingUrl\"" {
@@ -180,6 +204,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_library_properties/MissingUrl is missing the required url field\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingArchitectures\"" {
@@ -188,8 +214,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  warningRegex='^WARNING: .* is missing the architectures field'
-  [[ "${lines[0]}" =~ $warningRegex ]]
+  outputRegex='^WARNING: \./check_library_properties/MissingArchitectures is missing the architectures field\. This causes the Arduino IDE to assume the library is compatible with all architectures \(\*\)\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/InvalidLine\"" {
@@ -198,6 +224,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_library_properties/InvalidLine contains an invalid line\. Installation of a library with invalid line will cause all compilations to fail\. library\.properties must only consist of property definitions, blank lines, and comments \(#\)\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/BlankName\"" {
@@ -206,6 +234,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex="^ERROR: \./check_library_properties/BlankName's has an blank name value\.$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/InvalidVersion\"" {
@@ -214,6 +244,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_library_properties/InvalidVersion has an invalid version value\. Follow the semver specification: https://semver\.org$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/RedundantParagraph\"" {
@@ -222,6 +254,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex="^ERROR: \./check_library_properties/RedundantParagraph's paragraph value repeats the sentence\. These strings are displayed one after the other in Library Manager so there is no point in redundancy.$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/InvalidCategory\"" {
@@ -230,6 +264,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_library_properties/InvalidCategory has an invalid category value\. Please chose a valid category from https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/UncategorizedCategory\"" {
@@ -238,8 +274,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  warningRegex="^WARNING: category 'Uncategorized' used in"
-  [[ "${lines[0]}" =~ $warningRegex ]]
+  outputRegex="^WARNING: category 'Uncategorized' used in \./check_library_properties/UncategorizedCategory is not recommended\. Please chose an appropriate category from https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/BlankUrl\"" {
@@ -248,6 +284,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_library_properties/BlankUrl does not define the url field\. This results in a "More info" link in Library Manager that looks clickable but is not\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/MissingScheme\"" {
@@ -256,6 +294,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex="^ERROR: \./check_library_properties/MissingScheme's url value github\.com/arduino/Arduino is missing the scheme \(e\.g\. https://\)\. URL scheme must be specified for Library Manager's \"More info\" link to be clickable\.$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/DeadUrl\"" {
@@ -264,6 +304,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex="^ERROR: \./check_library_properties/DeadUrl's url value https://foobar\.example\.com/ returned error status 000\.$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/ProblematicGoogleUrl\"" {
@@ -288,8 +330,10 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 2 ]
-  warningRegex="^WARNING: \./check_library_properties/IncorrectArchitecturesFieldCase is missing the architectures field\."
-  [[ "${lines[1]}" =~ $warningRegex ]]
+  outputRegex="^ERROR: \./check_library_properties/IncorrectArchitecturesFieldCase's architectures field name has incorrect case\. It must be spelled exactly architectures\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  outputRegex="^WARNING: \./check_library_properties/IncorrectArchitecturesFieldCase is missing the architectures field\. This causes the Arduino IDE to assume the library is compatible with all architectures \(\*\)\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  [[ "${lines[1]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/ArchitecturesMisspelled\"" {
@@ -298,8 +342,10 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 2 ]
-  warningRegex="^WARNING: \./check_library_properties/ArchitecturesMisspelled is missing the architectures field."
-  [[ "${lines[1]}" =~ $warningRegex ]]
+  outputRegex='^ERROR: \./check_library_properties/ArchitecturesMisspelled has misspelled architectures field name as "architecture"\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  outputRegex="^WARNING: \./check_library_properties/ArchitecturesMisspelled is missing the architectures field\. This causes the Arduino IDE to assume the library is compatible with all architectures \(\*\)\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  [[ "${lines[1]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/ArchitecturesEmpty\"" {
@@ -308,6 +354,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex='^ERROR: \./check_library_properties/ArchitecturesEmpty has an empty architectures field\. This causes the examples to be put under File > Examples > INCOMPATIBLE\.$'
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/ArchitectureAliasWithValidMatch\"" {
@@ -316,7 +364,7 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  unrecognizedArchitectureRegex='^WARNING: \./check_library_properties/ArchitectureAliasWithValidMatch/library\.properties'\''s architectures field contains an unknown architecture Avr'
+  unrecognizedArchitectureRegex='^ERROR: \./check_library_properties/ArchitecturesEmpty has an empty architectures field\. This causes the examples to be put under File > Examples > INCOMPATIBLE\.$'
   [[ "${lines[0]}" =~ $IDEnotInstalledRegex ]]
 }
 
@@ -342,6 +390,10 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 2 ]
+  outputRegex="^ERROR: \./check_library_properties/ArchitectureAliasWithoutValidMatch's architectures field contains an invalid architecture AVR\. Note: architecture values are case-sensitive\.$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  outputRegex="^ERROR: \./check_library_properties/ArchitectureAliasWithoutValidMatch's architectures field \(AVR\) doesn't contain any known architecture values\.$"
+  [[ "${lines[1]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/NoRecognizedArchitecture\"" {
@@ -350,6 +402,10 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 2 ]
+  outputRegex="^WARNING: \./check_library_properties/NoRecognizedArchitecture's architectures field contains an unknown architecture asdf\. Note: architecture values are case-sensitive\.$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
+  outputRegex="^ERROR: \./check_library_properties/NoRecognizedArchitecture's architectures field \(asdf\) doesn't contain any known architecture values\.$"
+  [[ "${lines[1]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/InvalidArchitecture\"" {
@@ -358,8 +414,10 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 2 ]
-  unrecognizedArchitectureRegex='^WARNING:\./check_library_properties/InvalidArchitecture/library\.properties'\''s architectures field contains an unknown architecture asdf'
+  unrecognizedArchitectureRegex="^WARNING: \./check_library_properties/InvalidArchitecture's architectures field contains an unknown architecture foo\. Note: architecture values are case-sensitive\.$"
   [[ "${lines[0]}" =~ $IDEnotInstalledRegex ]]
+  outputRegex="^ERROR: \./check_library_properties/InvalidArchitecture's architectures field \(foo\) doesn't contain any known architecture values\.$"
+  [[ "${lines[1]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/IncorrectIncludesFieldCase\"" {
@@ -368,6 +426,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex="^ERROR: \./check_library_properties/IncorrectIncludesFieldCase's includes field name has incorrect case\. It must be spelled exactly includes\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/IncludeField\"" {
@@ -376,6 +436,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex="^ERROR: \./check_library_properties/IncludeField's includes field name is misspelled\. It must be spelled exactly \"includes\"\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/EmptyIncludes\"" {
@@ -384,6 +446,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex="^ERROR: \./check_library_properties/EmptyIncludes's includes value is empty\. Either define the field or remove it\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/IncorrectDotAlinkageFieldCase\"" {
@@ -392,6 +456,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex="^ERROR: \./check_library_properties/IncorrectDotAlinkageFieldCase's dot_a_linkage field name has incorrect case\. It must be spelled exactly dot_a_linkage\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/DotAlinkagesField\"" {
@@ -400,6 +466,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex="^ERROR: \./check_library_properties/DotAlinkagesField's dot_a_linkage field name is misspelled\. It must be spelled exactly \"dot_a_linkage\"\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/IncorrectPrecompiledFieldCase\"" {
@@ -408,6 +476,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex="^ERROR: \./check_library_properties/IncorrectPrecompiledFieldCase's precompiled field name has incorrect case\. It must be spelled exactly precompiled\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/PrecompileField\"" {
@@ -416,6 +486,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex="^ERROR: \./check_library_properties/PrecompileField's precompiled field name is misspelled\. It must be spelled exactly \"precompiled\"\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/IncorrectLdflagsFieldCase\"" {
@@ -424,6 +496,8 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex="^ERROR: \./check_library_properties/IncorrectLdflagsFieldCase's ldflags field name has incorrect case\. It must be spelled exactly ldflags\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
 @test "check_library_properties \"./check_library_properties/LdflagField\"" {
@@ -432,4 +506,6 @@ TESTS_BATS_APPLICATION_FOLDER="$APPLICATION_FOLDER"
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
+  outputRegex="^ERROR: \./check_library_properties/LdflagField's ldflags field name is misspelled\. It must be spelled exactly \"ldflags\"\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  [[ "${lines[0]}" =~ $outputRegex ]]
 }
