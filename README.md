@@ -135,7 +135,7 @@ Make some additional checks for compliance with the requirements for adding a li
 ##### `build_sketch sketchPath boardID allowFail IDEversion`
 ##### `build_sketch sketchPath boardID allowFail [IDEversionList]`
 ##### `build_sketch sketchPath boardID allowFail startIDEversion endIDEversion`
-Verify/compile sketch(es). `build_sketch` will echo the arduino exit status to the log, which is documented at https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#exit-status.
+Verify/compile sketch(es). `build_sketch` will echo the arduino exit status to the log, which is documented at https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#exit-status. Note that in the Travis CI job logs, the compilation output is "folded" to make it easier to browse. You can click the triangles in the left margin to unfold.
 - Parameter: **sketchPath** - Path to a sketch or folder containing sketches. If a folder is specified it will be recursively searched and all sketches will be verified.
 - Parameter: **boardID** - `package:arch:board[:parameters]` ID of the board to be compiled for. e.g. `arduino:avr:uno`. Board-specific parameters are only supported by Arduino IDE 1.5.5 and newer.
 - Parameter: **allowFail** - `true`, `require`, or `false`. Allow the verification to fail without causing the CI build to fail. `require` will cause the build to fail if the sketch verification doesn't fail.
