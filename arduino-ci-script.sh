@@ -2329,6 +2329,7 @@ function check_library_manager_compliance() {
 set_script_verbosity 0
 
 # Create the temporary folder
+rm "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER" --recursive --force
 create_folder "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER"
 
 # Create the report folder
