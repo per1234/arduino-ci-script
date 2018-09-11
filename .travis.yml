@@ -71,6 +71,7 @@ before_install:
   - bats check_library_manager_compliance.bats
   - bats check_library_properties.bats
   - bats check_library_structure.bats
+  - bats check_sketch_structure.bats
   - bats miscellaneous.bats
   - cd ..
 
