@@ -1274,7 +1274,7 @@ function check_sketch_structure() {
 
   # Check whether folder exists
   if [[ ! -d "$normalizedSearchPath" ]]; then
-    echo "ERROR: Specified folder: $searchPath doesn't exist."
+    echo "ERROR: ${searchPath}: Folder doesn't exist."
     return $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_DOESNT_EXIST_EXIT_STATUS
   fi
 
@@ -1291,12 +1291,12 @@ function check_sketch_structure() {
     while read -r sketchFilePath; do
       # Check for sketches that use the obsolete .pde extension
       if [[ "${sketchFilePath: -4}" == ".pde" ]]; then
-        echo "WARNING: File $sketchFilePath uses the .pde extension. For Arduino sketches, it's recommended to use the .ino extension instead. If this is a Processing sketch then .pde is the correct extension."
+        echo "WARNING: ${sketchFilePath}: Uses .pde extension. For Arduino sketches, it's recommended to use the .ino extension instead. If this is a Processing sketch then .pde is the correct extension."
       fi
 
       # Check for sketches with incorrect extension case
       if [[ "${sketchFilePath: -4}" != ".ino" && "${sketchFilePath: -4}" != ".pde" ]]; then
-        echo "ERROR: Sketch file $sketchFilePath has incorrect extension case, which causes it to not be recognized on a filename case-sensitive OS such as Linux."
+        echo "ERROR: ${sketchFilePath}: Incorrect extension case. This causes it to not be recognized on a filename case-sensitive OS such as Linux."
         exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_INCORRECT_EXTENSION_CASE_EXIT_STATUS)
       fi
 
@@ -1314,14 +1314,14 @@ function check_sketch_structure() {
       if grep --quiet --regexp='void  *setup *( *)' "$sketchFilePath"; then
         if [[ "$primarySketchFound" == true ]]; then
           # A primary sketch file was previously found in this folder
-          echo "ERROR: Multiple sketches found in the same folder (${sketchPath})."
+          echo "ERROR: ${sketchPath}: Multiple sketches found in the same folder."
           exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_MULTIPLE_SKETCHES_EXIT_STATUS)
         fi
         local primarySketchFound=true
       fi
     done < <(find "$sketchPath" -maxdepth 1 -type f \( -iname '*.ino' -or -iname '*.pde' \) -print)
     if [[ "$folderNameMismatch" == true ]]; then
-      echo "ERROR: Sketch folder name $sketchPath does not match the sketch filename."
+      echo "ERROR: ${sketchPath}: Folder name does not match the sketch filename."
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_SKETCH_NAME_MISMATCH_EXIT_STATUS)
     fi
 
