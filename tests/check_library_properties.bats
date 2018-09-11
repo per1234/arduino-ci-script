@@ -56,7 +56,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^ERROR: Specified folder: \./check_library_properties/DoesntExist doesn't exist\.$"
+  outputRegex="^ERROR: \./check_library_properties/DoesntExist: Folder doesn't exist\.$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -66,7 +66,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_properties/MisspelledFilename contains an incorrectly spelled library\.properties file\.$'
+  outputRegex='^ERROR: \./check_library_properties/MisspelledFilename: Incorrectly spelled library\.properties file\. It must be spelled exactly \"library\.properties\".$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -76,7 +76,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_properties/InvalidFilenameCase/Library\.properties has incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux\. It must be exactly library\.properties$'
+  outputRegex='^ERROR: \./check_library_properties/InvalidFilenameCase/Library\.properties: Incorrect filename case\. This causes it to not be recognized on a filename case-sensitive OS such as Linux\. It must be exactly \"library.properties\"\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -86,7 +86,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_properties/MissingName is missing the required name field\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  outputRegex='^ERROR: \./check_library_properties/MissingName/library\.properties: Missing required name field\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -96,7 +96,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_properties/MultipleInvalidLibraryProperties/MissingName is missing the required name field\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  outputRegex='^ERROR: \./check_library_properties/MultipleInvalidLibraryProperties/MissingName/library\.properties: Missing required name field\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -107,7 +107,7 @@ source ../arduino-ci-script.sh
   # The BOM corrupts the first line, which in this case is the name field
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_properties/BOM is missing the required name field\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  outputRegex='^ERROR: \./check_library_properties/BOM/library\.properties: Missing required name field\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -117,7 +117,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_properties/MissingVersion is the missing the required version field\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  outputRegex='^ERROR: \./check_library_properties/MissingVersion/library\.properties: Missing required version field\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -127,7 +127,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_properties/MissingAuthor is missing the required author field\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  outputRegex='^ERROR: \./check_library_properties/MissingAuthor/library\.properties: Missing required author field\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -137,7 +137,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^WARNING: Use of undocumented email field in \./check_library_properties/EmailInsteadOfMaintainer\. It's recommended to use the maintainer field instead, per the Arduino Library Specification\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  outputRegex="^WARNING: \./check_library_properties/EmailInsteadOfMaintainer/library\.properties: Use of undocumented email field\. It's recommended to use the maintainer field instead, per the Arduino Library Specification\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -147,7 +147,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_properties/MissingMaintainer is missing the required maintainer field\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  outputRegex='^ERROR: \./check_library_properties/MissingMaintainer/library\.properties: Missing required maintainer field\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -157,7 +157,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_properties/MissingSentence is missing tne required sentence field\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  outputRegex='^ERROR: \./check_library_properties/MissingSentence/library\.properties: Missing required sentence field\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -167,7 +167,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_properties/MissingParagraph is missing the required paragraph field\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  outputRegex='^ERROR: \./check_library_properties/MissingParagraph/library\.properties: Missing required paragraph field\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -177,7 +177,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_properties/MissingCategory is missing the category field\. This results in an invalid category warning\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  outputRegex='^ERROR: \./check_library_properties/MissingCategory/library\.properties: Missing category field\. This results in an invalid category warning\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -187,7 +187,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_properties/MissingUrl is missing the required url field\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  outputRegex='^ERROR: \./check_library_properties/MissingUrl/library\.properties: Missing required url field\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -197,7 +197,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^WARNING: \./check_library_properties/MissingArchitectures is missing the architectures field\. This causes the Arduino IDE to assume the library is compatible with all architectures \(\*\)\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  outputRegex='^WARNING: \./check_library_properties/MissingArchitectures/library\.properties: Missing architectures field\. This causes the Arduino IDE to assume the library is compatible with all architectures \(\*\). See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -207,7 +207,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_properties/InvalidLine contains an invalid line\. Installation of a library with invalid line will cause all compilations to fail\. library\.properties must only consist of property definitions, blank lines, and comments \(#\)\.$'
+  outputRegex='^ERROR: \./check_library_properties/InvalidLine/library\.properties: Invalid line found\. Installation of a library with invalid line will cause all compilations to fail\. library\.properties must only consist of property definitions, blank lines, and comments \(#\)\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -217,7 +217,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^ERROR: \./check_library_properties/BlankName's has an blank name value\.$"
+  outputRegex="^ERROR: ./check_library_properties/BlankName/library\.properties: Has an undefined name field\.$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -227,7 +227,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_properties/InvalidVersion has an invalid version value\. Follow the semver specification: https://semver\.org$'
+  outputRegex='^ERROR: \./check_library_properties/InvalidVersion/library\.properties: Invalid version value\. Follow the semver specification: https://semver\.org$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -237,7 +237,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^ERROR: \./check_library_properties/RedundantParagraph's paragraph value repeats the sentence\. These strings are displayed one after the other in Library Manager so there is no point in redundancy.$"
+  outputRegex="^ERROR: \./check_library_properties/RedundantParagraph/library\.properties: paragraph value repeats the sentence\. These strings are displayed one after the other in Library Manager so there is no point in redundancy\.$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -247,7 +247,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_properties/InvalidCategory has an invalid category value\. Please chose a valid category from https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
+  outputRegex='^ERROR: \./check_library_properties/InvalidCategory/library\.properties: Invalid category value\. Please chose a valid category from https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -257,7 +257,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^WARNING: category 'Uncategorized' used in \./check_library_properties/UncategorizedCategory is not recommended\. Please chose an appropriate category from https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  outputRegex="^WARNING: \./check_library_properties/UncategorizedCategory/library\.properties: Category \"Uncategorized\" is not recommended\. Please chose an appropriate category from https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -267,7 +267,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_properties/BlankUrl does not define the url field\. This results in a "More info" link in Library Manager that looks clickable but is not\.$'
+  outputRegex='^ERROR: \./check_library_properties/BlankUrl/library\.properties: Undefined url field\. This results in a \"More info\" link in Library Manager that looks clickable but is not\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -277,7 +277,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^ERROR: \./check_library_properties/MissingScheme's url value github\.com/arduino/Arduino is missing the scheme \(e\.g\. https://\)\. URL scheme must be specified for Library Manager's \"More info\" link to be clickable\.$"
+  outputRegex="^ERROR: \./check_library_properties/MissingScheme/library\.properties: url value github\.com/arduino/Arduino is missing the scheme \(e.g. https://\)\. URL scheme must be specified for Library Manager's \"More info\" link to be clickable\.$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -287,7 +287,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^ERROR: \./check_library_properties/DeadUrl's url value https://foobar\.example\.com/ returned error status 000\.$"
+  outputRegex="^ERROR: \./check_library_properties/DeadUrl/library\.properties: url value https://foobar\.example.com/ returned error status 000\.$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -313,9 +313,9 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 2 ]
-  outputRegex="^ERROR: \./check_library_properties/IncorrectArchitecturesFieldCase's architectures field name has incorrect case\. It must be spelled exactly architectures\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  outputRegex="^ERROR: \./check_library_properties/IncorrectArchitecturesFieldCase/library\.properties: architectures field name has incorrect case\. It must be spelled exactly \"architectures\"\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
   [[ "${lines[0]}" =~ $outputRegex ]]
-  outputRegex="^WARNING: \./check_library_properties/IncorrectArchitecturesFieldCase is missing the architectures field\. This causes the Arduino IDE to assume the library is compatible with all architectures \(\*\)\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  outputRegex="^WARNING: \./check_library_properties/IncorrectArchitecturesFieldCase/library\.properties: Missing architectures field\. This causes the Arduino IDE to assume the library is compatible with all architectures \(\*\)\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
   [[ "${lines[1]}" =~ $outputRegex ]]
 }
 
@@ -325,9 +325,9 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 2 ]
-  outputRegex='^ERROR: \./check_library_properties/ArchitecturesMisspelled has misspelled architectures field name as "architecture"\.$'
+  outputRegex='^ERROR: ./check_library_properties/ArchitecturesMisspelled/library\.properties: Misspelled architectures field name \"architecture\"\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
-  outputRegex="^WARNING: \./check_library_properties/ArchitecturesMisspelled is missing the architectures field\. This causes the Arduino IDE to assume the library is compatible with all architectures \(\*\)\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  outputRegex="^WARNING: \./check_library_properties/ArchitecturesMisspelled/library\.properties: Missing architectures field\. This causes the Arduino IDE to assume the library is compatible with all architectures \(\*\)\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
   [[ "${lines[1]}" =~ $outputRegex ]]
 }
 
@@ -337,7 +337,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_properties/ArchitecturesEmpty has an empty architectures field\. This causes the examples to be put under File > Examples > INCOMPATIBLE\.$'
+  outputRegex='^ERROR: \./check_library_properties/ArchitecturesEmpty/library\.properties: Undefined architectures field\. This causes the examples to be put under File > Examples > INCOMPATIBLE\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -373,9 +373,9 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 2 ]
-  outputRegex="^ERROR: \./check_library_properties/ArchitectureAliasWithoutValidMatch's architectures field contains an invalid architecture AVR\. Note: architecture values are case-sensitive\.$"
+  outputRegex="^ERROR: \./check_library_properties/ArchitectureAliasWithoutValidMatch/library\.properties: architectures field contains an invalid architecture: AVR\. Note: architecture values are case-sensitive\.$"
   [[ "${lines[0]}" =~ $outputRegex ]]
-  outputRegex="^ERROR: \./check_library_properties/ArchitectureAliasWithoutValidMatch's architectures field \(AVR\) doesn't contain any known architecture values\.$"
+  outputRegex="^ERROR: \./check_library_properties/ArchitectureAliasWithoutValidMatch/library\.properties: architectures field \(AVR\) doesn't contain any known architecture values\.$"
   [[ "${lines[1]}" =~ $outputRegex ]]
 }
 
@@ -385,9 +385,9 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 2 ]
-  outputRegex="^WARNING: \./check_library_properties/NoRecognizedArchitecture's architectures field contains an unknown architecture asdf\. Note: architecture values are case-sensitive\.$"
+  outputRegex="^WARNING: \./check_library_properties/NoRecognizedArchitecture/library\.properties: architectures field contains an unknown architecture: asdf\. Note: architecture values are case-sensitive\.$"
   [[ "${lines[0]}" =~ $outputRegex ]]
-  outputRegex="^ERROR: \./check_library_properties/NoRecognizedArchitecture's architectures field \(asdf\) doesn't contain any known architecture values\.$"
+  outputRegex="^ERROR: \./check_library_properties/NoRecognizedArchitecture/library\.properties: architectures field \(asdf\) doesn't contain any known architecture values\.$"
   [[ "${lines[1]}" =~ $outputRegex ]]
 }
 
@@ -397,9 +397,9 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 2 ]
-  unrecognizedArchitectureRegex="^WARNING: \./check_library_properties/InvalidArchitecture's architectures field contains an unknown architecture foo\. Note: architecture values are case-sensitive\.$"
+  unrecognizedArchitectureRegex="^WARNING: \./check_library_properties/InvalidArchitecture/library\.properties: architectures field contains an unknown architecture: foo\. Note: architecture values are case-sensitive\.$"
   [[ "${lines[0]}" =~ $IDEnotInstalledRegex ]]
-  outputRegex="^ERROR: \./check_library_properties/InvalidArchitecture's architectures field \(foo\) doesn't contain any known architecture values\.$"
+  outputRegex="^ERROR: \./check_library_properties/InvalidArchitecture/library\.properties: architectures field \(foo\) doesn't contain any known architecture values\.$"
   [[ "${lines[1]}" =~ $outputRegex ]]
 }
 
@@ -409,7 +409,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^ERROR: \./check_library_properties/IncorrectIncludesFieldCase's includes field name has incorrect case\. It must be spelled exactly includes\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  outputRegex="^ERROR: \./check_library_properties/IncorrectIncludesFieldCase/library\.properties: includes field name has incorrect case\. It must be spelled exactly \"includes\"\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -419,7 +419,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^ERROR: \./check_library_properties/IncludeField's includes field name is misspelled\. It must be spelled exactly \"includes\"\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  outputRegex="^ERROR: \./check_library_properties/IncludeField/library\.properties: Misspelled includes field name\. It must be spelled exactly \"includes\"\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -429,7 +429,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^ERROR: \./check_library_properties/EmptyIncludes's includes value is empty\. Either define the field or remove it\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  outputRegex="^ERROR: \./check_library_properties/EmptyIncludes/library\.properties: Undefined includes field\. Either define the field or remove it\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -439,7 +439,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^ERROR: \./check_library_properties/IncorrectDotAlinkageFieldCase's dot_a_linkage field name has incorrect case\. It must be spelled exactly dot_a_linkage\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  outputRegex="^ERROR: \./check_library_properties/IncorrectDotAlinkageFieldCase/library\.properties: dot_a_linkage field name has incorrect case\. It must be spelled exactly \"dot_a_linkage\"\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -449,7 +449,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^ERROR: \./check_library_properties/DotAlinkagesField's dot_a_linkage field name is misspelled\. It must be spelled exactly \"dot_a_linkage\"\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  outputRegex="^ERROR: \./check_library_properties/DotAlinkagesField/library\.properties: Misspelled dot_a_linkage field name\. It must be spelled exactly \"dot_a_linkage\"\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -459,7 +459,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^ERROR: \./check_library_properties/IncorrectPrecompiledFieldCase's precompiled field name has incorrect case\. It must be spelled exactly precompiled\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  outputRegex="^ERROR: \./check_library_properties/IncorrectPrecompiledFieldCase/library\.properties: precompiled field name has incorrect case\. It must be spelled exactly \"precompiled\"\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -469,7 +469,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^ERROR: \./check_library_properties/PrecompileField's precompiled field name is misspelled\. It must be spelled exactly \"precompiled\"\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  outputRegex="^ERROR: \./check_library_properties/PrecompileField/library\.properties: Misspelled precompiled field name\. It must be spelled exactly \"precompiled\"\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -479,7 +479,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^ERROR: \./check_library_properties/IncorrectLdflagsFieldCase's ldflags field name has incorrect case\. It must be spelled exactly ldflags\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  outputRegex="^ERROR: \./check_library_properties/IncorrectLdflagsFieldCase/library\.properties: ldflags field name has incorrect case\. It must be spelled exactly \"ldflags\"\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -489,6 +489,6 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^ERROR: \./check_library_properties/LdflagField's ldflags field name is misspelled\. It must be spelled exactly \"ldflags\"\. See https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
+  outputRegex="^ERROR: \./check_library_properties/LdflagField/library\.properties: Misspelled ldflags field name\. It must be spelled exactly \"ldflags\"\. See https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
