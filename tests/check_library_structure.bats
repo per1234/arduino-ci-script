@@ -8,7 +8,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^WARNING: \./check_library_structure/ValidLibraryOnePointZero is missing a library\.properties file. While not required, it's recommended to add this file to provide helpful metadata\. See: https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#library-metadata$"
+  outputRegex="^WARNING: \./check_library_structure/ValidLibraryOnePointZero: Missing library\.properties file\. While not required, it's recommended to add this file to provide helpful metadata\. See: https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#library-metadata$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -34,7 +34,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^WARNING: \./check_library_structure/InvalidLibraryBelowDepth is missing a library\.properties file\. While not required, it's recommended to add this file to provide helpful metadata\. See: https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#library-metadata$"
+  outputRegex="^WARNING: \./check_library_structure/InvalidLibraryBelowDepth: Missing library\.properties file\. While not required, it's recommended to add this file to provide helpful metadata\. See: https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#library-metadata$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -44,7 +44,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^ERROR: Specified folder: \./check_library_structure/DoesntExist doesn't exist\.$"
+  outputRegex="^ERROR: \./check_library_structure/DoesntExist: Folder doesn't exist\.$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -54,7 +54,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_structure/IncorrectSrcFolderCase is a 1\.5 format library with incorrect case in src subfolder name, which causes library to not be recognized on a filename case-sensitive OS such as Linux\.$'
+  outputRegex='^ERROR: \./check_library_structure/IncorrectSrcFolderCase: Is a 1\.5 format library with incorrect case in src subfolder name, which causes library to not be recognized on a filename case-sensitive OS such as Linux\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -64,7 +64,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_structure/MultipleInvalidLibraries/IncorrectSrcFolderCase is a 1\.5 format library with incorrect case in src subfolder name, which causes library to not be recognized on a filename case-sensitive OS such as Linux\.$'
+  outputRegex='^ERROR: \./check_library_structure/MultipleInvalidLibraries/IncorrectSrcFolderCase: Is a 1\.5 format library with incorrect case in src subfolder name, which causes library to not be recognized on a filename case-sensitive OS such as Linux\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -74,7 +74,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: No valid library found in \./check_library_structure/NotLibrary$'
+  outputRegex='^ERROR: \./check_library_structure/NotLibrary: No valid library found\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -124,7 +124,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_structure/SpuriousDotFolder/\.asdf causes the Arduino IDE to display a spurious folder warning\.$'
+  outputRegex='^ERROR: \./check_library_structure/SpuriousDotFolder/\.asdf: Causes the Arduino IDE to display a spurious folder warning\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -134,7 +134,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_structure/IncorrectExtrasFolder has incorrectly spelled extras folder name\. It should be exactly extras\. See: https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#extra-documentation$'
+  outputRegex='^ERROR: \./check_library_structure/IncorrectExtrasFolder: Incorrectly spelled extras folder name\. It should be spelled exactly "extras"\. See: https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#extra-documentation$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -144,7 +144,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_structure/IncorrectExamplesFolder has incorrect examples folder name. See: https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#library-examples$'
+  outputRegex='^ERROR: \./check_library_structure/IncorrectExamplesFolder: Incorrect examples folder name\. It should be spelled exactly \"examples\"\. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#library-examples$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -154,7 +154,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_structure/SrcAndUtiltyFolders is a 1\.5 format library with src and utility folders in library root\. The utility folder should be moved under the src folder\. See: https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#source-code$'
+  outputRegex='^ERROR: \./check_library_structure/SrcAndUtiltyFolders: 1\.5 format library with src and utility folders in library root\. The utility folder should be moved under the src folder\. See: https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#source-code$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -164,7 +164,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^WARNING: \./check_library_structure/MissingLibraryProperties is missing a library\.properties file. While not required, it's recommended to add this file to provide helpful metadata\. See: https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#library-metadata$"
+  outputRegex="^WARNING: \./check_library_structure/MissingLibraryProperties: Missing library.properties file\. While not required, it's recommended to add this file to provide helpful metadata\. See: https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#library-metadata$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -174,7 +174,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_structure/StrayLibraryProperties/src/library\.properties is a stray file\. library\.properties should be located in the library root folder\.$'
+  outputRegex='^ERROR: \./check_library_structure/StrayLibraryProperties/src/library\.properties: Stray file\. library\.properties should be located in the library root folder\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -184,7 +184,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^WARNING: \./check_library_structure/MissingKeywordsTxt is missing a keywords\.txt file\. While not required, it's recommended to add this file to provide keyword highlighting in the Arduino IDE\. See: https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#keywords$"
+  outputRegex="^WARNING: \./check_library_structure/MissingKeywordsTxt: Missing keywords\.txt file\. While not required, it's recommended to add this file to provide keyword highlighting in the Arduino IDE\. See: https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#keywords$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -194,7 +194,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_structure/StrayKeywordsTxt/src/keywords\.txt is a stray file. keywords\.txt should be located in the library root folder\.$'
+  outputRegex='^ERROR: \./check_library_structure/StrayKeywordsTxt/src/keywords\.txt: Stray file\. keywords\.txt should be located in the library root folder\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -204,7 +204,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_structure/SketchOutsideExamples has sketch files found outside the examples and extras folders\.$'
+  outputRegex='^ERROR: \./check_library_structure/SketchOutsideExamples: Sketch files found outside the examples and extras folders\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -214,7 +214,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \./check_library_structure/IncorrectSketchExtensionCase/examples/example1/example1\.Ino: Has incorrect extension case, which causes it to not be recognized on a filename case-sensitive OS such as Linux\.$'
+  outputRegex='^ERROR: \./check_library_structure/IncorrectSketchExtensionCase/examples/example1/example1\.Ino: Incorrect extension case\. This causes it to not be recognized on a filename case-sensitive OS such as Linux\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
