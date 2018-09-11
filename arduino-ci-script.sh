@@ -2280,28 +2280,28 @@ function check_library_manager_compliance() {
 
   # Check whether folder exists
   if [[ ! -d "$normalizedLibraryPath" ]]; then
-    echo "ERROR: Specified folder: $libraryPath doesn't exist."
+    echo "ERROR: ${libraryPath}: Folder doesn't exist."
     return $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_FOLDER_DOESNT_EXIST_EXIT_STATUS
   fi
 
   # Check for .exe files
   local -r exePath=$(find "$normalizedLibraryPath" -type f -name '*.exe')
   if [[ "$exePath" != "" ]]; then
-    echo "ERROR: .exe file found at $exePath"
+    echo "ERROR: ${exePath}: .exe file found."
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_EXE_FOUND_EXIT_STATUS)
   fi
 
   # Check for .development file
   local -r dotDevelopmentPath=$(find "$normalizedLibraryPath" -maxdepth 1 -type f -name '.development')
   if [[ "$dotDevelopmentPath" != "" ]]; then
-    echo "ERROR: .development file found at $dotDevelopmentPath"
+    echo "ERROR: ${dotDevelopmentPath}: .development file found."
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_DOT_DEVELOPMENT_FOUND_EXIT_STATUS)
   fi
 
   # Check for symlink
   local -r symlinkPath=$(find "$normalizedLibraryPath" -type l)
   if [[ "$symlinkPath" != "" ]]; then
-    echo "ERROR: Symlink found at $symlinkPath"
+    echo "ERROR: ${symlinkPath}: Symlink found."
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_SYMLINK_FOUND_EXIT_STATUS)
   fi
 
@@ -2317,7 +2317,7 @@ function check_library_manager_compliance() {
     check_folder_name "$libraryManagerFolderName"
     local -r checkFolderNameExitStatus=$?
     if [[ $checkFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
-      echo "ERROR: ${normalizedLibraryPath}'s name value $nameValue does not meet the requirements of the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+      echo "ERROR: ${normalizedLibraryPath}/library.properties: name value: $nameValue does not meet the requirements of the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
       exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_CHECK_FOLDER_NAME_OFFSET + checkFolderNameExitStatus)))
     fi
   fi

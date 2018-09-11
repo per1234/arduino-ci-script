@@ -16,7 +16,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex="^ERROR: Specified folder: \./check_library_manager_compliance/DoesntExist doesn't exist\.$"
+  outputRegex="^ERROR: \./check_library_manager_compliance/DoesntExist: Folder doesn't exist\.$"
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -26,7 +26,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \.exe file found at \./check_library_manager_compliance/ContainsExe/asdf\.exe$'
+  outputRegex='^ERROR: \./check_library_manager_compliance/ContainsExe/asdf\.exe: \.exe file found\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -36,7 +36,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: \.development file found at \./check_library_manager_compliance/ContainsDotDevelopment/\.development$'
+  outputRegex='^ERROR: \./check_library_manager_compliance/ContainsDotDevelopment/\.development: \.development file found\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -46,7 +46,7 @@ source ../arduino-ci-script.sh
   echo "Exit status: $status | Expected: $expectedExitStatus"
   [ "$status" -eq $expectedExitStatus ]
   [ "${#lines[@]}" -eq 1 ]
-  outputRegex='^ERROR: Symlink found at \./check_library_manager_compliance/ContainsSymlink/IsSymlink$'
+  outputRegex='^ERROR: \./check_library_manager_compliance/ContainsSymlink/IsSymlink: Symlink found\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
 }
 
@@ -59,7 +59,7 @@ source ../arduino-ci-script.sh
   [ "${#lines[@]}" -eq 2 ]
   outputRegex='^ERROR: Invalid folder name: -Foobar\. Folder name beginning with a - or \. is not allowed\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
-  outputRegex="^ERROR: \./check_library_manager_compliance/InvalidCharactersAtStartOfName's name value -Foobar does not meet the requirements of the Arduino Library Manager indexer\. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format$"
+  outputRegex="^ERROR: \./check_library_manager_compliance/InvalidCharactersAtStartOfName/library.properties: name value: -Foobar does not meet the requirements of the Arduino Library Manager indexer\. See: https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
   [[ "${lines[1]}" =~ $outputRegex ]]
 }
 
@@ -71,7 +71,7 @@ source ../arduino-ci-script.sh
   [ "${#lines[@]}" -eq 2 ]
   outputRegex='^ERROR: Invalid folder name: Foo\(bar\)\. Only letters, numbers, dots, dashes, and underscores are allowed\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
-  outputRegex="^ERROR: \./check_library_manager_compliance/InvalidCharactersInName's name value Foo\(bar\) does not meet the requirements of the Arduino Library Manager indexer\. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format$"
+  outputRegex="^ERROR: \./check_library_manager_compliance/InvalidCharactersInName/library.properties: name value: Foo\(bar\) does not meet the requirements of the Arduino Library Manager indexer\. See: https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
   [[ "${lines[1]}" =~ $outputRegex ]]
 }
 
@@ -83,6 +83,6 @@ source ../arduino-ci-script.sh
   [ "${#lines[@]}" -eq 2 ]
   outputRegex='^ERROR: Folder name asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf exceeds the maximum of 63 characters\.$'
   [[ "${lines[0]}" =~ $outputRegex ]]
-  outputRegex="^ERROR: \./check_library_manager_compliance/NameTooLong's name value asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf does not meet the requirements of the Arduino Library Manager indexer\. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format$"
+  outputRegex="^ERROR: \./check_library_manager_compliance/NameTooLong/library\.properties: name value: asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf does not meet the requirements of the Arduino Library Manager indexer\. See: https://github\.com/arduino/Arduino/wiki/Arduino-IDE-1\.5:-Library-specification#libraryproperties-file-format$"
   [[ "${lines[1]}" =~ $outputRegex ]]
 }
