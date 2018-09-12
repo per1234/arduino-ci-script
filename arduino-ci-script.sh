@@ -488,7 +488,7 @@ function install_package() {
       extract ./*.*
 
       # Delete all files from the temporary folder
-      find ./ -type f -maxdepth 1 -delete
+      find ./ -maxdepth 1 -type f -delete
 
       # Install the package
       mv $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./* "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/hardware/"
@@ -629,7 +629,7 @@ function install_library() {
       extract ./*.*
 
       # Delete all files from the temporary folder
-      find ./ -type f -maxdepth 1 -delete
+      find ./ -maxdepth 1 -type f -delete
 
       # Install the library
       mv $ARDUINO_CI_SCRIPT_VERBOSITY_OPTION ./* "${ARDUINO_CI_SCRIPT_SKETCHBOOK_FOLDER}/libraries/${newFolderName}"
