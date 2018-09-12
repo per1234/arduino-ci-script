@@ -5,10 +5,10 @@ Bash script for continuous integration of [Arduino](http://www.arduino.cc/) proj
 
 [![Build Status](https://travis-ci.org/per1234/arduino-ci-script.svg?branch=master)](https://travis-ci.org/per1234/arduino-ci-script)
 
-#### Installation
+### Installation
 The script can be used in multiple ways:
 
-##### Clone the latest release
+#### Clone the latest release
 Include the latest release of the script in your project by adding the following lines to your build configuration file:
 ```yaml
   # Clone the script repository
@@ -21,7 +21,7 @@ Include the latest release of the script in your project by adding the following
   - source "${HOME}/scripts/arduino-ci-script.sh"
 ```
 
-##### Local copy
+#### Local copy
 If you're passing a token to the script's publish report functions then best security practices would be to use a static copy of the script so you can be sure of the commands the token is used with:
 - Download the latest version of the script from https://github.com/per1234/arduino-ci-script/releases by clicking one of the **Source code** links.
 - Unzip the downloaded file.
@@ -33,10 +33,11 @@ If you're passing a token to the script's publish report functions then best sec
 Be sure to check for new releases of the script so that you can benefit from the ongoing development work. You can receive notifications of releases by [watching the repository](https://github.com/per1234/arduino-ci-script/subscription).
 
 
-#### Usage
+### Usage
 See https://github.com/per1234/WatchdogLog/blob/master/.travis.yml for an example of the script in use.
 
 Please configure your continuous integration system to make the minimum number of downloads and sketch verifications necessary to effectively test your code. This will prevent wasting Arduino and Travis CI's bandwidth and keep the build durations short.
+
 ##### `set_script_verbosity SCRIPT_VERBOSITY_LEVEL`
 Control the level of verbosity of the script's output in the Travis CI log. Verbose output can be helpful for debugging but in normal usage it makes the log hard to read and may cause the log to exceed Travis CI's maximum log size of 4 MB, which causes the job to be terminated. The default verbosity level is `0`.
 - Parameter: **SCRIPT_VERBOSITY_LEVEL** - `0`, `1` or `2` (least to most verbosity).
@@ -185,11 +186,12 @@ Add the report to the report gist. See the [instructions for publishing job repo
 - Parameter: **doLinkComment** - `true` or `false` Whether to comment on the GitHub thread of the commit that triggered the build with a link to the report.
 
 
-#### Publishing job reports
+### Publishing job reports
 The script offers the option of publishing the job result reports to a repository or GitHub [gist](https://gist.github.com/) by using the `publish_report_to_repository` or `publish_report_to_gist` functions. This makes it easier to view the reports or to import them into a spreadsheet program. You also have the option of having the link to the reports automatically added in a comment to the commit that triggered the build. This requires some configuration, which is described in the instructions below.
 
 NOTE: For security reasons, reports for builds of pull requests from a fork of the repository can not be published. If the owner of that fork wants to publish reports they can create a GitHub token (and gist if using `publish_report_to_gist`) and configure the Travis CI settings for their fork of the repository following these instructions.
-##### Creating a GitHub personal access token
+
+#### Creating a GitHub personal access token
 This is required for either publishing option.
 1. Sign in to your GitHub account.
 2. Click your avatar at the top right corner of GitHub > **Settings** > **Developer settings** > **Personal access tokens** > **Generate new token**.
@@ -203,7 +205,8 @@ This is required for either publishing option.
 9. Click the **Add** button.
 
 An alternative to using a Travis CI hidden environment variable as described above is to define the GitHub personal access token as an encrypted environment variable: https://docs.travis-ci.com/user/environment-variables/#Encrypting-environment-variables.
-##### Creating a gist
+
+#### Creating a gist
 This is required for use of the `publish_report_to_gist` function.
 1. Open https://gist.github.com/
 2. Sign in to your GitHub account.
@@ -216,9 +219,10 @@ This is required for use of the `publish_report_to_gist` function.
 9. Click the **Add** button.
 
 
-#### Troubleshooting
+### Troubleshooting
 ##### Script hangs after an arduino command
 The Arduino IDE will usually try to start the GUI whenever there is an error in the command. Since the Travis CI build environment does not support this it will just hang for ten minutes until Travis CI automatically cancels the job. This means you get no useful information on the cause of the problem.
+
 ##### Verbose output
 Verbose output results in a harder to read log so you should leave it off or minimized when possible but it can be useful for troubleshooting. Note that turning on verbose output for a large build may cause the log to exceed 4 MB, which causes Travis CI to terminate the job.
 - Verbose script output - See [`set_script_verbosity` documentation](set_script_verbosity-script_verbosity_level) in the Usage section.
@@ -228,6 +232,7 @@ Verbose output results in a harder to read log so you should leave it off or min
     - `- set -o verbose`
   - Print a trace of simple commands, for commands, case commands, select commands, and arithmetic for commands and their arguments or associated word lists after they are expanded and before they are executed. The value of the PS4 variable is expanded and the resultant value is printed before the command and its expanded arguments.
     - `- set -o xtrace`
+
 ##### Problematic IDE versions
 Some older versions of the Arduino IDE have bugs or limitations that may cause problems if used with this script:
 - 1.5.1 and older - The command line interface was added in 1.5.2, thus no version older than that can be used.
@@ -239,5 +244,5 @@ Some older versions of the Arduino IDE have bugs or limitations that may cause p
 - 1.6.3 and older - Do not support installing boards (`--install-boards`), thus `install_package` can't be used if no newer IDE version has been installed.
 
 
-#### Contributing
+### Contributing
 Pull requests or issue reports are welcome! Please see the [contribution rules](https://github.com/per1234/arduino-ci-script/blob/master/CONTRIBUTING.md) for instructions.
