@@ -5,6 +5,15 @@ Bash script for continuous integration of [Arduino](http://www.arduino.cc/) proj
 
 [![Build Status](https://travis-ci.org/per1234/arduino-ci-script.svg?branch=master)](https://travis-ci.org/per1234/arduino-ci-script)
 
+
+### Table of contents
+- [Installation](#installation)
+- [Usage](#usage)
+- [Publishing job reports](#publishing-job-reports)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+
+
 ### Installation
 The script can be used in multiple ways:
 
