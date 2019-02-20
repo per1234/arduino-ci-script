@@ -66,14 +66,16 @@ before_install:
   - cd ..
   - rm --recursive --force bats-core
   - bats --version
-  - cd tests
+  - cd ..
+  - git clone https://github.com/per1234/arduino-ci-script-tests
+  - cd arduino-ci-script-tests
   - bats check_keywords_txt.bats
   - bats check_library_manager_compliance.bats
   - bats check_library_properties.bats
   - bats check_library_structure.bats
   - bats check_sketch_structure.bats
   - bats miscellaneous.bats
-  - cd ..
+  - cd ../arduino-ci-script
 
   # Formatting checks:
   # Check for files starting with a blank line
