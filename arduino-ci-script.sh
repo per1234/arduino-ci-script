@@ -2269,6 +2269,7 @@ readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_NAME_HAS_INVALID_FIR
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_NAME_HAS_INVALID_CHARACTER_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_CHECK_FOLDER_NAME_OFFSET + ARDUINO_CI_SCRIPT_CHECK_FOLDER_NAME_INVALID_CHARACTER_EXIT_STATUS))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_NAME_TOO_LONG_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_CHECK_FOLDER_NAME_OFFSET + ARDUINO_CI_SCRIPT_CHECK_FOLDER_NAME_TOO_LONG_EXIT_STATUS))
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_NAME_TOO_LONG_EXIT_STATUS + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_BLANK_URL_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 function check_library_manager_compliance() {
   local -r libraryPath="$1"
   # Replace backslashes with slashes
@@ -2319,6 +2320,13 @@ function check_library_manager_compliance() {
     if [[ $checkFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
       echo "ERROR: ${normalizedLibraryPath}/library.properties: name value: $nameValue does not meet the requirements of the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
       exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_CHECK_FOLDER_NAME_OFFSET + checkFolderNameExitStatus)))
+    fi
+
+    local urlValue
+    urlValue="$(get_library_properties_field_value "$libraryProperties" 'url')"
+    if [[ "$urlValue" == "" ]]; then
+      echo "ERROR: ${normalizedLibraryPath}/library.properties: Blank url value: You must define a URL."
+      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_BLANK_URL_EXIT_STATUS)
     fi
   fi
 
