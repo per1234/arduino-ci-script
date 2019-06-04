@@ -1440,7 +1440,7 @@ function check_library_structure() {
 
     # Check for incorrect spelling of examples folder
     if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -iregex '^.*/examples?$') && ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'examples') ]]; then
-      echo "ERROR: ${normalizedLibraryPath}: Incorrect examples folder name. It should be spelled exactly \"examples\". See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#library-examples"
+      echo "ERROR: ${normalizedLibraryPath}: Incorrect examples folder name. It should be spelled exactly \"examples\". Incorrect examples folder name will cause importing the library to Arduino Web Editor to fail and examples to not be available in Arduino Web Editor for Library Manager libraries. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#library-examples"
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_EXAMPLES_FOLDER_NAME_EXIT_STATUS)
     fi
 
@@ -1488,7 +1488,7 @@ function check_library_structure() {
 
     # Check for sketch files outside of the src or extras folders
     if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -path './examples' -prune -or -path './extras' -prune -or \( -type f -and \( -iname '*.ino' -or -iname '*.pde' \) \)) ]]; then
-      echo "ERROR: ${normalizedLibraryPath}: Sketch files found outside the examples and extras folders."
+      echo "ERROR: ${normalizedLibraryPath}: Sketch files found outside the examples and extras folders. Sketches outside the examples folder will cause importing the library to Arduino Web Editor to fail."
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_SKETCH_EXIT_STATUS)
     fi
 
