@@ -82,6 +82,7 @@ matrix:
         - cd ..
         - git clone https://github.com/per1234/arduino-ci-script-tests
         - cd arduino-ci-script-tests
+        - git checkout 2cb113ce9bfa1503dff3faf68e55f03ab99e13a6
       script:
         - bats check_keywords_txt.bats
         - bats check_library_manager_compliance.bats
