@@ -82,7 +82,7 @@ matrix:
         - cd ..
         - git clone https://github.com/per1234/arduino-ci-script-tests
         - cd arduino-ci-script-tests
-        - git checkout 2cb113ce9bfa1503dff3faf68e55f03ab99e13a6
+        - git checkout 6b9758211e957689803b05008e705cb88758bd2b
       script:
         - bats check_keywords_txt.bats
         - bats check_library_manager_compliance.bats
@@ -189,6 +189,8 @@ script:
   - check_keywords_txt "${SKETCHBOOK_FOLDER}/libraries/NewPing"
 
   - check_library_manager_compliance "${SKETCHBOOK_FOLDER}/libraries/NewPing"
+
+  - check_code_formatting "1" "" "${APPLICATION_FOLDER}/arduino/examples/01.Basics/BareMinimum"
 
   # Test library installed from .zip with rename
   # Test library installed from .zip with dot in the folder name

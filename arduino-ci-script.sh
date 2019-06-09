@@ -2333,6 +2333,76 @@ function check_library_manager_compliance() {
   return "$exitStatus"
 }
 
+function check_code_formatting() {
+  local -r strictness="$1"
+  local -r excludedPathList="$2"
+  local -r targetPath="$3"
+
+  local -r astyleConfigurationFolder="etc/astyle-configurations"
+  local -r astyleConfigurationExtension=".conf"
+
+  # Fold the output in the Travis CI log
+  echo -e -n 'travis_fold:start:check_code_formatting\r'
+
+  if [[ $strictness -lt 1 ]] || [[ $strictness -gt 3 ]]; then
+    echo "ERROR: Invalid strictness parameter value. Valid values are 1 (least strict) - 3 (most strict)"
+    return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+  fi
+
+  if ! [[ -d "$targetPath" ]]; then
+    echo "ERROR: targetPath doesn't exist"
+    return "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+  fi
+
+  local scriptFolder
+  # https://stackoverflow.com/a/246128
+  local scriptSource="${BASH_SOURCE[0]}"
+  while [ -h "$scriptSource" ]; do # Resolve $scriptSource until the file is no longer a symlink
+    scriptFolder="$(cd -P "$(dirname "$scriptSource")" >/dev/null 2>&1 && pwd)"
+    scriptSource="$(readlink "$scriptSource")"
+    [[ $scriptSource != /* ]] && scriptSource="$scriptFolder/$scriptSource" # If $scriptSource was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+  done
+  scriptFolder="$(cd -P "$(dirname "$scriptSource")" >/dev/null 2>&1 && pwd)"
+
+  # Assemble the find options for the excluded paths from the list
+  for excludedPath in ${excludedPathList//,/ }; do
+    excludeOptions="$excludeOptions -path $excludedPath -prune -or"
+  done
+
+  local astylePath
+  astylePath=$(command -v astyle)
+  if [[ ! -e "$astylePath" ]]; then
+    # Install astyle
+    # Save the current folder
+    local -r previousFolder="$PWD"
+    mkdir "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/astyle"
+    wget --no-verbose $ARDUINO_CI_SCRIPT_QUIET_OPTION --output-document="${ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER}/astyle.tar.gz" "https://iweb.dl.sourceforge.net/project/astyle/astyle/astyle%203.1/astyle_3.1_linux.tar.gz"
+    tar --extract --file="${ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER}/astyle.tar.gz" --directory="${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}"
+    cd "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/astyle/build/gcc"
+    eval "make $ARDUINO_CI_SCRIPT_VERBOSITY_REDIRECT"
+    astylePath="${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/astyle/build/gcc/bin/astyle"
+    # Return to the previous folder
+    cd "$previousFolder"
+  fi
+
+  # Set default exit status
+  exitStatus="$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS"
+
+  while read -r filename; do
+    # Check if it's a file (find matches on pruned folders)
+    if [[ -f "$filename" ]]; then
+      if ! diff --strip-trailing-cr "$filename" <("${astylePath}" --options="${scriptFolder}/${astyleConfigurationFolder}/${strictness}${astyleConfigurationExtension}" --dry-run <"$filename"); then
+        echo "ERROR: Non-compliant code formatting in $filename"
+        # Make the function fail
+        exitStatus="$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
+      fi
+    fi
+  done <<<"$(eval "find $targetPath -regextype posix-extended $excludeOptions \( -iregex '.*\.((ino)|(h)|(hpp)|(hh)|(hxx)|(h\+\+)|(cpp)|(cc)|(cxx)|(c\+\+)|(cp)|(c)|(ipp)|(ii)|(ixx)|(inl)|(tpp)|(txx)|(tpl))$' -and -type f \)")"
+
+  echo -e -n 'travis_fold:end:check_code_formatting\r'
+  return "$exitStatus"
+}
+
 # Set default verbosity (must be called after the function definitions
 set_script_verbosity 0
 

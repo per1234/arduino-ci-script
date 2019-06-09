@@ -52,7 +52,7 @@ Control the level of verbosity of the script's output in the Travis CI log. Verb
 - Parameter: **SCRIPT_VERBOSITY_LEVEL** - `0`, `1` or `2` (least to most verbosity).
 
 ##### `set_application_folder APPLICATION_FOLDER`
-- Parameter: **APPLICATION_FOLDER** - The folder to install the Arduino IDE to. This should be set to `/usr/local/share` or a subfolder of that location. The folder will be created if it doesn't already exist. The Arduino IDE will be installed in the `arduino` subfolder.
+- Parameter: **APPLICATION_FOLDER** - The folder to install the Arduino IDE (and Artistic Style if you use `check_code_formatting`) to. This should be set to `/usr/local/share` or a subfolder of that location. The folder will be created if it doesn't already exist. The Arduino IDE will be installed in the `arduino` subfolder.
 
 ##### `set_sketchbook_folder SKETCHBOOK_FOLDER`
 - Parameter: **SKETCHBOOK_FOLDER** - The folder to be set as the Arduino IDE's sketchbook folder. The folder will be created if it doesn't already exist. Libraries installed via `install_library` will be installed to the `libraries` subfolder. Non-Boards Manager hardware packages installed via `install_package` will be installed to the `hardware` subfolder. This setting is only supported by Arduino IDE 1.5.6 and newer.
@@ -141,6 +141,15 @@ Check [keywords.txt](https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Li
 ##### `check_library_manager_compliance libraryPath`
 Make some additional checks for compliance with the requirements for adding a library to the [Library Manager index](https://github.com/arduino/Arduino/wiki/Library-Manager-FAQ). This function should be used in combination with `check_library_structure' and 'check_library_properties' to ensure full compliance with the requirements.
 - Parameter: **libraryPath** - Path of the library to check.
+
+##### `check_code_formatting strictness excludedPathList targetPath`
+Check code formatting for compliance with the Arduino code style. The [Artistic Style](http://astyle.sourceforge.net) formatter tool is used for this check. If it's not already installed, it will be installed to the `astyle` subfolder of the folder specified to `set_application_folder`.
+- Parameter: **strictness** - Determines how strict to be about code formatting compliance: 1 (least strict) - 3 (most strict). Each strictness level is based on the previous one, but with additional requirements.
+  - `1`: The Arduino IDE's auto format configuration.
+  - `2`: The configuration Arduino uses to format their example sketches.
+  - `3`: A custom configuration based on a study of the prevailing styles used in official Arduino code.
+- Parameter: **excludedPathList** - A comma-separated list of paths to exclude from the check.
+- Parameter: **targetPath** - The path to run the check on. All code files will be checked recursively.
 
 ##### `build_sketch sketchPath boardID allowFail IDEversion`
 ##### `build_sketch sketchPath boardID allowFail [IDEversionList]`
