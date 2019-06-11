@@ -73,7 +73,7 @@ Turn on/off checking for problems with libraries that generate a warning message
 
 ##### `install_ide [IDEversionList]`
 Install a list of Arduino IDE version(s).
-- Parameter(optional): **IDEversionList** - A list of the versions of the Arduino IDE you want installed, in order from oldest to newest. e.g. `'("1.6.5-r5" "1.6.9" "1.8.2")'`. If no arguments are supplied all IDE versions will be installed. The script allows you to install all IDE versions with a command line interface (1.5.2 and newer) for the sake of being complete but I don't see a good reason for testing with the 1.5.x versions of the Arduino IDE. Please only install the IDE versions you actually need for your test to avoid wasting Arduino's bandwidth. This will also result in a shorter build duration. Installation of the IDE will be skipped if it's found to already be installed in the folder specified via the `set_application_folder` function so `install_ide` can also be used simply to inform the script which IDE versions are available.
+- Parameter(optional): **IDEversionList** - A list of the versions of the Arduino IDE you want installed, in order from oldest to newest. e.g., `'("1.6.5-r5" "1.6.9" "1.8.2")'`. If no arguments are supplied all IDE versions will be installed. The script allows you to install all IDE versions with a command line interface (1.5.2 and newer) for the sake of being complete but I don't see a good reason for testing with the 1.5.x versions of the Arduino IDE. Please only install the IDE versions you actually need for your test to avoid wasting Arduino's bandwidth. This will also result in a shorter build duration. Installation of the IDE will be skipped if it's found to already be installed in the folder specified via the `set_application_folder` function so `install_ide` can also be used simply to inform the script which IDE versions are available.
 
 ##### `install_ide startIDEversion [endIDEversion]`
 Install a range of version(s) of the Arduino IDE.
@@ -85,38 +85,38 @@ Install a range of version(s) of the Arduino IDE.
 
 ##### `install_package packageURL`
 "Manually" install a hardware package downloaded as a compressed file. Packages are installed to `$SKETCHBOOK_FOLDER/hardware`. Assumes the hardware package is located in the root of the file and has the correct folder structure.
-- Parameter: **packageURL** - The URL of the hardware package download. The scheme component of the URL (e.g. `http://`, `https://`) is required.
+- Parameter: **packageURL** - The URL of the hardware package download. The scheme component of the URL (e.g., `http://`, `https://`) is required.
 
 ##### `install_package packageURL [branchName]`
-"Manually" install a hardware package by cloning from a Git repository. Packages are installed to `$SKETCHBOOK_FOLDER/hardware. Assumes the hardware package is located in the root of the repository and has the correct folder structure.
-- Parameter: **packageURL** - The URL of the Git repository. The scheme component of the URL (e.g. `http://`, `https://`) is required. The URL must end in `.git`.
+"Manually" install a hardware package by cloning from a Git repository. Packages are installed to `$SKETCHBOOK_FOLDER/hardware`. Assumes the hardware package is located in the root of the repository and has the correct folder structure.
+- Parameter: **packageURL** - The URL of the Git repository. The scheme component of the URL (e.g., `http://`, `https://`) is required. The URL must end in `.git`.
 - Parameter(optional): **branchName** - Branch of the repository to install. If this argument is not specified or is left blank the default branch will be used.
 
 ##### `install_package packageID [packageURL]`
 Install a hardware package using the Arduino IDE (Boards Manager). Only the **Arduino AVR Boards** package is included with the Arduino IDE installation. Packages are installed to `$HOME/.arduino15/packages`. You must call `install_ide` before this function. This feature is only available with Arduino IDE 1.6.4 and newer.
-- Parameter: **packageID** - `package name:platform architecture[:version]`. If `version` is omitted the most recent version will be installed. e.g. `arduino:samd` will install the most recent version of **Arduino SAM Boards**.
-- Parameter(optional): **packageURL** - The URL of the Boards Manager JSON file for 3rd party hardware packages. This can be omitted for hardware packages that are included in the official Arduino JSON file (e.g. Arduino SAM Boards, Arduino SAMD Boards, Intel Curie Boards).
+- Parameter: **packageID** - `package name:platform architecture[:version]`. If `version` is omitted the most recent version will be installed. e.g., `arduino:samd` will install the most recent version of **Arduino SAMD Boards**.
+- Parameter(optional): **packageURL** - The URL of the Boards Manager JSON file for 3rd party hardware packages. This can be omitted for hardware packages that are included in the official Arduino JSON file (e.g., Arduino SAM Boards, Arduino SAMD Boards, Intel Curie Boards).
 
 ##### `install_library`
 Install the library from the current repository. Assumes the library is in the root of the repository. The library is installed to the `libraries` subfolder of the sketchbook folder.
 
 ##### `install_library libraryName`
 Install a library that is listed in the Arduino Library Manager index. The library is installed to the `libraries` subfolder of the sketchbook folder. You must call `install_ide` before this function. This feature is only available with Arduino IDE 1.6.4 and newer installed.
-- Parameter: **libraryName** - The name of the library to install. You can specify a version separated from the name by a colon, e.g. "LiquidCrystal I2C:1.1.2". If no version is specified the most recent version will be installed. You can also specify comma-separated lists of library names.
+- Parameter: **libraryName** - The name of the library to install. You can specify a version separated from the name by a colon, e.g., "LiquidCrystal I2C:1.1.2". If no version is specified the most recent version will be installed. You can also specify comma-separated lists of library names.
 
 ##### `install_library libraryURL [newFolderName]`
 Download a library in a compressed file from a URL. The library is installed to the `libraries` subfolder of the sketchbook folder.
-- Parameter: **libraryURL** - The URL of the library download or library name in the Arduino Library Manager. The scheme component of the URL (e.g. `http://`, `https://`) is required. This can be any compressed file format. Assumes the library is located in the root of the file.
+- Parameter: **libraryURL** - The URL of the library download or library name in the Arduino Library Manager. The scheme component of the URL (e.g., `http://`, `https://`) is required. The download file can be in any compressed file format. Assumes the library is located in the root of the file.
 - Parameter(optional): **newFolderName** - Folder name to rename the installed library folder to. This can be useful if the default folder name of the downloaded file is problematic. The Arduino IDE gives include file preference when the filename matches the library folder name. GitHub's "Download ZIP" file is given the folder name `{repository name}-{branch name}`. Library folder names that contain `-` or `.` are not compatible with Arduino IDE 1.5.6 and older, arduino will hang if it's started with a library using an invalid folder name installed.
 
 ##### `install_library libraryURL [branchName [newFolderName]]`
-Install a library by cloning a Git repository). The library is installed to the `libraries` subfolder of the sketchbook folder. Assumes the library is located in the root of the repository.
-- Parameter: **libraryURL** - The URL of the library download or library name in the Arduino Library Manager. The scheme component of the URL (e.g. `http://`, `https://`) is required. The URL must end in `.git`.
+Install a library by cloning a Git repository. The library is installed to the `libraries` subfolder of the sketchbook folder. Assumes the library is located in the root of the repository.
+- Parameter: **libraryURL** - The URL of the library download or library name in the Arduino Library Manager. The scheme component of the URL (e.g., `http://`, `https://`) is required. The URL must end in `.git`.
 - Parameter(optional): **branchName** - Branch of the repository to install. If this argument is not specified or is left blank the default branch will be used.
 - Parameter(optional): **newFolderName** - Folder name to rename the installed library folder to. This can be useful if the default folder name of the downloaded file is problematic. The Arduino IDE gives include file preference when the filename matches the library folder name. Library folder names that contain `-` or `.` are not compatible with Arduino IDE 1.5.6 and older, arduino will hang if it's started with a library using an invalid folder name installed. If the `newFolderName` argument is specified the `branchName` argument must also be specified. If you don't want to specify a branch then use `""` for the `branchName` argument.
 
 ##### `set_verbose_output_during_compilation verboseOutputDuringCompilation`
-Turn on/off arduino verbose output during compilation (same as the IDE's **File > Preferences > Show verbose output during: > compilation**). This will show all the commands arduino runs during the process rather than just the compiler output. This is usually not very useful output and only clutters up the log. This feature is off by default.
+Turn on/off `arduino` verbose output during compilation (same as the IDE's **File > Preferences > Show verbose output during: > compilation**). This will show all the commands `arduino` runs during the process rather than just the compiler output. This is usually not very useful output and only clutters up the log. This feature is off by default.
 - Parameter: **verboseOutputDuringCompilation** - `true`/`false`
 
 ##### `check_sketch_structure searchPath`
@@ -124,7 +124,7 @@ Check sketches to ensure they have the correct structure.
 - Parameter: **searchPath** - Path containing sketches. The path will be searched recursively and all sketches found under it will be checked.
 
 ##### `check_library_structure basePath [depth]`
-Check a library to ensure they have the correct structure. This will also run `check_sketch_structure` on all sketches bundled with the library.
+Check libraries to ensure they have the correct structure. This will also run `check_sketch_structure` on all sketches bundled with the library.
 - Parameter: **basePath** - Path containing a library.
 - Parameter(optional): **depth** - Folder depth relative to `basePath` where the libraries are located. A depth of 0 will check the library located at `basePath`. The default value is 0.
 
@@ -139,11 +139,11 @@ Check [keywords.txt](https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Li
 - Parameter(optional): **maximumSearchDepth** - The recursive search depth. A depth of 0 will only search `searchPath` and no subfolders. The default value is 0.
 
 ##### `check_library_manager_compliance libraryPath`
-Make some additional checks for compliance with the requirements for adding a library to the [Library Manager index](https://github.com/arduino/Arduino/wiki/Library-Manager-FAQ). This function should be used in combination with `check_library_structure' and 'check_library_properties' to ensure full compliance with the requirements.
+Make some additional checks for compliance with the requirements for adding a library to the [Library Manager index](https://github.com/arduino/Arduino/wiki/Library-Manager-FAQ). This function should be used in combination with `check_library_structure` and `check_library_properties` to ensure full compliance with the requirements.
 - Parameter: **libraryPath** - Path of the library to check.
 
 ##### `check_code_formatting strictness excludedPathList targetPath`
-Check code formatting for compliance with the Arduino code style. The [Artistic Style](http://astyle.sourceforge.net) formatter tool is used for this check. If it's not already installed, it will be installed to the `astyle` subfolder of the folder specified to `set_application_folder`.
+Check code formatting for compliance with the Arduino code style. The [Artistic Style](http://astyle.sourceforge.net) formatter tool is used for this check. If it's not already installed, it will be installed to the `astyle` subfolder of the folder specified to `set_application_folder`. Note that in the Travis CI job logs, the `check_code_formatting` output is "folded" to make it easier to browse. You can click the triangle in the left margin of the command to unfold the output.
 - Parameter: **strictness** - Determines how strict to be about code formatting compliance: 1 (least strict) - 3 (most strict). Each strictness level is based on the previous one, but with additional requirements.
   - `1`: The Arduino IDE's auto format configuration.
   - `2`: The configuration Arduino uses to format their example sketches.
@@ -154,12 +154,12 @@ Check code formatting for compliance with the Arduino code style. The [Artistic 
 ##### `build_sketch sketchPath boardID allowFail IDEversion`
 ##### `build_sketch sketchPath boardID allowFail [IDEversionList]`
 ##### `build_sketch sketchPath boardID allowFail startIDEversion endIDEversion`
-Verify/compile sketch(es). `build_sketch` will echo the arduino exit status to the log, which is documented at https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#exit-status. Note that in the Travis CI job logs, the compilation output is "folded" to make it easier to browse. You can click the triangles in the left margin to unfold.
+Verify/compile sketch(es). `build_sketch` will echo the `arduino` exit status to the log, which is documented at https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#exit-status. Note that in the Travis CI job logs, the compilation output is "folded" to make it easier to browse. You can click the triangles in the left margin to unfold.
 - Parameter: **sketchPath** - Path to a sketch or folder containing sketches. If a folder is specified it will be recursively searched and all sketches will be verified.
-- Parameter: **boardID** - `package:arch:board[:parameters]` ID of the board to be compiled for. e.g. `arduino:avr:uno`. Board-specific parameters are only supported by Arduino IDE 1.5.5 and newer.
+- Parameter: **boardID** - `package:arch:board[:parameters]` ID of the board to be compiled for. e.g., `arduino:avr:uno`. Board-specific parameters are only supported by Arduino IDE 1.5.5 and newer.
 - Parameter: **allowFail** - `true`, `require`, or `false`. Allow the verification to fail without causing the CI build to fail. `require` will cause the build to fail if the sketch verification doesn't fail.
 - Parameter: **IDEversion** - A single version of the Arduino IDE to use to verify the sketch.
-- Parameter(optional): **IDEversionList** - A list of versions of the Arduino IDE to use to verify the sketch. e.g. `'("1.6.5-r5" "1.6.9" "1.8.2")'`. If no version list is provided all installed IDE versions will be used.
+- Parameter(optional): **IDEversionList** - A list of versions of the Arduino IDE to use to verify the sketch. e.g., `'("1.6.5-r5" "1.6.9" "1.8.2")'`. If no version list is provided all installed IDE versions will be used.
 - Parameter: **startIDEversion** - The start (inclusive) of a range of versions of the Arduino IDE to use to verify the sketch.
 - Parameter: **endIDEversion** - The end (inclusive) of a range of versions of the Arduino IDE to use to verify the sketch.
 
@@ -228,7 +228,7 @@ An alternative to using a Travis CI hidden environment variable as described abo
 This is required for use of the `publish_report_to_gist` function.
 1. Open https://gist.github.com/
 2. Sign in to your GitHub account.
-3. Type an appropriate name in the **Filename including extension...** field. Gists sort files alphabetically so the filename should be something that will sort before the report filenames, which start at travis_ci_job_report_1.1.tsv.
+3. Type an appropriate name in the **Filename including extension...** field. Gists sort files alphabetically so the filename should be something that will sort before the report filenames, which start at travis_ci_job_report_00001.001.tsv.
 4. Add some text to the file contents box.
 5. Click **Create secret gist** if you don't want the gist to be discoverable (it can still be read by anyone who knows the URL), or **Create public gist** to make it discoverable.
 6. Copy the URL of the gist.
@@ -258,7 +258,7 @@ Some older versions of the Arduino IDE have bugs or limitations that may cause p
 - 1.5.5 and older - Do not support setting preferences (`--pref`), thus `set_sketchbook_folder` can not be used if no newer IDE version has been installed.
 - 1.5.5-r2 and older - Don't recognize libraries that have a library.properties` file that doesn't define a `core-dependencies` property. The file include is successful but compilation of sketches that use the library functions will fail.
 - 1.5.6 and older - `-` or `.` are not allowed in sketch or library folder names. If any are present the Arduino IDE will hang indefinitely when it's executed.
-- 1.6.2 - Moves its hardware packages to the .arduino15 folder, causing all other IDE versions to use those cores, some of which are not compatible. For this reason 1.6.2 is not installed when a version range containing, but not starting or ending in, 1.6.2 is passed to `install_ide'. 1.6.2 is installed if it is explicitly specified in a version list.
+- 1.6.2 - Moves its hardware packages to the .arduino15 folder, causing all other IDE versions to use those cores, some of which are not compatible. For this reason 1.6.2 is not installed when a version range containing, but not starting or ending in, 1.6.2 is passed to `install_ide`. 1.6.2 is installed if it is explicitly specified in a version list.
 - 1.6.3 and older - Do not support installing boards (`--install-boards`), thus `install_package` can't be used if no newer IDE version has been installed.
 
 
