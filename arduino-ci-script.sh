@@ -1840,7 +1840,7 @@ function check_library_properties() {
         exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_ARCHITECTURES_EMPTY_EXIT_STATUS)
       else
         # Check for invalid architectures
-        local validArchitecturesRegex='^((\*)|(avr)|(sam)|(samd)|(stm32f4)|(nrf52)|(i586)|(i686)|(arc32)|(win10)|(esp8266)|(esp32)|(ameba)|(arm)|(efm32)|(FP51)|(iot2000)|(megaavr)|(msp430)|(navspark)|(nRF5)|(nRF51822)|(nRF52832)|(particle-photon)|(particle-electron)|(particle-core)|(pic)|(pic32)|(RFduino)|(Seeed_STM32F4)|(Simblee)|(solox)|(stm32)|(stm)|(STM32)|(STM32F1)|(STM32F3)|(STM32F4)|(STM32F2)|(STM32L1)|(STM32L4)|(teensy)|(x86))$'
+        local validArchitecturesRegex='^((\*)|(avr)|(sam)|(samd)|(stm32f4)|(nrf52)|(i586)|(i686)|(arc32)|(win10)|(esp8266)|(esp32)|(ameba)|(arm)|(efm32)|(FP51)|(iot2000)|(mbed)|(megaavr)|(mraa)|(msp430)|(navspark)|(nRF5)|(nRF51822)|(nRF52832)|(particle-photon)|(particle-electron)|(particle-core)|(pic)|(pic32)|(RFduino)|(samd_beta)|(Seeed_STM32F4)|(Simblee)|(solox)|(stm32)|(stm)|(STM32)|(STM32F1)|(STM32F3)|(STM32F4)|(STM32F2)|(STM32L1)|(STM32L4)|(teensy)|(x86))$'
         # Split string on ,
         IFS=','
         local validArchitectureFound=false
