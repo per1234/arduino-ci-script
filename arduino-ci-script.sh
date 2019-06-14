@@ -1232,20 +1232,20 @@ function check_folder_name() {
   # Starting folder name with a - or . is not allowed
   local -r startsWithInvalidCharacterRegex="^[-.]"
   if [[ "$folderName" =~ $startsWithInvalidCharacterRegex ]]; then
-    echo "ERROR: Invalid folder name: ${folderName}. Folder name beginning with a - or . is not allowed."
+    echo "Invalid folder name: ${folderName}. Folder name beginning with a - or . is not allowed."
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_FOLDER_NAME_INVALID_FIRST_CHARACTER_EXIT_STATUS)
   fi
 
   # Allowed characters: a-z, A-Z, 0-1, -._
   local -r disallowedCharactersRegex="[^a-zA-Z0-9._-]"
   if [[ "$folderName" =~ $disallowedCharactersRegex ]]; then
-    echo "ERROR: Invalid folder name: ${folderName}. Only letters, numbers, dots, dashes, and underscores are allowed."
+    echo "Invalid folder name: ${folderName}. Only letters, numbers, dots, dashes, and underscores are allowed."
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_FOLDER_NAME_INVALID_CHARACTER_EXIT_STATUS)
   fi
 
   # <64 characters
   if [[ ${#folderName} -gt 63 ]]; then
-    echo "ERROR: Folder name $folderName exceeds the maximum of 63 characters."
+    echo "Folder name $folderName exceeds the maximum of 63 characters."
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_FOLDER_NAME_TOO_LONG_EXIT_STATUS)
   fi
   return "$exitStatus"
@@ -1347,6 +1347,7 @@ function check_sketch_structure() {
     check_folder_name "$sketchPath"
     local checkFolderNameExitStatus=$?
     if [[ $checkFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
+      echo "ERROR: ${sketchPath}: Invalid folder name."
       exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_CHECK_FOLDER_NAME_OFFSET + checkFolderNameExitStatus)))
     fi
 
@@ -1435,6 +1436,7 @@ function check_library_structure() {
     check_folder_name "$normalizedLibraryPath"
     local checkFolderNameExitStatus=$?
     if [[ $checkFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
+      echo "ERROR: ${normalizedLibraryPath}: Invalid folder name."
       exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_CHECK_FOLDER_NAME_OFFSET + checkFolderNameExitStatus)))
     fi
 
