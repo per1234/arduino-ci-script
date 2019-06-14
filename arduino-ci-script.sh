@@ -1731,7 +1731,7 @@ function check_library_properties() {
         check_folder_name "$libraryManagerFolderName"
         local checkFolderNameExitStatus=$?
         if [[ $checkFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
-          echo "WARNING: ${normalizedLibraryPropertiesPath}/library.properties: Name value $nameValue does not meet the requirements of the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+          echo "WARNING: ${normalizedLibraryPropertiesPath}/library.properties: name value: $nameValue does not meet the requirements of the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
         fi
 
         # Check if the library.properties name value starts with "arduino" (case-insensitive)
