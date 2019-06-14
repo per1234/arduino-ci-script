@@ -1252,6 +1252,24 @@ function check_folder_name() {
 }
 
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=1
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_NAME_RESERVED_NAME_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+function check_library_properties_name() {
+  local -r name="$1"
+
+  local exitStatus=$ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS
+
+  # Check if the library.properties name value starts with "arduino" (case-insensitive)
+  # https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format
+  local -r ReservedNameRegex="^arduino"
+  # Libraries with reserved names added to the Library Manager index before the enactment of the rule are grandfathered
+  local -r GrandfatheredNameRegex="^(Arduino Learning Board)|(Arduino LoRaWAN)|(Arduino OPL2)|(Arduino POST HTTP Parser)|(Arduino Smart Watch)|(arduino-async-modem)|(arduino-display-lcdkeypad)|(arduino-ess)|(arduino-fsm)|(Arduino-I2C-KM1)|(arduino-managed-serial-device)|(arduino-menusystem)|(arduino-NVM)|(arduino-sht)|(arduino-timer)|(arduino-timer-api)|(Arduino-Websocket-Fast)|(ArduinoArcherPanelClient)|(ArduinoBlue)|(ArduinoCloudStorage)|(ArduinoComponents)|(ArduinoESPAT)|(ArduinoFacil)|(arduinoFFT)|(ArduinoFritzApi)|(ArduinoHttpServer)|(ArduinoIHC)|(ArduinoINA219)|(ArduinoIRC)|(ArduinoJson)|(ArduinoLang)|(ArduinoLearningKitStarter)|(ArduinoLog)|(ArduinoMenu library)|(ArduinoMqtt)|(ArduinoOSC)|(ArduinoOTA)|(ArduinoQueue)|(ArduinoSensors)|(ArduinoSerialToTCPBridgeClient)|(ArduinoSTL)|(ArduinoTEA5767)|(ArduinoThread)|(ArduinoThreadRunOnce)|(ArduinoTrace)|(ArduinoUniqueID)|(ArduinoUnit)|(ArduinoUserInterface)|(arduinoVNC)|(ArduinoWebsockets)$"
+  if [[ "${name,,}" =~ $ReservedNameRegex ]] && ! [[ "$name" =~ $GrandfatheredNameRegex ]]; then
+    exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_NAME_RESERVED_NAME_EXIT_STATUS)
+  fi
+  return "$exitStatus"
+}
+
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=1
 readonly ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_FOLDER_DOESNT_EXIST_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_INCORRECT_EXTENSION_CASE_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
@@ -1712,6 +1730,13 @@ function check_library_properties() {
         local checkFolderNameExitStatus=$?
         if [[ $checkFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
           echo "WARNING: ${normalizedLibraryPropertiesPath}/library.properties: Name value $nameValue does not meet the requirements of the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
+        fi
+
+        # Check if the library.properties name value starts with "arduino" (case-insensitive)
+        check_library_properties_name "$nameValue"
+        local checkLibraryPropertiesNameExitStatus=$?
+        if [[ "$checkLibraryPropertiesNameExitStatus" == "$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_NAME_RESERVED_NAME_EXIT_STATUS" ]]; then
+          echo "WARNING: ${normalizedLibraryPropertiesPath}/library.properties: name value: $nameValue starts with \"arduino\". These names are reserved for official Arduino libraries. Libraries using a reserved name will not be accepted in the Library Manager index."
         fi
       fi
     fi
@@ -2270,6 +2295,8 @@ readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_NAME_HAS_INVALID_CHA
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_NAME_TOO_LONG_EXIT_STATUS=$((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_CHECK_FOLDER_NAME_OFFSET + ARDUINO_CI_SCRIPT_CHECK_FOLDER_NAME_TOO_LONG_EXIT_STATUS))
 ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_NAME_TOO_LONG_EXIT_STATUS + 1))
 readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_BLANK_URL_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
+ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER=$((ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER + 1))
+readonly ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_NAME_IS_RESERVED_EXIT_STATUS=$ARDUINO_CI_SCRIPT_EXIT_STATUS_COUNTER
 function check_library_manager_compliance() {
   local -r libraryPath="$1"
   # Replace backslashes with slashes
@@ -2306,13 +2333,15 @@ function check_library_manager_compliance() {
     exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_SYMLINK_FOUND_EXIT_STATUS)
   fi
 
-  # Check for characters in the library.properties name value disallowed by the Library Manager indexer
+  # Check for problems with library.properties
   if [[ -f "$normalizedLibraryPath/library.properties" ]]; then
     # Get rid of the CRs
     local libraryProperties
     libraryProperties=$(tr "\r" "\n" <"$normalizedLibraryPath/library.properties")
     local nameValue
     nameValue="$(get_library_properties_field_value "$libraryProperties" 'name')"
+
+    # Check for characters in the library.properties name value disallowed by the Library Manager indexer
     # Library Manager installs libraries to a folder that is the name field value with any spaces replaced with _
     local -r libraryManagerFolderName="${nameValue// /_}"
     check_folder_name "$libraryManagerFolderName"
@@ -2320,6 +2349,14 @@ function check_library_manager_compliance() {
     if [[ $checkFolderNameExitStatus -ne $ARDUINO_CI_SCRIPT_SUCCESS_EXIT_STATUS ]]; then
       echo "ERROR: ${normalizedLibraryPath}/library.properties: name value: $nameValue does not meet the requirements of the Arduino Library Manager indexer. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#libraryproperties-file-format"
       exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_CHECK_FOLDER_NAME_OFFSET + checkFolderNameExitStatus)))
+    fi
+
+    # Check if the library.properties name value starts with "arduino" (case-insensitive)
+    check_library_properties_name "$nameValue"
+    local checkLibraryPropertiesNameExitStatus=$?
+    if [[ "$checkLibraryPropertiesNameExitStatus" == "$ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_NAME_RESERVED_NAME_EXIT_STATUS" ]]; then
+      echo "ERROR: ${normalizedLibraryPath}/library.properties: name value: $nameValue starts with \"arduino\". These names are reserved for official Arduino libraries."
+      exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_MANAGER_COMPLIANCE_NAME_IS_RESERVED_EXIT_STATUS)
     fi
 
     local urlValue
