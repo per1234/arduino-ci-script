@@ -1457,7 +1457,7 @@ function check_library_structure() {
     fi
 
     # Check for incorrect spelling of examples folder
-    if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -iregex '^.*/examples?$') && ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'examples') ]]; then
+    if [[ $(find "$normalizedLibraryPath" -regextype posix-extended -maxdepth 1 -type d -and -iregex '^.*/(examples?)|(exampels?)$') && ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'examples') ]]; then
       echo "ERROR: ${normalizedLibraryPath}: Incorrect examples folder name. It should be spelled exactly \"examples\". Incorrect examples folder name will cause importing the library to Arduino Web Editor to fail and examples to not be available in Arduino Web Editor for Library Manager libraries. See: https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5:-Library-specification#library-examples"
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_INCORRECT_EXAMPLES_FOLDER_NAME_EXIT_STATUS)
     fi
