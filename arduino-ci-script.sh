@@ -1723,7 +1723,7 @@ function check_library_properties() {
       # Check for blank name value
       if [[ "$nameValue" == "" ]]; then
         echo "ERROR: ${normalizedLibraryPropertiesPath}/library.properties: Has an undefined name field."
-        exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_BLANK_NAME_EXIT_STATUS + checkFolderNameExitStatus)))
+        exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_BLANK_NAME_EXIT_STATUS)
       else
         # Check for invalid name value
         # Library Manager installs libraries to a folder that is the name field value with any spaces replaced with _
