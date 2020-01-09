@@ -534,13 +534,35 @@ function install_package() {
       if [[ "$packageURL" != "" ]]; then
         # Get the current Additional Boards Manager URLs preference value so it won't be overwritten when the new URL is added
         local priorBoardsmanagerAdditionalURLs
+        local getPrefExitStatus
+        # arduino --get-pref returns 4 when the preference does not exist, which is an acceptable circumstance. So it's necessary to unset errexit
+        set +o errexit
         if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -eq 0 ]]; then
-          priorBoardsmanagerAdditionalURLs=$("${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}" --get-pref boardsmanager.additional.urls 2>/dev/null | tail --lines=1)
+          priorBoardsmanagerAdditionalURLs=$(
+            "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}" --get-pref boardsmanager.additional.urls 2>/dev/null | tail --lines=1
+            exit "${PIPESTATUS[0]}"
+          )
+          getPrefExitStatus="$?"
         elif [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -eq 1 ]]; then
-          priorBoardsmanagerAdditionalURLs=$("${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}" --get-pref boardsmanager.additional.urls | tail --lines=1)
+          priorBoardsmanagerAdditionalURLs=$(
+            "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}" --get-pref boardsmanager.additional.urls | tail --lines=1
+            exit "${PIPESTATUS[0]}"
+          )
+          getPrefExitStatus="$?"
         else
-          priorBoardsmanagerAdditionalURLs=$("${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}" --get-pref boardsmanager.additional.urls | tee /dev/tty | tail --lines=1)
+          priorBoardsmanagerAdditionalURLs=$(
+            "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/${ARDUINO_CI_SCRIPT_IDE_INSTALLATION_FOLDER}/${ARDUINO_CI_SCRIPT_ARDUINO_COMMAND}" --get-pref boardsmanager.additional.urls | tee /dev/tty | tail --lines=1
+            exit "${PIPESTATUS[0]}"
+          )
+          getPrefExitStatus="$?"
         fi
+        set -o errexit
+
+        if [[ "$getPrefExitStatus" == "4" ]]; then
+          # No boardsmanager.additional.urls preference was set. This causes priorBoardsmanagerAdditionalURLs to have a garbage value with Arduino IDE 1.8.10 and newer.
+          priorBoardsmanagerAdditionalURLs=""
+        fi
+
         local -r blankregex="^[ ]*$"
         if [[ "$priorBoardsmanagerAdditionalURLs" =~ $blankregex ]]; then
           # There is no previous Additional Boards Manager URLs preference value
