@@ -2198,6 +2198,7 @@ function check_keywords_txt() {
         # Strip leading whitespace. This is ignored by the Arduino IDE (even tabs)
         local keywordsTxtLineFrontStripped="${keywordsTxtLine#"${keywordsTxtLine%%[![:space:]]*}"}"
         # Change tabs to the field separator character for line splitting
+        # shellcheck disable=SC2206
         local keywordsTxtLineSwappedTabs=(${keywordsTxtLineFrontStripped//$'\t'/$fieldSeparator})
 
         # KEYWORD is the 1st field
