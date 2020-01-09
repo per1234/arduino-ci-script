@@ -1373,7 +1373,7 @@ function check_sketch_structure() {
       exitStatus=$(set_exit_status "$exitStatus" $((ARDUINO_CI_SCRIPT_CHECK_SKETCH_STRUCTURE_CHECK_FOLDER_NAME_OFFSET + checkFolderNameExitStatus)))
     fi
 
-  done <<<"$(find "$normalizedSearchPath" -type f \( -iname '*.ino' -or -iname '*.pde' \) -printf '%h\n' | sort --unique)"
+  done <<<"$(find "$normalizedSearchPath" -type f \( -iname '*.ino' -or -iname '*.pde' \) -printf '%h\n' | sort --dictionary-order --unique)"
   return "$exitStatus"
 }
 
@@ -1471,7 +1471,7 @@ function check_library_structure() {
 
       echo "ERROR: ${spuriousDotFolderPath}: Causes the Arduino IDE to display a spurious folder warning."
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_SPURIOUS_DOT_FOLDER_EXIT_STATUS)
-    done <<<"$(find "$normalizedLibraryPath" -maxdepth 1 -type d -regex '^.*/\..*$' -not -name '.git' -not -name '.github' -not -name '.svn' -not -name '.hg' -not -name '.bzr' -not -name '.vscode')"
+    done <<<"$(find "$normalizedLibraryPath" -maxdepth 1 -type d -regex '^.*/\..*$' -not -name '.git' -not -name '.github' -not -name '.svn' -not -name '.hg' -not -name '.bzr' -not -name '.vscode' | sort --dictionary-order)"
 
     # Check for incorrect spelling of extras folder
     if [[ $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -iregex '^.*/extras?$') && ! $(find "$normalizedLibraryPath" -maxdepth 1 -type d -and -name 'extras') ]]; then
@@ -1507,7 +1507,7 @@ function check_library_structure() {
 
         echo "ERROR: ${normalizedLibraryPropertiesPath}: Stray file. library.properties should be located in the library root folder."
         exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_LIBRARY_PROPERTIES_EXIT_STATUS)
-      done <<<"$(find "$normalizedLibraryPath/src" -maxdepth 1 -type f -iname 'library.properties')"
+      done <<<"$(find "$normalizedLibraryPath/src" -maxdepth 1 -type f -iname 'library.properties' | sort --dictionary-order)"
     fi
 
     # Check for missing keywords.txt file
@@ -1525,7 +1525,7 @@ function check_library_structure() {
 
         echo "ERROR: ${keywordsTxtPath}: Stray file. keywords.txt should be located in the library root folder."
         exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_STRUCTURE_STRAY_KEYWORDS_TXT_EXIT_STATUS)
-      done <<<"$(find "$normalizedLibraryPath/src" -maxdepth 1 -type f -iname 'keywords.txt')"
+      done <<<"$(find "$normalizedLibraryPath/src" -maxdepth 1 -type f -iname 'keywords.txt' | sort --dictionary-order)"
     fi
 
     # Check for sketch files outside of the src or extras folders
@@ -1550,7 +1550,7 @@ function check_library_structure() {
       fi
     fi
 
-  done <<<"$(find "$normalizedBasePath" -mindepth "$depth" -maxdepth "$depth" -type d)"
+  done <<<"$(find "$normalizedBasePath" -mindepth "$depth" -maxdepth "$depth" -type d | sort --dictionary-order)"
 
   return "$exitStatus"
 }
@@ -1723,7 +1723,7 @@ function check_library_properties() {
         echo "ERROR: ${foundLibraryPropertiesPath}: Incorrect filename case. This causes it to not be recognized on a filename case-sensitive OS such as Linux. It must be exactly \"library.properties\"."
         exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_INCORRECT_FILENAME_CASE_EXIT_STATUS)
       fi
-    done <<<"$(find "$normalizedLibraryPropertiesPath" -maxdepth 1 -type f -iname 'library.properties')"
+    done <<<"$(find "$normalizedLibraryPropertiesPath" -maxdepth 1 -type f -iname 'library.properties' | sort --dictionary-order)"
 
     # Check whether the folder contains a library.properties file
     if [[ "$libraryPropertiesFound" == false ]]; then
@@ -2036,7 +2036,7 @@ function check_library_properties() {
       exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_LIBRARY_PROPERTIES_LDFLAGS_MISSPELLED_EXIT_STATUS)
     fi
 
-  done <<<"$(find "$normalizedLibraryPropertiesSearchPath" -maxdepth "$maximumSearchDepth" -type d)"
+  done <<<"$(find "$normalizedLibraryPropertiesSearchPath" -maxdepth "$maximumSearchDepth" -type d | sort --dictionary-order)"
 
   return "$exitStatus"
 }
@@ -2121,7 +2121,7 @@ function check_keywords_txt() {
         echo "ERROR: ${foundKeywordsTxtPath}: Incorrect filename case, which causes it to not be recognized on a filename case-sensitive OS such as Linux. It must be exactly \"keywords.txt\"."
         exitStatus=$(set_exit_status "$exitStatus" $ARDUINO_CI_SCRIPT_CHECK_KEYWORDS_TXT_INCORRECT_FILENAME_CASE_EXIT_STATUS)
       fi
-    done <<<"$(find "$normalizedKeywordsTxtPath" -maxdepth 1 -type f -iname 'keywords.txt')"
+    done <<<"$(find "$normalizedKeywordsTxtPath" -maxdepth 1 -type f -iname 'keywords.txt' | sort --dictionary-order)"
 
     # Check whether the folder contains a keywords.txt file
     if [[ "$keywordsTxtFound" == false ]]; then
@@ -2301,7 +2301,7 @@ function check_keywords_txt() {
       done <<<"$keywordsTxtCRline"
     done <"${normalizedKeywordsTxtPath}/keywords.txt"
 
-  done <<<"$(find "$normalizedKeywordsTxtSearchPath" -maxdepth "$maximumSearchDepth" -type d)"
+  done <<<"$(find "$normalizedKeywordsTxtSearchPath" -maxdepth "$maximumSearchDepth" -type d | sort --dictionary-order)"
 
   return "$exitStatus"
 }
