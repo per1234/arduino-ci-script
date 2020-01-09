@@ -152,7 +152,7 @@ install:
 
   # Test library installation from repository (can't do this because there is no library in this repository)
   # - install_library
-  # Test library install from .zip file. A non-GitHub library download must be used because GitHub appends -{branch name} or -{release version} to the .zip downloads and having a library folder installed whos name contains "-" causes arduino 1.5.6 or older to hang.
+  # Test library install from .zip file. A non-GitHub library download must be used because GitHub appends -{branch name} or -{release version} to the .zip downloads and having a library folder installed whose name contains "-" causes arduino 1.5.6 or older to hang.
   - install_library "https://bitbucket.org/teckel12/arduino-new-ping/downloads/NewPing_v1.8.zip"
   # Test library install from .zip file/folder that has a dot in the name. It must be renamed so that it won't have a hyphen in the folder name, which causes verification to hang with Arduino IDE 1.5.2 - 1.5.6-r2.
   # Test library install from .zip file with rename.
