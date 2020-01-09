@@ -198,7 +198,7 @@ script:
   # Test build_sketch with specific IDE version
   # Test build_sketch without absolute path
   - cd "${SKETCHBOOK_FOLDER}/libraries/CapacitiveSensor/examples/CapacitiveSensorSketch/"
-  - build_sketch "CapacitiveSensorSketch.pde" "ATTinyCore-master:avr:attinyx5:LTO=disable,TimerClockSource=default,chip=85,clock=8internal,bod=disable" "false" "1.8.4"
+  - build_sketch "CapacitiveSensorSketch.pde" "ATTinyCore-master:avr:attinyx5:LTO=disable,TimerClockSource=default,chip=85,clock=8internal,eesave=aenable,bod=disable,millis=enabled" "false" "1.8.4"
 
   # Test library installed from .zip
   # Test board from hardware package installed via Boards Manager without URL
