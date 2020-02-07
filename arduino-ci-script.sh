@@ -195,7 +195,7 @@ function install_ide() {
     return_handler "$ARDUINO_CI_SCRIPT_FAILURE_EXIT_STATUS"
   fi
 
-  # Generate an array declaration string containing a list all Arduino IDE versions which support CLI (1.5.2+ according to https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#history)
+  # Generate an array declaration string containing a list all available Arduino IDE versions which support CLI
   # Save the current folder
   local -r previousFolder="$PWD"
   cd "$ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER"
@@ -204,13 +204,26 @@ function install_ide() {
   cd Arduino
   git remote add origin https://github.com/arduino/Arduino.git
   if [[ "$startIDEversion" != "1.6.2" ]] && [[ "$startIDEversion" != "1.6.2" ]]; then
-    # Arduino IDE 1.6.2 has the nasty behavior of moving the included hardware cores to the .arduino15 folder, causing those versions to be used for all builds after Arduino IDE 1.6.2 is used. For that reason, 1.6.2 will only be installed if explicitly specified in the install_ide version arguments
+    # See "Arduino IDE version blacklist" documentation below
     local -r IDEversion162regex=--regex='refs/tags/1\.6\.2'
     if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -gt 0 ]]; then
       echo "NOTE: Due to not playing nicely with other versions, Arduino IDE 1.6.2 will not be installed unless explicitly specified in the version arguments."
     fi
   fi
-  local -r ARDUINO_CI_SCRIPT_FULL_IDE_VERSION_LIST_ARRAY="${ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION}'(\"$(git ls-remote --quiet --tags --refs | grep --invert-match --regexp='refs/tags/1\.0' --regexp='refs/tags/1\.5$' --regexp='refs/tags/1\.5\.1$' --regexp='refs/tags/1\.5\.4-r2$' --regexp='refs/tags/1\.5\.5-r2$' --regexp='refs/tags/1\.5\.7-macosx-java7$' --regexp='refs/tags/1\.5\.8-macosx-java7$' ${IDEversion162regex} --regexp='refs/tags/1\.6\.5-r2$' --regexp='refs/tags/1\.6\.5-r3$' | grep --regexp='refs/tags/[0-9]\+\.[0-9]\+\.[0-9]\+\(\(-.*$\)\|$\)' | cut --delimiter='/' --fields=3 | sort --version-sort | sed ':a;N;$!ba;s/\n/\" \"/g')\")'"
+
+  # Arduino IDE tag blacklist:
+  # <1.5.2: no CLI (https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#history)
+  # 1.5.4-r2: Not available for download
+  # 1.5.5-r2: Not available for download
+  # 1.5.7-macosx-java7: Not available for download
+  # 1.5.8-macosx-java7: Not available for download
+  # 1.6.2: has the nasty behavior of moving the included hardware cores to the .arduino15 folder, causing those versions to be used for all builds after Arduino IDE 1.6.2 is used. For that reason, 1.6.2 will only be installed if explicitly specified in the install_ide version arguments
+  # 1.6.5-r2: Not available for download
+  # 1.6.5-r3: Not available for download
+  # 1.6.5-r2: Not available for download
+  # 1.6.5-r3: Not available for download
+  # 1.8.11-ms-store-1: Not available for download
+  local -r ARDUINO_CI_SCRIPT_FULL_IDE_VERSION_LIST_ARRAY="${ARDUINO_CI_SCRIPT_IDE_VERSION_LIST_ARRAY_DECLARATION}'(\"$(git ls-remote --quiet --tags --refs | grep --invert-match --regexp='refs/tags/1\.0' --regexp='refs/tags/1\.5$' --regexp='refs/tags/1\.5\.1$' --regexp='refs/tags/1\.5\.4-r2$' --regexp='refs/tags/1\.5\.5-r2$' --regexp='refs/tags/1\.5\.7-macosx-java7$' --regexp='refs/tags/1\.5\.8-macosx-java7$' ${IDEversion162regex} --regexp='refs/tags/1\.6\.5-r2$' --regexp='refs/tags/1\.6\.5-r3$' --regexp='refs/tags/1\.8\.11-ms-store-1$' | grep --regexp='refs/tags/[0-9]\+\.[0-9]\+\.[0-9]\+\(\(-.*$\)\|$\)' | cut --delimiter='/' --fields=3 | sort --version-sort | sed ':a;N;$!ba;s/\n/\" \"/g')\")'"
   cd ..
   # Remove the temporary repo
   rm Arduino --recursive --force
