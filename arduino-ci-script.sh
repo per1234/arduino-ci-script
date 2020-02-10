@@ -2457,7 +2457,7 @@ function check_code_formatting() {
     # Install astyle
     # Save the current folder
     local -r previousFolder="$PWD"
-    mkdir "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/astyle"
+    mkdir --parents "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/astyle"
     wget --no-verbose $ARDUINO_CI_SCRIPT_QUIET_OPTION --output-document="${ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER}/astyle.tar.gz" "https://iweb.dl.sourceforge.net/project/astyle/astyle/astyle%203.1/astyle_3.1_linux.tar.gz"
     tar --extract --file="${ARDUINO_CI_SCRIPT_TEMPORARY_FOLDER}/astyle.tar.gz" --directory="${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}"
     cd "${ARDUINO_CI_SCRIPT_APPLICATION_FOLDER}/astyle/build/gcc"
