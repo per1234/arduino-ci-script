@@ -60,11 +60,11 @@ matrix:
 
     # Check for inconsistent script formatting
     - name: 'Script Formatting Check'
-      language: go
+      language: minimal
       install:
-        - go get -u mvdan.cc/sh/cmd/shfmt
+        - docker run --volume "$TRAVIS_BUILD_DIR":/mnt --workdir /mnt mvdan/shfmt:latest -i 2 -w .
       script:
-        - shfmt -i 2 -d .
+        - git diff --color --exit-code
 
 
     - name: 'Unit Tests'
