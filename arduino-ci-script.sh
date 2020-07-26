@@ -204,14 +204,14 @@ function install_ide() {
   cd Arduino
   git remote add origin https://github.com/arduino/Arduino.git
   if [[ "$startIDEversion" != "1.6.2" ]] && [[ "$startIDEversion" != "1.6.2" ]]; then
-    # See "Arduino IDE version blacklist" documentation below
+    # See "Arduino IDE version blocklist" documentation below
     local -r IDEversion162regex=--regex='refs/tags/1\.6\.2'
     if [[ "$ARDUINO_CI_SCRIPT_VERBOSITY_LEVEL" -gt 0 ]]; then
       echo "NOTE: Due to not playing nicely with other versions, Arduino IDE 1.6.2 will not be installed unless explicitly specified in the version arguments."
     fi
   fi
 
-  # Arduino IDE tag blacklist:
+  # Arduino IDE tag blocklist:
   # <1.5.2: no CLI (https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc#history)
   # 1.5.4-r2: Not available for download
   # 1.5.5-r2: Not available for download
