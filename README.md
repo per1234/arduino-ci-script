@@ -190,7 +190,7 @@ Echo a tab separated report of all verification results to the log. The report i
 - Library Issue - Short description of the last library issue detected.
 
 ##### `publish_report_to_repository REPORT_GITHUB_TOKEN repositoryURL reportBranch reportFolder doLinkComment`
-Add the report to a repository. See the [instructions for publishing job reports](publishing-job-reports) for details.
+Add the report to a repository. See the [instructions for publishing job reports](#publishing-job-reports) for details.
 - Parameter: **REPORT_GITHUB_TOKEN** - The hidden or encrypted environment variable containing the GitHub personal access token.
 - Parameter: **repositoryURL** - The .git URL of the repository to publish the report to. This URL can be found by clicking the "Clone or download" button on the home page of the repository. The repository must already exist.
 - Parameter: **reportBranch** - The branch to publish the report to. The branch must already exist.
@@ -198,7 +198,7 @@ Add the report to a repository. See the [instructions for publishing job reports
 - Parameter: **doLinkComment** - `true` or `false` Whether to comment on the GitHub thread of the commit that triggered the build with a link to the report.
 
 ##### `publish_report_to_gist REPORT_GITHUB_TOKEN REPORT_GIST_URL doLinkComment`
-Add the report to the report gist. See the [instructions for publishing job reports](publishing-job-reports) for details.
+Add the report to the report gist. See the [instructions for publishing job reports](#publishing-job-reports) for details.
 - Parameter: **REPORT_GITHUB_TOKEN** - The hidden or encrypted environment variable containing the GitHub personal access token.
 - Parameter: **REPORT_GIST_URL** - The URL of the report gist.
 - Parameter: **doLinkComment** - `true` or `false` Whether to comment on the GitHub thread of the commit that triggered the build with a link to the report.
@@ -243,8 +243,8 @@ The Arduino IDE will usually try to start the GUI whenever there is an error in 
 
 ##### Verbose output
 Verbose output results in a harder to read log so you should leave it off or minimized when possible but it can be useful for troubleshooting. Note that turning on verbose output for a large build may cause the log to exceed 4 MB, which causes Travis CI to terminate the job.
-- Verbose script output - See [`set_script_verbosity` documentation](set_script_verbosity-script_verbosity_level) in the Usage section.
-- Verbose output during compilation - See [`set_verbose_output_during_compilation` documentation](set_verbose_output_during_compilation-verboseoutputduringcompilation) in the Usage section.
+- Verbose script output - See [`set_script_verbosity` documentation](#set_script_verbosity-script_verbosity_level) in the Usage section.
+- Verbose output during compilation - See [`set_verbose_output_during_compilation` documentation](#set_verbose_output_during_compilation-verboseoutputduringcompilation) in the Usage section.
 - Verbose output for Travis CI - Add one or both of the following lines to your `.travis.yml` file to get more details of the Travis CI build process.
   - Print shell input lines as they are read:
     - `- set -o verbose`
